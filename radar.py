@@ -29,6 +29,7 @@ class Radar:
         self.max_distance = self.max_distance_viewable()
         self.t=0
         self.seen_list = {}
+        self.num_states = (2*pi)/self.radians_of_view
 
     def update_viewing_angle(self, new_angle):
         self.viewing_angle= new_angle
