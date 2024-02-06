@@ -10,7 +10,6 @@ import pygame
 from functools import reduce
 from math import floor
 import gymnasium as gym
-from gymnasium import spaces
 
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
@@ -24,7 +23,7 @@ class RadarEnv(gym.Env):
 
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
-        self.observation_space = spaces.Dict(
+        self.observation_space = gym.spaces.Dict(
             {
                 "angles" : [radar.viewing_angle for radar in self.game.radars],
                 "targets": self.game.targets,
@@ -32,7 +31,7 @@ class RadarEnv(gym.Env):
         )
 
         # 1 radar for now, so the number of actions is the number of states
-        self.action_space = spaces.Discrete(reduce(lambda x,y: x*y,
+        self.action_space = gym.spaces.Discrete(reduce(lambda x,y: x*y,
                                                    [radar.num_states for radar in self.game.radars]))
 
 
@@ -66,7 +65,7 @@ class RadarEnv(gym.Env):
             return [i % self.game.radars[0].num_states, floor(i/self.game.radars[0].num_states)]
 
     def _get_obs(self):
-        return {"agent": self._agent_angle, "targets": self.game.last_image}
+        return {"agent": self._agent_angle, "targets": self.game.next_tensor}
 
     def reset(self, seed=None, options=None):
         # We need the following line to seed self.np_random
@@ -90,10 +89,12 @@ class RadarEnv(gym.Env):
         # Map the action to angle of view of all agents
         angles = self._action_to_angle[action]
 
-        reward = self.game.reward_slice_cross_entropy()
+        self.game.update_t(angles)
+        terminated = 1 if self.game.t == 1000 else 0
+        reward = self.game.reward
         observation = self._get_obs()
 
         if self.render_mode == "human":
             self._render_frame()
 
-        return observation, reward, False, False, None
+        return observation, reward, terminated, False, None

@@ -35,10 +35,12 @@ class Radar:
         self.viewing_angle= new_angle
         return
 
-    def update_t(self, t, random_dir: bool=True):
+    def update_t(self, t, random_dir):
         # just incase I decide I want to have the radar move around
         self.t=t
         if random_dir:
+            self.viewing_angle = random_dir*2*pi/self.num_states
+        else:
             self.viewing_angle = look_new_direction()
         return
 
@@ -52,18 +54,6 @@ class Radar:
                                                                      self.max_distance, self.viewing_angle,
                                                                       self.viewing_angle+self.radians_of_view)]
         return targets
-
-    def update_seen_list(self,targets):
-        targets = self.visible_targets(targets).copy()
-        for radius,angle in self.seen_list.keys():
-            if (radius < self.max_distance) & is_angle_between(angle, self.viewing_angle,self.viewing_angle+self.radians_of_view):
-                if self.seen_list[(radius,angle)].cartesian_coordinates in [target.cartesian_coordinates for target in targets]:
-                    self.seen_list[(radius, angle)].rechecked(self.t, True)
-                    targets=[target for target in targets if target.cartesian_coordinates != self.seen_list[(radius,angle)].cartesian_coordinates]
-                else:
-                    self.seen_list[(radius, angle)].rechecked(self.t, False)
-        for target in targets:
-            self.seen_list[cartesian_to_polar(relative_location(target.cartesian_coordinates,self.cartesian_coordinates))]=SeenObject(target.cartesian_coordinates, self.t, self)
 
 def look_new_direction(radians = None):
     if radians is None:
