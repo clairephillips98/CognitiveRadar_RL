@@ -12,27 +12,30 @@ from math import floor
 import gymnasium as gym
 
 
+
+
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
     def __init__(self, render_mode=None, size=5):
-        self.blur_radius = 3
+
+        self.blur_radius = 2
         self.scale = 50
         self.game = Simulation(self.blur_radius, self.scale)
         self.size = size  # The size of the square grid
-        self.window_size = 512  # The size of the PyGame window
-
+        self.window_size = np.array(self.game.last_tensor.size()) * self.size  # The size of the PyGame window
+        print(self.window_size)
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.observation_space = gym.spaces.Dict(
             {
-                #"agent_angles": gym.spaces.Space(np.array([radar.viewing_angle for radar in self.game.radars])),
-                "observation": gym.spaces.Box(low=0.0,high=1.0,
-                                              shape=tuple(list(self.game.last_tensor.size())),dtype=np.float32),
+                # "agent_angles": gym.spaces.Space(np.array([radar.viewing_angle for radar in self.game.radars])),
+                "observation": gym.spaces.Box(low=0.0, high=1.0,
+                                              shape=tuple(list(self.game.last_tensor.size())), dtype=np.float32),
             }
         )
 
-        action_size = int(reduce(lambda x, y: x * y,[radar.num_states for radar in self.game.radars]))
+        action_size = int(reduce(lambda x, y: x * y, [radar.num_states for radar in self.game.radars]))
         # 1 radar for now, so the number of actions is the number of states
         self.action_space = gym.spaces.Discrete(action_size)
 
@@ -46,7 +49,7 @@ class RadarEnv(gym.Env):
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
-
+        self.render_mode = "human"
         """
         If human-rendering is used, `self.window` will be a reference
         to the window that we draw to. `self.clock` will be a clock that is used
@@ -78,7 +81,7 @@ class RadarEnv(gym.Env):
         self._agent_angle = [random.randint(0, radar.num_states) for radar in self.game.radars]
 
         observation = self._get_obs()
-        info = None # update this for when I need info
+        info = None  # update this for when I need info
 
         if self.render_mode == "human":
             self._render_frame()
@@ -99,3 +102,43 @@ class RadarEnv(gym.Env):
             self._render_frame()
 
         return observation, reward, terminated, False, None
+
+    def render(self):
+        if self.render_mode == "rgb_array":
+            return self._render_frame()
+
+    def _render_frame(self):
+        if self.window is None and self.render_mode == "human":
+            pygame.init()
+            pygame.display.init()
+            self.window = pygame.display.set_mode(
+                tuple(self.window_size)
+            )
+        if self.clock is None and self.render_mode == "human":
+            self.clock = pygame.time.Clock()
+
+        canvas = pygame.display.set_mode(tuple(self.window_size))
+        ret = np.empty((*self.window_size, 3), dtype=np.uint8)
+        print(self.game.last_tensor.numpy().astype(int) * 255)
+        plotted_arr = (self.game.last_tensor.numpy() * 255).astype(int)
+        plotted_arr = np.repeat(plotted_arr, 5, axis=0)
+        plotted_arr = np.repeat(plotted_arr, 5, axis=1)
+        ret[:, :, 2] = ret[:, :, 1] = ret[:, :, 0] = plotted_arr
+
+        surf = pygame.surfarray.make_surface(ret)
+        if self.render_mode == "human":
+            canvas.blit(surf, (0, 0))
+            pygame.display.update()
+
+            # We need to ensure that human-rendering occurs at the predefined framerate.
+            # The following line will automatically add a delay to keep the framerate stable.
+            self.clock.tick(self.metadata["render_fps"])
+        else:  # rgb_array
+            return np.transpose(
+                np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
+            )
+
+    def close(self):
+        if self.window is not None:
+            pygame.display.quit()
+            pygame.quit()

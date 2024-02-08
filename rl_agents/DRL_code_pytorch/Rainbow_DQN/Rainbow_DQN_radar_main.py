@@ -13,17 +13,15 @@ class Runner:
         self.env_name = env_name
         self.number = number
         self.seed = seed
+        env = gym.make('radar_env/radar_gymnasium')
         self.env = RadarEnv()
-        # self.env = gym.make(env_name)
         self.env_evaluate = RadarEnv()
-        # self.env_evaluate = gym.make(env_name)  # When evaluating the policy, we need to rebuild an environment
-        # self.env.seed(seed)
+        self.env.seed(seed)
         # self.env.action_space.seed(seed)
         # self.env_evaluate.seed(seed)
         # self.env_evaluate.action_space.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
-
         self.args.state_dim = self.env.observation_space['observation'].shape
         if type(self.args.state_dim) == int:
             self.args.state_dim = [self.args.state_dim]
@@ -44,7 +42,6 @@ class Runner:
         else:
             self.replay_buffer = ReplayBuffer(args)
         self.agent = DQN(args)
-
         self.algorithm = 'DQN'
         if args.use_double and args.use_dueling and args.use_noisy and args.use_per and args.use_n_steps:
             self.algorithm = 'Rainbow_' + self.algorithm

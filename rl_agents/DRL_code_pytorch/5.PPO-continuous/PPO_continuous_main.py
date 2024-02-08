@@ -34,8 +34,8 @@ def evaluate_policy(args, env, agent, state_norm):
 
 
 def main(args, env_name, number, seed):
-    env = gym.make(env_name)
-    env_evaluate = gym.make(env_name)  # When evaluating the policy, we need to rebuild an environment
+    env = gym
+    env_evaluate = gym  # When evaluating the policy, we need to rebuild an environment
     # Set random seed
     env.seed(seed)
     env.action_space.seed(seed)

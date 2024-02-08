@@ -16,7 +16,7 @@ class Runner:
         self.seed = seed
 
         # Create env
-        self.env = gym.make(env_name)
+        self.env = gym
         # Set random seed
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)

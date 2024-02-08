@@ -102,8 +102,8 @@ def evaluate_policy(env, agent):
 if __name__ == '__main__':
     env_name = ['CartPole-v0', 'CartPole-v1']
     env_index = 0
-    env = gym.make(env_name[env_index])
-    env_evaluate = gym.make(env_name[env_index])  # When evaluating the policy, we need to rebuild an environment
+    env = gym
+    env_evaluate = gym  # When evaluating the policy, we need to rebuild an environment
     number = 9
     # Set random seed
     seed = 0

@@ -134,7 +134,7 @@ class Simulation:
 
 
 def main():
-    test = Simulation(2, 50)
+    test = Simulation(2, 10)
     for t in range(20):
         test.update_t()
     # images = [Image.fromarray(np.repeat(im,repeats = 3,axis=0)) for im in test.images]

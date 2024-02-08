@@ -190,8 +190,8 @@ def reward_adapter(r, env_index):
 if __name__ == '__main__':
     env_name = ['Pendulum-v1', 'BipedalWalker-v3', 'HalfCheetah-v2', 'Hopper-v2', 'Walker2d-v2']
     env_index = 0
-    env = gym.make(env_name[env_index])
-    env_evaluate = gym.make(env_name[env_index])  # When evaluating the policy, we need to rebuild an environment
+    env = gym
+    env_evaluate = gym  # When evaluating the policy, we need to rebuild an environment
     number = 1
     # Set random seed
     seed = 0

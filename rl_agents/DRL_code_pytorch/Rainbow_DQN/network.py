@@ -8,7 +8,10 @@ from functools import reduce
 class Dueling_Net(nn.Module):
     def __init__(self, args):
         super(Dueling_Net, self).__init__()
-        self.fc1 = nn.Linear(reduce(lambda x,y: x*y,args.state_dim), args.hidden_dim)
+        self.conv1 = nn.Conv2d(1,8,3)
+        self.pool = nn.MaxPool2d(2,2)
+        self.conv2 = nn.Conv2d(8,6,3)
+        self.fc1 = nn.Linear(6*4*4, args.hidden_dim)
         self.fc2 = nn.Linear(args.hidden_dim, args.hidden_dim)
         if args.use_noisy:
             self.V = NoisyLinear(args.hidden_dim, 1)
@@ -18,7 +21,14 @@ class Dueling_Net(nn.Module):
             self.A = nn.Linear(args.hidden_dim, args.action_dim)
 
     def forward(self, s):
+        s = s.unsqueeze(1)
+        print(s.size())
+        s = self.pool(F.relu(self.conv1(s)))
+        print(s.size())
+        s = self.pool(F.relu(self.conv2(s)))
+        print(s.size())
         s = torch.flatten(s,1)
+        print(s.size())
         s = torch.relu(self.fc1(s))
         s = torch.relu(self.fc2(s))
         V = self.V(s)  # batch_size X 1
