@@ -1,32 +1,22 @@
-import torch
-import numpy as np
 import gymnasium as gym
 from torch.utils.tensorboard import SummaryWriter
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.replay_buffer import *
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.rainbow_dqn import DQN
 import argparse
 from radar_env.radar_gymnasium import RadarEnv
-
+import random
 class Runner:
-    def __init__(self, args, env_name, number, seed):
+    def __init__(self, args, env_name, number,seed):
         self.args = args
-        self.env_name = env_name
+        self.env_name = "Radar_Env"
         self.number = number
         self.seed = seed
-        env = gym.make('radar_env/radar_gymnasium')
-        self.env = RadarEnv()
-        self.env_evaluate = RadarEnv()
-        self.env.seed(seed)
-        # self.env.action_space.seed(seed)
-        # self.env_evaluate.seed(seed)
-        # self.env_evaluate.action_space.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
+        self.env = RadarEnv(seed)
+        self.env_evaluate = RadarEnv(seed)
         self.args.state_dim = self.env.observation_space['observation'].shape
         if type(self.args.state_dim) == int:
             self.args.state_dim = [self.args.state_dim]
         self.args.action_dim = self.env.action_space.n
-        print(self.args.action_dim)
         self.args.episode_limit = self.env._max_episode_steps  # Maximum number of steps per episode
         print("env={}".format(self.env_name))
         print("state_dim={}".format(self.args.state_dim))
@@ -42,6 +32,10 @@ class Runner:
         else:
             self.replay_buffer = ReplayBuffer(args)
         self.agent = DQN(args)
+        if args.load_model is True:
+            self.agent.net.load_state_dict(torch.load('model/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
+            self.agent.target_net.load_state_dict(torch.load('model/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
+
         self.algorithm = 'DQN'
         if args.use_double and args.use_dueling and args.use_noisy and args.use_per and args.use_n_steps:
             self.algorithm = 'Rainbow_' + self.algorithm
@@ -57,7 +51,7 @@ class Runner:
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
 
-        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}'.format(self.algorithm, env_name, number, seed))
+        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}'.format(self.algorithm, self.env_name, number, seed))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -102,8 +96,15 @@ class Runner:
 
                 if self.total_steps % self.args.evaluate_freq == 0:
                     self.evaluate_policy()
+                if (self.total_steps/10) % self.args.evaluate_freq == 0:
+                    self.save_models()
+        self.save_models()
         # Save reward
         np.save('./data_train/{}_env_{}_number_{}_seed_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed), np.array(self.evaluate_rewards))
+
+    def save_models(self):
+        torch.save(self.agent.net.state_dict(),'model/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name))
+        torch.save(self.agent.target_net.state_dict(), 'model/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name))
 
     def evaluate_policy(self, ):
         evaluate_reward = 0
@@ -159,5 +160,5 @@ if __name__ == '__main__':
     env_names = ['CartPole-v1', 'LunarLander-v2']
     env_index = 1
     for seed in [0, 10, 100]:
-        runner = Runner(args=args, env_name=env_names[env_index], number=1, seed=seed)
+        runner = Runner(args=args, env_name="cognitive_radar", number=1, seed=seed)
         runner.run()

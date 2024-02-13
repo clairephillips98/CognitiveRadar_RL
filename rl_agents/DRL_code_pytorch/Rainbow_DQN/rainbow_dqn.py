@@ -38,7 +38,6 @@ class DQN(object):
         with torch.no_grad():
             state = torch.unsqueeze(torch.tensor(state, dtype=torch.float), 0)
             q = self.net(state)
-            print(q.size())
             if np.random.uniform() > epsilon:
                 action = q.argmax(dim=-1).item()
             else:

@@ -12,15 +12,15 @@ import numpy as np
 import torch
 
 
-def create_radars():
+def create_radars(seed=None):
     radar_1 = Radar(peak_power=400, duty_cycle=3,
                     pulsewidth=4, bandwidth=1, frequency=3,
                     pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(0, 0), wavelength=3,
-                    radians_of_view=pi / 4)
+                    radians_of_view=pi / 4,seed=seed)
     radar_2 = Radar(peak_power=200, duty_cycle=3,
                     pulsewidth=4, bandwidth=1, frequency=3,
                     pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(1, 1), wavelength=3,
-                    radians_of_view=pi / 6)
+                    radians_of_view=pi / 6,seed=seed)
     return [radar_1]  # , radar_2 just 1 radar for now
 
 
@@ -30,19 +30,19 @@ def bounds(radar):
     return {'x_lower': x_lower, 'x_upper': x_upper, 'y_lower': y_lower, 'y_upper': y_upper, }
 
 
-def create_targets(n_ts, bounds):
-    targets = [Target(radius=1, bounds=bounds, path_eqn=None, name=n) for n in range(n_ts)]
+def create_targets(n_ts, bounds,seed=None):
+    targets = [Target(radius=1, bounds=bounds, path_eqn=None, name=n,seed=seed) for n in range(n_ts)]
     return targets
 
 
 class Simulation:
 
-    def __init__(self, blur_radius: int = 3, scale: int = 50):
+    def __init__(self, blur_radius: int = 3, scale: int = 50,seed=None):
         self.reward = None
         self.t = 0
-        self.radars = create_radars()
+        self.radars = create_radars(seed)
         self.overall_bounds = bounds(self.radars[0])  # these are overall bounds for when there are multiple radars
-        self.targets = create_targets(10, self.overall_bounds)
+        self.targets = create_targets(10, self.overall_bounds, seed=seed)
         self.scale = scale
         self.blur_radius = blur_radius
         self.base_image = Image.new("RGB", (
@@ -124,8 +124,9 @@ class Simulation:
         # The model is rewarded for a large change == high entropy
 
         loss = torch.nn.BCELoss(reduction='none')
-        loss = loss(last_image, torch.floor(next_image ))
-        mask = torch.where((next_image < 1.0) & (next_image > 0.0), 0.0, 1.0)
+        loss = loss(last_image, torch.floor(next_image))
+        mask = torch.where((next_image < 1.0) & (next_image > 0.0), 0.0, 0.01)
+        # scaling values to be between 0 and 1.  torch BCELoss values are clipped to be between 0 and 100.
         # this works because if the last pixel was white, and it stayed white (or white), loss is 0
         # if the last pixel was grey, it will only now be white/black if the pixel has been viewed
         # so we only need to mask the grey cells

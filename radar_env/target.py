@@ -6,13 +6,14 @@ Jan 18 2024
 Defining a moving target
 """""
 import random
-#random.seed(11)
+
 from random import randint
 
 
 class Target:
 
-    def __init__(self, radius,bounds, path_eqn=None, name=None):
+    def __init__(self,radius,bounds, path_eqn=None, name=None,seed=None):
+        random.seed(seed)
         self.t = 0
         self.shift = 0
         self.x_start = randint(bounds['x_lower']*50, bounds['x_upper']*50) / 50

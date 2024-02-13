@@ -4,8 +4,10 @@ I may be wrong and I may return
 """""
 
 import random
+random.seed(10)
 from radar_env.simulate import Simulation
 import numpy as np
+np.random.seed(10)
 import pygame
 from functools import reduce
 from math import floor
@@ -17,14 +19,14 @@ import gymnasium as gym
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, render_mode=None, size=5):
-
+    def __init__(self,seed=None, render_mode=None, size=5):
+        self.seed = seed
         self.blur_radius = 2
         self.scale = 50
         self.game = Simulation(self.blur_radius, self.scale)
+        print(self.game.last_tensor)
         self.size = size  # The size of the square grid
         self.window_size = np.array(self.game.last_tensor.size()) * self.size  # The size of the PyGame window
-        print(self.window_size)
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.observation_space = gym.spaces.Dict(
@@ -35,9 +37,9 @@ class RadarEnv(gym.Env):
             }
         )
 
-        action_size = int(reduce(lambda x, y: x * y, [radar.num_states for radar in self.game.radars]))
+        self.action_size = int(reduce(lambda x, y: x * y, [radar.num_states for radar in self.game.radars]))
         # 1 radar for now, so the number of actions is the number of states
-        self.action_space = gym.spaces.Discrete(action_size)
+        self.action_space = gym.spaces.Discrete(self.action_size)
 
         """
         The following dictionary maps abstract actions from `self.action_space` to
@@ -45,11 +47,10 @@ class RadarEnv(gym.Env):
         I.e. 0 corresponds to "right", 1 to "up" etc.
         """
 
-        self._action_to_angle = {i: self.to_action(i) for i in range(action_size)}  # only up to 2 radars
+        self._action_to_angle = {i: self.to_action(i) for i in range(self.action_size)}  # only up to 2 radars
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
-        self.render_mode = "human"
         """
         If human-rendering is used, `self.window` will be a reference
         to the window that we draw to. `self.clock` will be a clock that is used
@@ -73,11 +74,13 @@ class RadarEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         # We need the following line to seed self.np_random
-        super().reset(seed=seed)
+        if self.seed is not None:
+            self.seed += 1
+        super().reset(seed=self.seed)
 
-        self.game = Simulation(self.blur_radius, self.scale)
+        self.game = Simulation(self.blur_radius, self.scale, seed=self.seed)
 
-        # Choose the agent's location uniformly at random
+        # Choose the agent starting angle at random
         self._agent_angle = [random.randint(0, radar.num_states) for radar in self.game.radars]
 
         observation = self._get_obs()
@@ -119,7 +122,6 @@ class RadarEnv(gym.Env):
 
         canvas = pygame.display.set_mode(tuple(self.window_size))
         ret = np.empty((*self.window_size, 3), dtype=np.uint8)
-        print(self.game.last_tensor.numpy().astype(int) * 255)
         plotted_arr = (self.game.last_tensor.numpy() * 255).astype(int)
         plotted_arr = np.repeat(plotted_arr, 5, axis=0)
         plotted_arr = np.repeat(plotted_arr, 5, axis=1)

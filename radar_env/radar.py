@@ -6,7 +6,6 @@ Jan 18 2024
 Defining a radar
 """""
 import random
-random.seed(10)
 from math import pi
 from utils import is_angle_between,in_wedge_cartesian,cartesian_to_polar,relative_location
 
@@ -14,7 +13,8 @@ class Radar:
 
     def __init__(self, peak_power, duty_cycle,
                  pulsewidth, bandwidth, frequency,
-                 pulse_repetition_rate, antenna_size, cartesian_coordinates, wavelength, radians_of_view):
+                 pulse_repetition_rate, antenna_size, cartesian_coordinates, wavelength, radians_of_view,seed=None):
+        random.seed(seed)
         self.peak_power = peak_power
         self.duty_cycle = duty_cycle
         self.pulsewidth = pulsewidth

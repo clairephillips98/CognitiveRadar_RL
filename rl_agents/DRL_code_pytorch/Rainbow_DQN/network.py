@@ -22,13 +22,9 @@ class Dueling_Net(nn.Module):
 
     def forward(self, s):
         s = s.unsqueeze(1)
-        print(s.size())
         s = self.pool(F.relu(self.conv1(s)))
-        print(s.size())
         s = self.pool(F.relu(self.conv2(s)))
-        print(s.size())
         s = torch.flatten(s,1)
-        print(s.size())
         s = torch.relu(self.fc1(s))
         s = torch.relu(self.fc2(s))
         V = self.V(s)  # batch_size X 1
