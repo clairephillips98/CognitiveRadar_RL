@@ -3,6 +3,7 @@ from torch.utils.tensorboard import SummaryWriter
 import argparse
 from radar_env.radar_gymnasium import RadarEnv
 import random
+from rl_agents.calculate_stats import radar_stats,radar_stats_analysis
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
@@ -33,22 +34,28 @@ class Runner:
             self.evaluate_policy()
             self.total_steps += 1
     def evaluate_policy(self):
-        action=0
+        action=-1
         evaluate_reward = 0
+        analysis_info = {}
         for _ in range(self.args.evaluate_times):
             state = self.env_evaluate.reset()[0]
             done = False
             episode_reward = 0
+            episode_sum_view_time = 0
             while not done:
                 action = (action + 1) % self.env.action_size
                 next_state, reward, done, _, _ = self.env_evaluate.step(action)
                 episode_reward += reward
                 state = next_state
             evaluate_reward += episode_reward
+            analysis_info = radar_stats(analysis_info, self.env_evaluate.info_analysis())
+        analysis = radar_stats_analysis(analysis_info)
         evaluate_reward /= self.args.evaluate_times
         self.evaluate_rewards.append(evaluate_reward)
         print("total_steps:{} \t evaluate_reward:{} \t epsilon：{}".format(self.total_steps, evaluate_reward, "None"))
         self.writer.add_scalar('step_rewards_{}'.format(self.env_name), evaluate_reward, global_step=self.total_steps)
+        self.writer.add_scalar('step_time_to_first_view_{}'.format(self.env_name), analysis['avg_time_til_first_view'], global_step=self.total_steps)
+        self.writer.add_scalar('target_view_rate_to_velocity_corr_{}'.format(self.env_name), analysis['views_vel_corr'], global_step=self.total_steps)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameter Setting for DQN")

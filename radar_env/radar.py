@@ -7,7 +7,7 @@ Defining a radar
 """""
 import random
 from math import pi
-from utils import is_angle_between,in_wedge_cartesian,cartesian_to_polar,relative_location
+from utils import is_angle_between,in_wedge_cartesian,cartesian_to_polar,relative_location,in_circle_cartesian
 
 class Radar:
 
@@ -29,17 +29,17 @@ class Radar:
         self.max_distance = self.max_distance_viewable()
         self.t=0
         self.seen_list = {}
-        self.num_states = (2*pi)/self.radians_of_view
+        self.num_states = (360)/self.radians_of_view
 
     def update_viewing_angle(self, new_angle):
         self.viewing_angle= new_angle
         return
 
-    def update_t(self, t, random_dir):
+    def update_t(self, t, given_dir):
         # just incase I decide I want to have the radar move around
         self.t=t
-        if random_dir:
-            self.viewing_angle = random_dir*2*pi/self.num_states
+        if given_dir:
+            self.viewing_angle = (given_dir*360)/self.num_states
         else:
             self.viewing_angle = look_new_direction()
         return
@@ -48,14 +48,19 @@ class Radar:
         distance = self.peak_power
         return distance
 
-    def visible_targets(self, targets):
-        targets = [target for target in targets if in_wedge_cartesian(target.cartesian_coordinates,
-                                                                     self.cartesian_coordinates,
-                                                                     self.max_distance, self.viewing_angle,
-                                                                      self.viewing_angle+self.radians_of_view)]
-        return targets
+    def visible_targets(self, targets, viewed_targets):
+        for target in targets:
+            if target.views[-1] != self.t:
+                if in_circle_cartesian(target.cartesian_coordinates, self.cartesian_coordinates,self.max_distance):
+                    if in_wedge_cartesian(target.cartesian_coordinates,self.cartesian_coordinates,self.max_distance,
+                                      self.viewing_angle,self.viewing_angle+self.radians_of_view):
+                        target.collect_stats(self.t, True)
+                        viewed_targets.append(target)
+                    else:
+                        target.collect_stats(self.t,False)
+        return viewed_targets
 
-def look_new_direction(radians = None):
-    if radians is None:
-        radians = random.uniform(0, 2 * pi)
-    return radians
+def look_new_direction(degrees = None):
+    if degrees is None:
+        degrees = random.uniform(0, 360)
+    return degrees

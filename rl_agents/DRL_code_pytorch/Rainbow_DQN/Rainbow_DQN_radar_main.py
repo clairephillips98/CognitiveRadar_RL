@@ -5,6 +5,7 @@ from rl_agents.DRL_code_pytorch.Rainbow_DQN.rainbow_dqn import DQN
 import argparse
 from radar_env.radar_gymnasium import RadarEnv
 import random
+from rl_agents.calculate_stats import radar_stats,radar_stats_analysis
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
@@ -32,10 +33,6 @@ class Runner:
         else:
             self.replay_buffer = ReplayBuffer(args)
         self.agent = DQN(args)
-        if args.load_model is True:
-            self.agent.net.load_state_dict(torch.load('model/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
-            self.agent.target_net.load_state_dict(torch.load('model/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
-
         self.algorithm = 'DQN'
         if args.use_double and args.use_dueling and args.use_noisy and args.use_per and args.use_n_steps:
             self.algorithm = 'Rainbow_' + self.algorithm
@@ -50,7 +47,9 @@ class Runner:
                 self.algorithm += '_PER'
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
-
+        if args.load_model is True:
+            self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
+            self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
         self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}'.format(self.algorithm, self.env_name, number, seed))
 
         self.evaluate_num = 0  # Record the number of evaluations
@@ -103,11 +102,12 @@ class Runner:
         np.save('./data_train/{}_env_{}_number_{}_seed_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed), np.array(self.evaluate_rewards))
 
     def save_models(self):
-        torch.save(self.agent.net.state_dict(),'model/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name))
-        torch.save(self.agent.target_net.state_dict(), 'model/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name))
+        torch.save(self.agent.net.state_dict(),'models/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name))
+        torch.save(self.agent.target_net.state_dict(), 'models/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name))
 
     def evaluate_policy(self, ):
         evaluate_reward = 0
+        analysis_info = {}
         self.agent.net.eval()
         for _ in range(self.args.evaluate_times):
             state = self.env_evaluate.reset()[0]
@@ -118,12 +118,16 @@ class Runner:
                 next_state, reward, done, _,_ = self.env_evaluate.step(action)
                 episode_reward += reward
                 state = next_state
+            analysis_info = radar_stats(analysis_info, self.env_evaluate.info_analysis())
             evaluate_reward += episode_reward
         self.agent.net.train()
+        analysis = radar_stats_analysis(analysis_info)
         evaluate_reward /= self.args.evaluate_times
         self.evaluate_rewards.append(evaluate_reward)
         print("total_steps:{} \t evaluate_reward:{} \t epsilon：{}".format(self.total_steps, evaluate_reward, self.epsilon))
         self.writer.add_scalar('step_rewards_{}'.format(self.env_name), evaluate_reward, global_step=self.total_steps)
+        self.writer.add_scalar('step_time_to_first_view_{}'.format(self.env_name), analysis['avg_time_til_first_view'], global_step=self.total_steps)
+        self.writer.add_scalar('target_view_rate_to_velocity_corr_{}'.format(self.env_name), analysis['views_vel_corr'], global_step=self.total_steps)
 
 
 if __name__ == '__main__':
@@ -131,7 +135,6 @@ if __name__ == '__main__':
     parser.add_argument("--max_train_steps", type=int, default=int(4e5), help=" Maximum number of training steps")
     parser.add_argument("--evaluate_freq", type=float, default=1e3, help="Evaluate the policy every 'evaluate_freq' steps")
     parser.add_argument("--evaluate_times", type=float, default=3, help="Evaluate times")
-
     parser.add_argument("--buffer_capacity", type=int, default=int(1e5), help="The maximum replay-buffer capacity ")
     parser.add_argument("--batch_size", type=int, default=256, help="batch size")
     parser.add_argument("--hidden_dim", type=int, default=256, help="The number of neurons in hidden layers of the neural network")
@@ -148,10 +151,10 @@ if __name__ == '__main__':
     parser.add_argument("--beta_init", type=float, default=0.4, help="Important sampling parameter in PER")
     parser.add_argument("--use_lr_decay", type=bool, default=True, help="Learning rate Decay")
     parser.add_argument("--grad_clip", type=float, default=10.0, help="Gradient clip")
-
+    parser.add_argument("--load_model", type=bool, default=True, help="Whether to pick up the last model")
     parser.add_argument("--use_double", type=bool, default=True, help="Whether to use double Q-learning")
     parser.add_argument("--use_dueling", type=bool, default=True, help="Whether to use dueling network")
-    parser.add_argument("--use_noisy", type=bool, default=True, help="Whether to use noisy network")
+    parser.add_argument("--use_noisy", type=bool, default=False, help="Whether to use noisy network")
     parser.add_argument("--use_per", type=bool, default=True, help="Whether to use PER")
     parser.add_argument("--use_n_steps", type=bool, default=True, help="Whether to use n_steps Q-learning")
 

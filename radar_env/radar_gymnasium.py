@@ -4,16 +4,13 @@ I may be wrong and I may return
 """""
 
 import random
-random.seed(10)
 from radar_env.simulate import Simulation
 import numpy as np
-np.random.seed(10)
 import pygame
 from functools import reduce
 from math import floor
 import gymnasium as gym
-
-
+import torch
 
 
 class RadarEnv(gym.Env):
@@ -24,7 +21,7 @@ class RadarEnv(gym.Env):
         self.blur_radius = 2
         self.scale = 50
         self.game = Simulation(self.blur_radius, self.scale)
-        print(self.game.last_tensor)
+        self.info = torch.empty(0,4)
         self.size = size  # The size of the square grid
         self.window_size = np.array(self.game.last_tensor.size()) * self.size  # The size of the PyGame window
         # Observations are dictionaries with the agent's and the target's location.
@@ -47,8 +44,7 @@ class RadarEnv(gym.Env):
         I.e. 0 corresponds to "right", 1 to "up" etc.
         """
 
-        self._action_to_angle = {i: self.to_action(i) for i in range(self.action_size)}  # only up to 2 radars
-
+        self._action_to_angle = {i: self.game.to_action(i) for i in range(self.action_size)}  # only up to 2 radars
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
         """
@@ -62,15 +58,21 @@ class RadarEnv(gym.Env):
         self.clock = None
         self._max_episode_steps = 300
 
-    def to_action(self, i):
-        # can only be up to 2 actions
-        if len(self.game.radars) == 1:
-            return [i]
-        else:
-            return [i % self.game.radars[0].num_states, floor(i / self.game.radars[0].num_states)]
 
     def _get_obs(self):
         return self.game.last_tensor
+
+    def _get_info(self):
+        # view_count, average_velocity, time_til_first_view, possible_observable_time
+        info = torch.vstack([target.stats for target in self.game.targets])
+        # this could be a bottle neck
+        return info
+
+    def info_analysis(self):
+        info = self._get_info()
+        time_til_first_view = info[:,2]
+        time_til_first_view[time_til_first_view == -1] = self._max_episode_steps
+        return time_til_first_view.sum(), info[:,[0,1]]
 
     def reset(self, seed=None, options=None):
         # We need the following line to seed self.np_random
@@ -79,28 +81,27 @@ class RadarEnv(gym.Env):
         super().reset(seed=self.seed)
 
         self.game = Simulation(self.blur_radius, self.scale, seed=self.seed)
-
+        # self.info = torch.empty(0,4)
         # Choose the agent starting angle at random
         self._agent_angle = [random.randint(0, radar.num_states) for radar in self.game.radars]
 
         observation = self._get_obs()
-        info = None  # update this for when I need info
+        info = self._get_info()  # update this for when I need info
 
         if self.render_mode == "human":
             self._render_frame()
 
-        return observation, info
+        return observation, None
 
     def step(self, action):
 
         # Map the action to angle of view of all agents
         self._agent_angle = self._action_to_angle[action]
-
         self.game.update_t(self._agent_angle)
-        terminated = 1 if self.game.t == 1000 else 0
+        terminated = 1 if self.game.t == 500 else 0
         reward = self.game.reward
         observation = self._get_obs()
-
+        # info = self._get_info()
         if self.render_mode == "human":
             self._render_frame()
 
