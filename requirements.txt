@@ -1,7 +1,6 @@
 Box2D==2.3.2
 Box2D-kengz==2.3.3
 box2d-py==2.3.8
-dm-tree==0.1.8
 grpcio
 gymnasium==0.29.1
 imageio==2.33.1
@@ -9,10 +8,7 @@ ipython==8.20.0
 keras==3.0.4
 keras-rl==0.4.2
 matplotlib==3.8.3
-namex==0.0.7
-networkx==3.2.1
-numpy==1.26.4
-oauthlib==3.2.2
+numpy
 opencv-python==4.9.0.80
 pillow==10.2.0
 pygame==2.5.2
