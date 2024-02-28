@@ -2,7 +2,7 @@
 
 # Check if the environment is "cedar"
 if [ "$1" = "cedar" ]; then
-    module load StdEnv/2020
+    module load StdEnv/2020 python/3.11
 fi
 
 # Specify Python 3.11
@@ -13,7 +13,8 @@ python3.11 -m venv myenv
 # Activate the virtual environment
 source myenv/bin/activate
 
-pip install -r requirements.txt
+pip3.11 install -r requirements.txt
 
 # Verify the Python version
+
 python --version

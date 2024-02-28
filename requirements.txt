@@ -9,12 +9,14 @@ ipython==8.20.0
 keras==3.0.4
 keras-rl==0.4.2
 matplotlib==3.8.3
-numpy
+numpy~=1.26.4
 pillow==10.2.0
 pygame==2.5.2
 rsa==4.9
 scipy
 tensorboard
 tensorboard-data-server
-torch
+torch~=2.2.0
 torchvision
+
+jax~=0.4.24

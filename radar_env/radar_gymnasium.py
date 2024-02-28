@@ -6,6 +6,7 @@ I may be wrong and I may return
 import random
 from radar_env.simulate import Simulation
 import numpy as np
+import jax.numpy as jnp
 import pygame
 from functools import reduce
 from math import floor
@@ -23,14 +24,14 @@ class RadarEnv(gym.Env):
         self.game = Simulation(self.blur_radius, self.scale)
         self.info = torch.empty(0,4)
         self.size = size  # The size of the square grid
-        self.window_size = np.array(self.game.last_tensor.size()) * self.size  # The size of the PyGame window
+        self.window_size = jnp.array(self.game.last_tensor.size()) * self.size  # The size of the PyGame window
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.observation_space = gym.spaces.Dict(
             {
                 # "agent_angles": gym.spaces.Space(np.array([radar.viewing_angle for radar in self.game.radars])),
                 "observation": gym.spaces.Box(low=0.0, high=1.0,
-                                              shape=tuple(list(self.game.last_tensor.size())), dtype=np.float32),
+                                              shape=tuple(list(self.game.last_tensor.size())), dtype=jnp.float32),
             }
         )
 
@@ -122,10 +123,10 @@ class RadarEnv(gym.Env):
             self.clock = pygame.time.Clock()
 
         canvas = pygame.display.set_mode(tuple(self.window_size))
-        ret = np.empty((*self.window_size, 3), dtype=np.uint8)
+        ret = jnp.empty((*self.window_size, 3), dtype=jnp.uint8)
         plotted_arr = (self.game.last_tensor.numpy() * 255).astype(int)
-        plotted_arr = np.repeat(plotted_arr, 5, axis=0)
-        plotted_arr = np.repeat(plotted_arr, 5, axis=1)
+        plotted_arr = jnp.repeat(plotted_arr, 5, axis=0)
+        plotted_arr = jnp.repeat(plotted_arr, 5, axis=1)
         ret[:, :, 2] = ret[:, :, 1] = ret[:, :, 0] = plotted_arr
 
         surf = pygame.surfarray.make_surface(ret)
@@ -137,8 +138,8 @@ class RadarEnv(gym.Env):
             # The following line will automatically add a delay to keep the framerate stable.
             self.clock.tick(self.metadata["render_fps"])
         else:  # rgb_array
-            return np.transpose(
-                np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
+            return jnp.transpose(
+                jnp.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
             )
 
     def close(self):

@@ -9,6 +9,7 @@ from utils import min_max_radar_breadth
 from PIL import Image, ImageDraw, ImageFilter
 from math import ceil, pi, floor
 import numpy as np
+import jax.numpy as jnp
 import torch
 
 
@@ -76,7 +77,7 @@ class Simulation:
     def initial_scan(self):
         # initial scan - just look in every direction for the max number of looks required
         steps = min([radar.num_states for radar in self.radars])
-        integer_array = np.arange(0, steps)
+        integer_array = jnp.arange(0, steps)
         for step in integer_array:
             self.update_t(dir_list = self.to_action(step),recording = False)
 
@@ -142,7 +143,6 @@ class Simulation:
         # so we only need to mask the grey cells
         loss[mask[:, 0], mask[:, 1]] = 0
         reward = (torch.sum(loss))
-
         return reward
 
 
@@ -152,9 +152,9 @@ def main():
     for t in range(20):
         test.update_t()
         images.append(test.last_image)
-    # images = [Image.fromarray(np.repeat(im,repeats = 3,axis=0)) for im in test.images]
+    # images = [Image.fromarray(jnp.repeat(im,repeats = 3,axis=0)) for im in test.images]
     images[0].save("./images/cartesian.gif", save_all=True, append_images=images, duration=test.t, loop=0)
-    # images = [Image.fromarray(np.repeat(im,repeats = 3,axis=0)) for im in test.polar_images]
+    # images = [Image.fromarray(jnp.repeat(im,repeats = 3,axis=0)) for im in test.polar_images]
     # images[0].save("./images/polar.gif", save_all=True, append_images=images, duration=test.t, loop=0)
     print('done')
 
