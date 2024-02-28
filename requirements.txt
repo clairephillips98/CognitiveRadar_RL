@@ -18,7 +18,7 @@ fonttools==4.47.2
 fsspec==2023.12.2
 google-auth==2.27.0
 google-auth-oauthlib==1.2.0
-grpcio==1.60.1
+grpcio
 gymnasium==0.29.1
 h5py==3.10.0
 idna==3.6
