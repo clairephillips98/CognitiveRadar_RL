@@ -6,10 +6,9 @@ if [ "$1" = "cedar" ]; then
 fi
 
 # Specify Python 3.11
-export PYTHON=python3.11
 
 # Create the virtual environment
-$PYTHON -m venv myenv
+python3.11 -m venv myenv
 
 # Activate the virtual environment
 source myenv/bin/activate
