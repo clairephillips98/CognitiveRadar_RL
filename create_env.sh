@@ -18,3 +18,5 @@ pip3.11 install -r requirements.txt
 # Verify the Python version
 
 python --version
+
+python3.11 -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main
