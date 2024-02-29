@@ -13,6 +13,9 @@ from math import floor
 import gymnasium as gym
 import torch
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(device)
+
 
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}

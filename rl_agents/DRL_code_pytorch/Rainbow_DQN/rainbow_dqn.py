@@ -3,6 +3,9 @@ import numpy as np
 import copy
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.network import Dueling_Net, Net
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(device)
+
 
 class DQN(object):
     def __init__(self, args):
