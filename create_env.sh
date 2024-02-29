@@ -8,15 +8,15 @@ fi
 # Specify Python 3.11
 
 # Create the virtual environment
-python3.11 -m venv myenv
+python3 -m venv myenv
 
 # Activate the virtual environment
 source myenv/bin/activate
 
-pip3.11 install -r requirements.txt
+pip3 install -r requirements.txt
 
 # Verify the Python version
 
 python --version
 
-python3.11 -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main
+python3 -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main
