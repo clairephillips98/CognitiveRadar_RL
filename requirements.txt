@@ -15,3 +15,4 @@ tensorboard-data-server
 torch
 torchvision
 jax
+jaxlib
