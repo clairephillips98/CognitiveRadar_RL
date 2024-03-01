@@ -15,7 +15,7 @@ if [ "$1" = "cedar_new" ]; then
   pip3 install -r requirements.txt
 fi
 
-if [ "$1" = "cedar_new" ]; then
+if [ "$1" = "cedar" ]; then
   source myenv/bin/activate
 fi
 # Verify the Python version
