@@ -1,8 +1,4 @@
-Box2D
-Box2D-kengz
-box2d-py
 cloudpickle
-grpcio
 gymnasium
 imageio
 ipython
