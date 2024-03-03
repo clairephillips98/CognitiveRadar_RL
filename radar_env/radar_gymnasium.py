@@ -5,13 +5,16 @@ I may be wrong and I may return
 
 import random
 from radar_env.simulate import Simulation
-import numpy as np
-import jax.numpy as jnp
+import torch
+
+if torch.cuda.is_available():
+    import jax.numpy as jnp
+
+else:
+    import numpy as jnp
 import pygame
 from functools import reduce
-from math import floor
 import gymnasium as gym
-import torch
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)

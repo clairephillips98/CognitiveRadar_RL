@@ -6,8 +6,7 @@ Jan 18 2024
 Defining a radar
 """""
 import random
-from math import pi
-from utils import is_angle_between,in_wedge_cartesian,cartesian_to_polar,relative_location,in_circle_cartesian
+from utils import in_wedge_cartesian,in_circle_cartesian
 
 class Radar:
 

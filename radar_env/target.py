@@ -9,7 +9,6 @@ import random
 
 import torch
 from random import randint
-import math
 
 
 class Target:

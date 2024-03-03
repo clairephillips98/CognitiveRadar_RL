@@ -6,7 +6,7 @@ def cartesian_to_polar(cartesian_p):
     x, y = cartesian_p
     z = complex(x, y)
     r, theta = cmath.polar(z)
-    return r, theta
+    return r, 360*theta/(2*math.pi)
 
 
 def polar_to_cartesian(angle_radians, radius):
@@ -35,9 +35,9 @@ def relative_location(p1, p2):
 
 def is_angle_between(angle, start_angle, end_angle):
     # Normalize angles to be in the range [0, 2*pi)
-    angle = angle % (2 * math.pi)
-    start_angle = start_angle % (2 * math.pi)
-    end_angle = end_angle % (2 * math.pi)
+    angle = angle % 360
+    start_angle = start_angle % 360
+    end_angle = end_angle % 360
 
     # Check if angle is between start_angle and end_angle
     if start_angle <= end_angle:
