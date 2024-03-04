@@ -22,14 +22,24 @@ def create_radars(seed=None):
                     pulsewidth=4, bandwidth=1, frequency=3,
                     pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(0, 0), wavelength=3,
                     radians_of_view=45,seed=seed)
-
-    return [radar_1]  # , radar_2 just 1 radar for now
+    radar_2 = Radar(peak_power=400, duty_cycle=3,
+                    pulsewidth=4, bandwidth=1, frequency=3,
+                    pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(0, 400), wavelength=3,
+                    radians_of_view=45,seed=seed)
+    return [radar_1, radar_2]  # , radar_2 just 1 radar for now
 
 
 def bounds(radar):
     # create bounds around radars so we have image size
     x_lower, y_lower, x_upper, y_upper = min_max_radar_breadth(radar)  # update to include both radars
-    return {'x_lower': x_lower, 'x_upper': x_upper, 'y_lower': y_lower, 'y_upper': y_upper, }
+    return {'x_lower': x_lower, 'x_upper': x_upper, 'y_lower': y_lower, 'y_upper': y_upper}
+
+def overall_bounds(radars):
+    # create bounds around radars so we have image size
+    return {'x_lower': min(map(lambda d: d['x_lower'], radars)),
+            'x_upper': max(map(lambda d: d['x_upper'], radars)),
+            'y_lower': min(map(lambda d: d['y_lower'], radars)),
+            'y_upper': max(map(lambda d: d['y_upper'], radars))}
 
 
 def create_targets(n_ts, bounds,seed=None):
@@ -43,7 +53,8 @@ class Simulation:
         self.reward = None
         self.t = 0
         self.radars = create_radars(seed)
-        self.overall_bounds = bounds(self.radars[0])  # these are overall bounds for when there are multiple radars
+        self.bounds = [bounds(radar) for radar in self.radars]
+        self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
         self.targets = create_targets(10, self.overall_bounds, seed=seed)
         self.scale = scale
         self.blur_radius = blur_radius
@@ -62,25 +73,29 @@ class Simulation:
         mask_im = Image.new("L", self.base_image.size, 0)
         draw = ImageDraw.Draw(mask_im)
         for radar in self.radars:
-            draw.ellipse((140, 50, 260, 170), fill=255)
-            x_min, y_min, x_max, y_max = min_max_radar_breadth(radar)
-            draw.pieslice((self.blur_radius, self.blur_radius, (x_max - x_min) / self.scale + self.blur_radius,
-                           (y_max - y_min) / self.scale + self.blur_radius),
-                          angle_start, angle_stop, fill=255)
+            draw.pieslice((radar.cartesian_coordinates[0]/self.scale+self.blur_radius,
+                                radar.cartesian_coordinates[1]/self.scale+self.blur_radius,
+                                (radar.cartesian_coordinates[0]+2*radar.max_distance) / self.scale + self.blur_radius,
+                                (radar.cartesian_coordinates[1]+2*radar.max_distance) / self.scale + self.blur_radius),
+                               angle_start,
+                               angle_stop, fill='white')
         return mask_im
     def to_action(self, i):
         # can only be up to 2 actions
         if len(self.radars) == 1:
             return [i]
-        else:
+        elif len(self.radars)==2:
+            print([i % self.radars[0].num_states, floor(i / self.radars[0].num_states)])
             return [i % self.radars[0].num_states, floor(i / self.radars[0].num_states)]
+        else:
+            raise 'error with number of radars.  we cant handle more than 2 yet'
 
     def initial_scan(self):
         # initial scan - just look in every direction for the max number of looks required
-        steps = min([radar.num_states for radar in self.radars])
-        integer_array = jnp.arange(0, steps)
-        for step in integer_array:
-            self.update_t(dir_list = self.to_action(step),recording = False)
+        steps = max([radar.num_states for radar in self.radars])
+        for step in range(int(ceil(steps))):
+            step =[step]*len(self.radars)
+            self.update_t(dir_list = step, recording = False)
 
     def update_t(self, dir_list=None, recording=False):
         #radar direction moves
@@ -111,17 +126,18 @@ class Simulation:
         image = self.last_image.copy().filter(ImageFilter.GaussianBlur(radius=self.blur_radius))
         new_image = ImageDraw.Draw(image)
         for radar in self.radars:
-            x_min, y_min, x_max, y_max = min_max_radar_breadth(radar)
-            new_image.pieslice((self.blur_radius, self.blur_radius, (x_max - x_min) / self.scale + self.blur_radius,
-                                (y_max - y_min) / self.scale + self.blur_radius),
-                               (radar.viewing_angle),
+            new_image.pieslice((radar.cartesian_coordinates[0]/self.scale+self.blur_radius,
+                                radar.cartesian_coordinates[1]/self.scale+self.blur_radius,
+                                (radar.cartesian_coordinates[0]+2*radar.max_distance) / self.scale + self.blur_radius,
+                                (radar.cartesian_coordinates[1]+2*radar.max_distance) / self.scale + self.blur_radius),
+                               radar.viewing_angle,
                                (radar.viewing_angle + radar.radians_of_view), fill='white')
         for target in visible_targets:
             new_image.pieslice(
-                (floor((target.cartesian_coordinates[0] - target.radius - x_min) / self.scale) + self.blur_radius,
-                 floor((target.cartesian_coordinates[1] - target.radius - y_min) / self.scale) + self.blur_radius,
-                 ceil((target.cartesian_coordinates[0] + target.radius - x_min) / self.scale) + self.blur_radius,
-                 ceil((target.cartesian_coordinates[1] + target.radius - y_min) / self.scale) + self.blur_radius
+                (floor((target.cartesian_coordinates[0] - target.radius - self.overall_bounds['x_lower']) / self.scale) + self.blur_radius,
+                 floor((target.cartesian_coordinates[1] - target.radius - self.overall_bounds['y_lower']) / self.scale) + self.blur_radius,
+                 ceil((target.cartesian_coordinates[0] + target.radius - self.overall_bounds['x_lower']) / self.scale) + self.blur_radius,
+                 ceil((target.cartesian_coordinates[1] + target.radius - self.overall_bounds['y_lower']) / self.scale) + self.blur_radius
                  ), 0,
                 360, fill='black')
 

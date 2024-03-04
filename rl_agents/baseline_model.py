@@ -34,7 +34,7 @@ class Runner:
             self.evaluate_policy()
             self.total_steps += 1
     def evaluate_policy(self):
-        action=-1
+        action=3
         evaluate_reward = 0
         analysis_info = {}
         for _ in range(self.args.evaluate_times):
@@ -43,7 +43,7 @@ class Runner:
             episode_reward = 0
             episode_sum_view_time = 0
             while not done:
-                action = (action + 1) % self.env.action_size
+                action = (action + self.env.game.radars[0].num_states+ 1) % self.env.action_size
                 next_state, reward, done, _, _ = self.env_evaluate.step(action)
                 episode_reward += reward
                 state = next_state
