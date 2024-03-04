@@ -7,10 +7,14 @@ from radar_env.radar import Radar
 from radar_env.target import Target
 from utils import min_max_radar_breadth
 from PIL import Image, ImageDraw, ImageFilter
-from math import ceil, pi, floor
+from math import ceil, floor
 import numpy as np
-import jax.numpy as jnp
 import torch
+if torch.cuda.is_available():
+    import jax.numpy as jnp
+
+else:
+    import numpy as jnp
 
 
 def create_radars(seed=None):
