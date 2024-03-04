@@ -22,10 +22,7 @@ def create_radars(seed=None):
                     pulsewidth=4, bandwidth=1, frequency=3,
                     pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(0, 0), wavelength=3,
                     radians_of_view=45,seed=seed)
-    radar_2 = Radar(peak_power=200, duty_cycle=3,
-                    pulsewidth=4, bandwidth=1, frequency=3,
-                    pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(1, 1), wavelength=3,
-                    radians_of_view=360 / 12,seed=seed)
+
     return [radar_1]  # , radar_2 just 1 radar for now
 
 

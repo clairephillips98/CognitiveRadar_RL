@@ -28,16 +28,17 @@ class Radar:
         self.max_distance = self.max_distance_viewable()
         self.t=0
         self.seen_list = {}
-        self.num_states = (360)/self.radians_of_view
+        self.num_states = 360/self.radians_of_view
+        print(self.radians_of_view)
 
     def update_viewing_angle(self, new_angle):
         self.viewing_angle= new_angle
         return
 
-    def update_t(self, t, given_dir):
+    def update_t(self, t, given_dir=None):
         # just incase I decide I want to have the radar move around
         self.t=t
-        if given_dir:
+        if given_dir != None:
             self.viewing_angle = (given_dir*360)/self.num_states
         else:
             self.viewing_angle = look_new_direction()
