@@ -43,8 +43,11 @@ class DQN(object):
             q = self.net(state)
             if np.random.uniform() > epsilon:
                 action = q.argmax(dim=-1).item()
+                print(action)
             else:
                 action = np.random.randint(0, self.action_dim)
+                print('random action')
+                print(action)
             return action
 
     def learn(self, replay_buffer, total_steps):

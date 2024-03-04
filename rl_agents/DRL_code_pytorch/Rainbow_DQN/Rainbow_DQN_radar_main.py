@@ -7,7 +7,7 @@ from rl_agents.calculate_stats import radar_stats,radar_stats_analysis
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
-        self.env_name = "Radar_Env"
+        self.env_name = "Radar_Env_2_Radars"
         self.number = number
         self.seed = seed
         self.env = RadarEnv(seed)
@@ -62,6 +62,8 @@ class Runner:
 
     def run(self, ):
         self.evaluate_policy()
+        print('not eval')
+        print(self.epsilon)
         while self.total_steps < self.args.max_train_steps:
             state = self.env.reset()[0]
             done = False
@@ -104,6 +106,7 @@ class Runner:
         torch.save(self.agent.target_net.state_dict(), 'models/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name))
 
     def evaluate_policy(self, ):
+        print('eval')
         evaluate_reward = 0
         analysis_info = {}
         self.agent.net.eval()
@@ -149,7 +152,7 @@ if __name__ == '__main__':
     parser.add_argument("--beta_init", type=float, default=0.4, help="Important sampling parameter in PER")
     parser.add_argument("--use_lr_decay", type=bool, default=True, help="Learning rate Decay")
     parser.add_argument("--grad_clip", type=float, default=10.0, help="Gradient clip")
-    parser.add_argument("--load_model", type=bool, default=True, help="Whether to pick up the last model")
+    parser.add_argument("--load_model", type=bool, default=False, help="Whether to pick up the last model")
     parser.add_argument("--use_double", type=bool, default=True, help="Whether to use double Q-learning")
     parser.add_argument("--use_dueling", type=bool, default=True, help="Whether to use dueling network")
     parser.add_argument("--use_noisy", type=bool, default=False, help="Whether to use noisy network")
@@ -157,7 +160,7 @@ if __name__ == '__main__':
     parser.add_argument("--use_n_steps", type=bool, default=True, help="Whether to use n_steps Q-learning")
 
     args = parser.parse_args()
-
+    print(args)
     env_names = ['CartPole-v1', 'LunarLander-v2']
     env_index = 1
     for seed in [0, 10, 100]:
