@@ -29,7 +29,6 @@ class Radar:
         self.t=0
         self.seen_list = {}
         self.num_states = 360/self.radians_of_view
-        print(self.radians_of_view)
 
     def update_viewing_angle(self, new_angle):
         self.viewing_angle= new_angle

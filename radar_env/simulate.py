@@ -85,7 +85,6 @@ class Simulation:
         if len(self.radars) == 1:
             return [i]
         elif len(self.radars)==2:
-            print([i % self.radars[0].num_states, floor(i / self.radars[0].num_states)])
             return [i % self.radars[0].num_states, floor(i / self.radars[0].num_states)]
         else:
             raise 'error with number of radars.  we cant handle more than 2 yet'
