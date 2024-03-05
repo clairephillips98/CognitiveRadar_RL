@@ -22,4 +22,5 @@ fi
 
 echo python --version
 
+python3 -m rl_agents.baseline_model
 python3 -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main

@@ -152,7 +152,7 @@ if __name__ == '__main__':
     parser.add_argument("--beta_init", type=float, default=0.4, help="Important sampling parameter in PER")
     parser.add_argument("--use_lr_decay", type=bool, default=True, help="Learning rate Decay")
     parser.add_argument("--grad_clip", type=float, default=10.0, help="Gradient clip")
-    parser.add_argument("--load_model", type=bool, default=False, help="Whether to pick up the last model")
+    parser.add_argument("--load_model", type=bool, default=True, help="Whether to pick up the last model")
     parser.add_argument("--use_double", type=bool, default=True, help="Whether to use double Q-learning")
     parser.add_argument("--use_dueling", type=bool, default=True, help="Whether to use dueling network")
     parser.add_argument("--use_noisy", type=bool, default=False, help="Whether to use noisy network")
