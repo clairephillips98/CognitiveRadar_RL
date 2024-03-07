@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --nodes=
 #SBATCH --gpus-per-node=
-#SBATCH --time=1:00:0
+#SBATCH --time=4:00:0
 #SBATCH --account=soscip-<SOSCIP_PROJECT_ID> #For SOSCIP projects only
 module load anaconda3
 echo 1
