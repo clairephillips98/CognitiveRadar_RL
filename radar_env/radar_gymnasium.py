@@ -12,12 +12,12 @@ import torch
 #
 # else:
 import numpy as jnp
-if torch.cude.is_available():
-    show = True
+if torch.cuda.is_available():
+    show = False
     pygame = None
 else:
     import pygame
-    show = False
+    show = True
 from functools import reduce
 import gymnasium as gym
 
