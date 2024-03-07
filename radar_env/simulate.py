@@ -48,8 +48,9 @@ def create_targets(n_ts, bounds,seed=None):
 
 
 class Simulation:
-
-    def __init__(self, blur_radius: int = 3, scale: int = 50,seed=None):
+    meta_data = {'game_types': ['single_agent','MARL_shared_view', 'MARL_shared_targets']}
+    def __init__(self, blur_radius: int = 3, scale: int = 50,seed=None, game_type='single_agent'):
+        self.game_type = game_type
         self.reward = None
         self.t = 0
         self.radars = create_radars(seed)
@@ -63,16 +64,17 @@ class Simulation:
             self.blur_radius * 3 + ceil(
                 (self.overall_bounds['y_upper'] - self.overall_bounds['y_lower']) / self.scale)), (150, 150, 150))
         self.last_image = self.base_image.copy()
-        self.mask_image = self.create_mask()
+        self.mask_image = self.create_mask().copy()
         self.images = []
         self.polar_images = []
         self.last_tensor = None
         self.initial_scan()
 
-    def create_mask(self, angle_start=0, angle_stop=360):
+    def create_mask(self, angle_start=0, angle_stop=360, radars=None):
+        radars = self.radars if radars is None else radars
         mask_im = Image.new("L", self.base_image.size, 0)
         draw = ImageDraw.Draw(mask_im)
-        for radar in self.radars:
+        for radar in radars:
             draw.pieslice((radar.cartesian_coordinates[0]/self.scale+self.blur_radius,
                                 radar.cartesian_coordinates[1]/self.scale+self.blur_radius,
                                 (radar.cartesian_coordinates[0]+2*radar.max_distance) / self.scale + self.blur_radius,
@@ -106,18 +108,27 @@ class Simulation:
         [rad.update_t(self.t, dir_list[i]) for i, rad in enumerate(self.radars)]  # i think this is acutally pointless
         [tar.update_t(self.t) for tar in self.targets]
         visible_targets = self.get_visible_targets_and_update_stats()
+        if self.game_type=='single_agent':
+            self.step_for_single_agent(visible_targets, recording)
+        elif self.game_type=='MARL_shared_view':
+            self.step_for_shared_view(visible_targets, recording)
+        else:
+            self.step_for_shared_targets(visible_targets, recording)
+
+    def step_for_single_agent(self, visible_targets, recording):
         next_tensor = self.create_image(visible_targets)
 
-        if recording == True:
+        if recording:
             self.images.append(next_tensor)
 
         if self.last_tensor is not None:
             self.reward = self.reward_slice_cross_entropy(self.last_tensor, next_tensor)
         self.last_tensor = next_tensor
 
-    def get_visible_targets_and_update_stats(self):
+    def get_visible_targets_and_update_stats(self, radars=None):
+        radars = self.radars if radars is None else radars
         visible_targets = []
-        for radar in self.radars:
+        for radar in radars:
             visible_targets = radar.visible_targets(self.targets, visible_targets)
         return visible_targets
 

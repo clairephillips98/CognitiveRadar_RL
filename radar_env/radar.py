@@ -63,3 +63,4 @@ def look_new_direction(degrees = None):
     if degrees is None:
         degrees = random.uniform(0, 360)
     return degrees
+

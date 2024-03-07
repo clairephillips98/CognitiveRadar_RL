@@ -7,11 +7,11 @@ import random
 from radar_env.simulate import Simulation
 import torch
 
-if torch.cuda.is_available():
-    import jax.numpy as jnp
-
-else:
-    import numpy as jnp
+# if torch.cuda.is_available():
+#     import jax.numpy as jnp
+#
+# else:
+import numpy as jnp
 import pygame
 from functools import reduce
 import gymnasium as gym
@@ -23,7 +23,6 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self,seed=None, render_mode='human', size=5):
         self.seed = seed
         self.blur_radius = 2
         self.scale = 50
