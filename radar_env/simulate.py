@@ -10,11 +10,6 @@ from PIL import Image, ImageDraw, ImageFilter
 from math import ceil, floor
 import numpy as np
 import torch
-if torch.cuda.is_available():
-    import jax.numpy as jnp
-
-else:
-    import numpy as jnp
 
 
 def create_radars(seed=None):
