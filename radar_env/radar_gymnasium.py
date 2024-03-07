@@ -12,7 +12,12 @@ import torch
 #
 # else:
 import numpy as jnp
-import pygame
+if torch.cude.is_available():
+    show = True
+    pygame = None
+else:
+    import pygame
+    show = False
 from functools import reduce
 import gymnasium as gym
 
@@ -114,40 +119,41 @@ class RadarEnv(gym.Env):
         return observation, reward, terminated, False, None
 
     def render(self):
-        if self.render_mode == "rgb_array":
+        if (self.render_mode == "rgb_array") & show:
             return self._render_frame()
 
     def _render_frame(self):
-        if self.window is None and self.render_mode == "human":
-            pygame.init()
-            pygame.display.init()
-            self.window = pygame.display.set_mode(
-                tuple(self.window_size)
-            )
-        if self.clock is None and self.render_mode == "human":
-            self.clock = pygame.time.Clock()
+        if show:
+            if self.window is None and self.render_mode == "human":
+                pygame.init()
+                pygame.display.init()
+                self.window = pygame.display.set_mode(
+                    tuple(self.window_size)
+                )
+            if self.clock is None and self.render_mode == "human":
+                self.clock = pygame.time.Clock()
 
-        canvas = pygame.display.set_mode(tuple(self.window_size))
-        ret = jnp.empty((*self.window_size, 3), dtype=jnp.uint8)
-        plotted_arr = (self.game.last_tensor.numpy() * 255).astype(int)
-        plotted_arr = jnp.repeat(plotted_arr, 5, axis=0)
-        plotted_arr = jnp.repeat(plotted_arr, 5, axis=1)
-        ret[:, :, 2] = ret[:, :, 1] = ret[:, :, 0] = plotted_arr
+            canvas = pygame.display.set_mode(tuple(self.window_size))
+            ret = jnp.empty((*self.window_size, 3), dtype=jnp.uint8)
+            plotted_arr = (self.game.last_tensor.numpy() * 255).astype(int)
+            plotted_arr = jnp.repeat(plotted_arr, 5, axis=0)
+            plotted_arr = jnp.repeat(plotted_arr, 5, axis=1)
+            ret[:, :, 2] = ret[:, :, 1] = ret[:, :, 0] = plotted_arr
 
-        surf = pygame.surfarray.make_surface(ret)
-        if self.render_mode == "human":
-            canvas.blit(surf, (0, 0))
-            pygame.display.update()
+            surf = pygame.surfarray.make_surface(ret)
+            if self.render_mode == "human":
+                canvas.blit(surf, (0, 0))
+                pygame.display.update()
 
-            # We need to ensure that human-rendering occurs at the predefined framerate.
-            # The following line will automatically add a delay to keep the framerate stable.
-            self.clock.tick(self.metadata["render_fps"])
-        else:  # rgb_array
-            return jnp.transpose(
-                jnp.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
-            )
+                # We need to ensure that human-rendering occurs at the predefined framerate.
+                # The following line will automatically add a delay to keep the framerate stable.
+                self.clock.tick(self.metadata["render_fps"])
+            else:  # rgb_array
+                return jnp.transpose(
+                    jnp.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
+                )
 
     def close(self):
-        if self.window is not None:
+        if (self.window is not None) & show:
             pygame.display.quit()
             pygame.quit()
