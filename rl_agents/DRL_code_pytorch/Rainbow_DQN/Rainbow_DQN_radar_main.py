@@ -46,8 +46,9 @@ class Runner:
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
         if args.load_model is True:
-            self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
-            self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
+            try:
+                self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
+                self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
         self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}'.format(self.algorithm, self.env_name, number, seed))
 
         self.evaluate_num = 0  # Record the number of evaluations
