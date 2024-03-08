@@ -4,6 +4,7 @@ from rl_agents.DRL_code_pytorch.Rainbow_DQN.rainbow_dqn import DQN
 import argparse
 from radar_env.radar_gymnasium import RadarEnv
 from rl_agents.calculate_stats import radar_stats,radar_stats_analysis
+import os
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
@@ -46,7 +47,7 @@ class Runner:
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
         if args.load_model is True:
-            try:
+            if os.path.isfile('models/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name)):
                 self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
                 self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
         self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}'.format(self.algorithm, self.env_name, number, seed))
