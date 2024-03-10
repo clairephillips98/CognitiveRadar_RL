@@ -8,7 +8,7 @@ import os
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
-        self.env_name = "Radar_Env_2_Radars"
+        self.env_name = "Radar_Env_Radar"
         self.number = number
         self.seed = seed
         self.env = RadarEnv(seed)

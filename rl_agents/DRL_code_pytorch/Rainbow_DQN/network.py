@@ -11,7 +11,7 @@ class Dueling_Net(nn.Module):
         self.conv1 = nn.Conv2d(1,8,3)
         self.pool = nn.MaxPool2d(2,2)
         self.conv2 = nn.Conv2d(8,6,3)
-        self.fc1 = nn.Linear(8*6*3, args.hidden_dim)
+        self.fc1 = nn.Linear(8*4*3, args.hidden_dim)
         self.fc2 = nn.Linear(args.hidden_dim, args.hidden_dim)
         if args.use_noisy:
             self.V = NoisyLinear(args.hidden_dim, 1)
