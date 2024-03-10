@@ -3,7 +3,7 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --time=4:00:0
 #SBATCH --export=ALL
-#SBATCH --output=$SCRATCH/cphil_test.txt
+#SBATCH --output=cphil_test.txt
 
 module load anaconda3
 echo 1
