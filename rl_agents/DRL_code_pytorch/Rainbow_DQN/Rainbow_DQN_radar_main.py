@@ -64,8 +64,6 @@ class Runner:
 
     def run(self, ):
         self.evaluate_policy()
-        print('not eval')
-        print(self.epsilon)
         while self.total_steps < self.args.max_train_steps:
             state = self.env.reset()[0]
             done = False
@@ -108,7 +106,6 @@ class Runner:
         torch.save(self.agent.target_net.state_dict(), 'models/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name))
 
     def evaluate_policy(self, ):
-        print('eval')
         evaluate_reward = 0
         analysis_info = {}
         self.agent.net.eval()

@@ -10,6 +10,10 @@ from PIL import Image, ImageDraw, ImageFilter
 from math import ceil, floor
 import numpy as np
 import torch
+from functools import reduce
+import math
+from math import pi
+import torchvision.transforms as T
 
 
 def create_radars(seed=None):
@@ -43,6 +47,7 @@ def create_targets(n_ts, bounds,seed=None):
 
 
 class Simulation:
+
     meta_data = {'game_types': ['single_agent','MARL_shared_view', 'MARL_shared_targets']}
     def __init__(self, blur_radius: int = 3, scale: int = 50,seed=None, game_type='single_agent'):
         self.game_type = game_type
@@ -54,29 +59,37 @@ class Simulation:
         self.targets = create_targets(10, self.overall_bounds, seed=seed)
         self.scale = scale
         self.blur_radius = blur_radius
-        self.base_image = Image.new("RGB", (
-            self.blur_radius * 3 + ceil((self.overall_bounds['x_upper'] - self.overall_bounds['x_lower']) / self.scale),
-            self.blur_radius * 3 + ceil(
-                (self.overall_bounds['y_upper'] - self.overall_bounds['y_lower']) / self.scale)), (150, 150, 150))
-        self.last_image = self.base_image.copy()
-        self.mask_image = self.create_mask().copy()
+        shape = [self.blur_radius * 3 +
+                 ceil((self.overall_bounds['x_upper'] - self.overall_bounds['x_lower']) / self.scale),
+                 self.blur_radius * 3 +
+                 ceil((self.overall_bounds['y_upper'] - self.overall_bounds['y_lower']) / self.scale)]
+        self.base_image = torch.ones((shape[0],shape[1])) * 0.5
+        self.x = torch.arange(shape[1], dtype=torch.float32).view(1, -1).repeat(shape[0], 1)
+        self.y = torch.arange(shape[0], dtype=torch.float32).view(-1, 1).repeat(1, shape[1])
+        self.next_image = self.base_image.clone()
+        self.transform = T.GaussianBlur(kernel_size=(self.blur_radius*2+1, self.blur_radius*2+1), sigma=(1, 1))
+        masks = [self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, 0, 360, radar.max_distance) for radar in self.radars]
+        self.mask_image = reduce(lambda x, y: torch.logical_or(x, y), masks)
         self.images = []
-        self.polar_images = []
         self.last_tensor = None
+        self.polar_images = []
         self.initial_scan()
 
-    def create_mask(self, angle_start=0, angle_stop=360, radars=None):
-        radars = self.radars if radars is None else radars
-        mask_im = Image.new("L", self.base_image.size, 0)
-        draw = ImageDraw.Draw(mask_im)
-        for radar in radars:
-            draw.pieslice((radar.cartesian_coordinates[0]/self.scale+self.blur_radius,
-                                radar.cartesian_coordinates[1]/self.scale+self.blur_radius,
-                                (radar.cartesian_coordinates[0]+2*radar.max_distance) / self.scale + self.blur_radius,
-                                (radar.cartesian_coordinates[1]+2*radar.max_distance) / self.scale + self.blur_radius),
-                               angle_start,
-                               angle_stop, fill='white')
-        return mask_im
+    def draw_shape(self,x, y, center, start_angle, end_angle, radius):
+        # Compute distances from the center
+        scaled_center = [(center[0]-self.overall_bounds['x_lower'])/self.scale+self.blur_radius,
+                         (center[1]-self.overall_bounds['y_lower'])/self.scale+self.blur_radius]
+        distances = torch.sqrt((x - scaled_center[0]) ** 2 + (y - scaled_center[1]) ** 2)
+        # Compute angles from the center
+        angles = torch.atan2(y - scaled_center[1], x - scaled_center[0])
+        angles = angles = (angles * 180 / torch.tensor(pi)).int() % 360  # Convert angles to degrees
+        # Create a binary mask for the pie slice
+        scaled_radius = radius / self.scale
+        if start_angle <= end_angle:
+            mask = (distances <= scaled_radius) & (angles >= start_angle) & (angles <= end_angle)
+        else:
+            mask = (distances <= scaled_radius) & ((angles >= start_angle) | (angles <= end_angle))
+        return mask
     def to_action(self, i):
         # can only be up to 2 actions
         if len(self.radars) == 1:
@@ -111,14 +124,14 @@ class Simulation:
             self.step_for_shared_targets(visible_targets, recording)
 
     def step_for_single_agent(self, visible_targets, recording):
-        next_tensor = self.create_image(visible_targets)
+        self.create_image(visible_targets) # makes next image
 
         if recording:
-            self.images.append(next_tensor)
+            self.images.append(self.next_tensor)
 
         if self.last_tensor is not None:
-            self.reward = self.reward_slice_cross_entropy(self.last_tensor, next_tensor)
-        self.last_tensor = next_tensor
+            self.reward = self.reward_slice_cross_entropy(self.last_tensor, self.next_image)
+        self.last_tensor = self.next_image
 
     def get_visible_targets_and_update_stats(self, radars=None):
         radars = self.radars if radars is None else radars
@@ -128,36 +141,29 @@ class Simulation:
         return visible_targets
 
     def create_image(self, visible_targets):
-        image = self.last_image.copy().filter(ImageFilter.GaussianBlur(radius=self.blur_radius))
-        new_image = ImageDraw.Draw(image)
+        self.next_image = self.transform(torch.stack([self.next_image] * 3, dim=0))[0, :, :] # add blur
+        # Create a meshgrid of coordinates
         for radar in self.radars:
-            new_image.pieslice((radar.cartesian_coordinates[0]/self.scale+self.blur_radius,
-                                radar.cartesian_coordinates[1]/self.scale+self.blur_radius,
-                                (radar.cartesian_coordinates[0]+2*radar.max_distance) / self.scale + self.blur_radius,
-                                (radar.cartesian_coordinates[1]+2*radar.max_distance) / self.scale + self.blur_radius),
-                               radar.viewing_angle,
-                               (radar.viewing_angle + radar.radians_of_view), fill='white')
+            start_angle = radar.viewing_angle % 360
+            end_angle = (radar.viewing_angle + radar.radians_of_view) % 360
+            mask = self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, start_angle, end_angle, radar.max_distance)
+            # Convert mask to tensor and invert it
+            self.next_image[mask] = 1
         for target in visible_targets:
-            new_image.pieslice(
-                (floor((target.cartesian_coordinates[0] - target.radius - self.overall_bounds['x_lower']) / self.scale) + self.blur_radius,
-                 floor((target.cartesian_coordinates[1] - target.radius - self.overall_bounds['y_lower']) / self.scale) + self.blur_radius,
-                 ceil((target.cartesian_coordinates[0] + target.radius - self.overall_bounds['x_lower']) / self.scale) + self.blur_radius,
-                 ceil((target.cartesian_coordinates[1] + target.radius - self.overall_bounds['y_lower']) / self.scale) + self.blur_radius
-                 ), 0,
-                360, fill='black')
+            mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
+                                   max(self.scale,target.radius))
+            self.next_image[mask] = 0
+        # add mask of original value to everything outside mask
+        self.next_image[~self.mask_image] = 0.5
+        return self.next_image
 
-        self.last_image = self.base_image.copy()
-        self.last_image.paste(image, (0, 0), self.mask_image)
-        tensor_view = torch.tensor(np.array(self.last_image)[:, :, 0])/255
-        return tensor_view
-
-    def reward_slice_cross_entropy(self, last_image, next_image):
+    def reward_slice_cross_entropy(self, last_tensor, next_image):
 
         # Using BCE loss to find the binary cross entropy of the the changing images
         # The model is rewarded for a large change == high entropy
 
         loss = torch.nn.BCELoss(reduction='none')
-        loss = loss(last_image, torch.floor(next_image))
+        loss = loss(last_tensor, torch.floor(next_image))
         mask = ((next_image<1)&(next_image>0)).nonzero()
         # scaling values to be between 0 and 1.  torch BCELoss values are clipped to be between 0 and 100.
         # this works because if the last pixel was white, and it stayed white (or white), loss is 0
@@ -169,11 +175,12 @@ class Simulation:
 
 
 def main():
-    test = Simulation(2, 25)
+    transform = T.ToPILImage()
+    test = Simulation(2, 50)
     images = []
     for t in range(20):
         test.update_t()
-        images.append(test.last_image)
+        images.append(transform(torch.stack([test.next_image] * 3, dim=0)))
     # images = [Image.fromarray(jnp.repeat(im,repeats = 3,axis=0)) for im in test.images]
     images[0].save("./images/cartesian.gif", save_all=True, append_images=images, duration=test.t, loop=0)
     # images = [Image.fromarray(jnp.repeat(im,repeats = 3,axis=0)) for im in test.polar_images]
