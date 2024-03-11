@@ -31,4 +31,6 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_do
 echo use_n_steps
 python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=0 --use_noisy=0 --use_per=0 --use_n_steps=1
 echo baseline
-python -m rl_agnets.baseline_model
+python -m rl_agents.baseline_model --baseline_model_type 'min_variance'
+python -m rl_agents.baseline_model --baseline_model_type 'max_variance'
+python -m rl_agents.baseline_model --baseline_model_type 'simple'

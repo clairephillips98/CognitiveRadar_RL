@@ -11,8 +11,9 @@ class Runner:
         self.env_name = "Radar_Env_Radar"
         self.number = number
         self.seed = seed
-        self.env = RadarEnv(seed)
-        self.env_evaluate = RadarEnv(seed)
+        self.blur_radius = self.args.blur_radius
+        self.env = RadarEnv(seed=seed,blur_radius=self.blur_radius)
+        self.env_evaluate = RadarEnv(seed=seed,blur_radius=self.blur_radius)
         self.args.state_dim = self.env.observation_space['observation'].shape
         if type(self.args.state_dim) == int:
             self.args.state_dim = [self.args.state_dim]
@@ -47,10 +48,10 @@ class Runner:
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
         if args.load_model is True:
-            if os.path.isfile('models/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name)):
-                self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
-                self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name)))
-        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}'.format(self.algorithm, self.env_name, number, seed))
+            if os.path.isfile('models/DQN/net_{}_env_{}_blur_radius_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius)):
+                self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}_blur_radius_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius)))
+                self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}_blur_radius_{}.pt'.format(self.algorithm, self.env_name,self.blur_radius)))
+        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}'.format(self.algorithm, self.env_name, number, seed, self.blur_radius))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -99,11 +100,11 @@ class Runner:
                     self.save_models()
         self.save_models()
         # Save reward
-        np.save('./data_train/{}_env_{}_number_{}_seed_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed), np.array(self.evaluate_rewards))
+        np.save('./data_train/{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(self.evaluate_rewards))
 
     def save_models(self):
-        torch.save(self.agent.net.state_dict(),'models/DQN/net_{}_env_{}.pt'.format(self.algorithm, self.env_name))
-        torch.save(self.agent.target_net.state_dict(), 'models/DQN/target_net_{}_env_{}.pt'.format(self.algorithm, self.env_name))
+        torch.save(self.agent.net.state_dict(),'models/DQN/net_{}_env_{}_blur_radius_{}.pt'.format(self.algorithm, self.env_name,self.blur_radius))
+        torch.save(self.agent.target_net.state_dict(), 'models/DQN/target_net_{}_env_{}_blur_radius_{}.pt'.format(self.algorithm, self.env_name,self.blur_radius))
 
     def evaluate_policy(self, ):
         evaluate_reward = 0
@@ -157,11 +158,16 @@ if __name__ == '__main__':
     parser.add_argument("--use_noisy", type=int, default=1, help="Whether to use noisy network")
     parser.add_argument("--use_per", type=int, default=1, help="Whether to use PER")
     parser.add_argument("--use_n_steps", type=int, default=1, help="Whether to use n_steps Q-learning")
-
+    parser.add_argument("--blur_radius", type=int, default=None, help="size of the radius of the gaussian filter applied to previous views")
     args = parser.parse_args()
     print(args)
     env_names = ['CartPole-v1', 'LunarLander-v2']
     env_index = 1
     for seed in [0, 10, 100]:
+        if args.blur_radius is None:
+            for x in [0,1,2]:
+                args.blur_radius = x
+                runner = Runner(args=args, env_name="cognitive_radar", number=1, seed=seed)
+                runner.run()
         runner = Runner(args=args, env_name="cognitive_radar", number=1, seed=seed)
         runner.run()

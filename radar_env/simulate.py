@@ -49,7 +49,7 @@ def create_targets(n_ts, bounds,seed=None):
 class Simulation:
 
     meta_data = {'game_types': ['single_agent','MARL_shared_view', 'MARL_shared_targets']}
-    def __init__(self, blur_radius: int = 3, scale: int = 50,seed=None, game_type='single_agent'):
+    def __init__(self, blur_radius: int = 1, scale: int = 50,seed=None, game_type='single_agent'):
         self.game_type = game_type
         self.reward = None
         self.t = 0
@@ -151,7 +151,7 @@ class Simulation:
             self.next_image[mask] = 1
         for target in visible_targets:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
-                                   max(self.scale,target.radius))
+                                   max(self.scale/2+1,target.radius))
             self.next_image[mask] = 0
         # add mask of original value to everything outside mask
         self.next_image[~self.mask_image] = 0.5
@@ -176,7 +176,7 @@ class Simulation:
 
 def main():
     transform = T.ToPILImage()
-    test = Simulation(2, 50)
+    test = Simulation(1, 50)
     images = []
     for t in range(20):
         test.update_t()

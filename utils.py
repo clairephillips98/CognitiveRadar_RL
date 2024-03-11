@@ -80,3 +80,20 @@ def merge_dictionaries(*dicts):
   for d in dicts:
     merged.update(d)
   return merged
+
+
+def draw_shape(x, y, center, start_angle, end_angle, radius):
+    # Compute distances from the center
+    scaled_center = [(center[0] - self.overall_bounds['x_lower']) / self.scale + self.blur_radius,
+                     (center[1] - self.overall_bounds['y_lower']) / self.scale + self.blur_radius]
+    distances = torch.sqrt((x - scaled_center[0]) ** 2 + (y - scaled_center[1]) ** 2)
+    # Compute angles from the center
+    angles = torch.atan2(y - scaled_center[1], x - scaled_center[0])
+    angles = angles = (angles * 180 / torch.tensor(pi)).int() % 360  # Convert angles to degrees
+    # Create a binary mask for the pie slice
+    scaled_radius = radius / self.scale
+    if start_angle <= end_angle:
+        mask = (distances <= scaled_radius) & (angles >= start_angle) & (angles <= end_angle)
+    else:
+        mask = (distances <= scaled_radius) & ((angles >= start_angle) | (angles <= end_angle))
+    return mask

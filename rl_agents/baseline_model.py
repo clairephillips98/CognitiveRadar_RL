@@ -4,15 +4,19 @@ import argparse
 from radar_env.radar_gymnasium import RadarEnv
 import random
 from rl_agents.calculate_stats import radar_stats,radar_stats_analysis
+import torch
+from functools import reduce
+
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
-        self.env_name = "Radar_Env"
+        self.env_name = env_name
         self.number = number
         self.seed = seed
         random.seed(seed)
-        self.env = RadarEnv(seed)
-        self.env_evaluate = RadarEnv(seed)
+        self.blur_radius = args.blur_radius
+        self.env = RadarEnv(seed = seed, blur_radius=self.blur_radius)
+        self.env_evaluate = RadarEnv(seed = seed, blur_radius=self.blur_radius)
         self.args.state_dim = self.env.observation_space['observation'].shape
         if type(self.args.state_dim) == int:
             self.args.state_dim = [self.args.state_dim]
@@ -23,16 +27,46 @@ class Runner:
         print("action_dim={}".format(self.args.action_dim))
         print("episode_limit={}".format(self.args.episode_limit))
 
-        self.writer = SummaryWriter(log_dir='runs/Baseline_Model/{}_env_{}_number_{}_seed_{}'.format('baseline', self.env_name, number, seed))
+        self.writer = SummaryWriter(log_dir=
+                                    'runs/Baseline_Model/{}_env_{}_number_{}_seed_{}_blur_radius_{}_baseline_type_{}'.format('baseline', self.env_name, number, seed, self.blur_radius, self.args.baseline_model_type))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
         self.total_steps = 0  # Record the total steps during the training
+        if self.args.baseline_model_type != 'simple':
+            self.masks = self.get_mask()
+
+    def get_mask(self):
+        x = self.env.game.x
+        y = self.env.game.y
+        total_masks = []
+        for a in range(self.args.action_dim):
+            action = self.env.game.to_action(a) # viewing angle pair
+            masks = [self.env.game.draw_shape(x,y,self.env.game.radars[i].cartesian_coordinates,a,
+                                              a+self.env.game.radars[i].viewing_angle,
+                                              self.env.game.radars[i].max_distance) for i,a in enumerate(action)]
+            total_masks.append(reduce(lambda x, y: torch.logical_or(x, y), masks))
+        return total_masks
 
     def run(self):
         while self.total_steps < (self.args.max_train_steps/self.args.evaluate_freq):
             self.evaluate_policy()
             self.total_steps += 1
+
+    def simple_baseline(self, prev_action):
+        action = (prev_action + self.env.game.radars[0].num_states + 1) % self.env.action_size
+        return action
+    def variance_baseline(self,state, var_type='min'):
+        if random.choice([0,1]) == 1:
+            variances = [torch.var(state[mask]) for mask in self.masks]
+            if var_type == 'min':
+                best_var = min(variances)
+            else: # max
+                best_var = max(variances)
+            indexes = [i for i, value in enumerate(variances) if value == best_var]
+            return random.choice(indexes) # if there are multiple views which have the same best variance then select that one
+        else:
+            return random.choice(range(self.env.action_size))
     def evaluate_policy(self):
         action=3
         evaluate_reward = 0
@@ -43,7 +77,14 @@ class Runner:
             episode_reward = 0
             episode_sum_view_time = 0
             while not done:
-                action = (action + self.env.game.radars[0].num_states+ 1) % self.env.action_size
+                if self.args.baseline_model_type == 'simple':
+                    action = self.simple_baseline(action)
+                elif self.args.baseline_model_type == 'min_variance':
+                    action = self.variance_baseline(state, var_type='min')
+                elif self.args.baseline_model_type == 'max_variance':
+                    action = self.variance_baseline(state, var_type='max')
+                else:
+                    raise Exception("Sorry, not a valid baseline model type")
                 next_state, reward, done, _, _ = self.env_evaluate.step(action)
                 episode_reward += reward
                 state = next_state
@@ -85,12 +126,19 @@ if __name__ == '__main__':
     parser.add_argument("--use_noisy", type=bool, default=True, help="Whether to use noisy network")
     parser.add_argument("--use_per", type=bool, default=True, help="Whether to use PER")
     parser.add_argument("--use_n_steps", type=bool, default=True, help="Whether to use n_steps Q-learning")
+    parser.add_argument("--blur_radius", type=int, default=None, help="size of the radius of the gaussian filter applied to previous views")
+    parser.add_argument("--baseline_model_type",type=str, default='simple',
+                        help="type of baseline model (simple, min_variance, max_variance")
 
     args = parser.parse_args()
 
     env_names = ['CartPole-v1', 'LunarLander-v2']
     env_index = 1
     for seed in [0, 10, 100]:
+        for x in [1, 2,0]:
+            args.blur_radius = x
+            runner = Runner(args=args, env_name="Radar_Env_baseline_1", number=1, seed=seed)
+            runner.run()
         runner = Runner(args=args, env_name=env_names[env_index], number=1, seed=seed)
         runner.run()
 

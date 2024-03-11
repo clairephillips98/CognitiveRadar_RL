@@ -28,9 +28,9 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self,seed=None, render_mode=None, size=5):
+    def __init__(self,seed=None,render_mode='human', size=5, blur_radius=1):
         self.seed = seed
-        self.blur_radius = 2
+        self.blur_radius = blur_radius
         self.scale = 50
         self.game = Simulation(self.blur_radius, self.scale)
         self.info = torch.empty(0,4)
