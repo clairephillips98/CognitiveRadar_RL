@@ -8,13 +8,6 @@
 module load anaconda3
 echo 1
 source activate pytorch_env
-echo 2
-echo $PYTHONPATH
-echo 2
-pip list
-echo 3
-conda list
-echo 4
 python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main
 echo everything
 python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main
