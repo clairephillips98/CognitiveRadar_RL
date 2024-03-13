@@ -20,7 +20,7 @@ def create_radars(seed=None):
     radar_1 = Radar(peak_power=400, duty_cycle=3,
                     pulsewidth=4, bandwidth=1, frequency=3,
                     pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(0, 0), wavelength=3,
-                    radians_of_view=45,seed=seed)
+                    radians_of_view=30,seed=seed)
     # radar_2 = Radar(peak_power=400, duty_cycle=3,
     #                 pulsewidth=4, bandwidth=1, frequency=3,
     #                 pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(0, 400), wavelength=3,
@@ -59,13 +59,13 @@ class Simulation:
         self.targets = create_targets(10, self.overall_bounds, seed=seed)
         self.scale = scale
         self.blur_radius = blur_radius
-        shape = [self.blur_radius * 3 +
+        self.shape = [self.blur_radius * 3 +
                  ceil((self.overall_bounds['x_upper'] - self.overall_bounds['x_lower']) / self.scale),
                  self.blur_radius * 3 +
                  ceil((self.overall_bounds['y_upper'] - self.overall_bounds['y_lower']) / self.scale)]
-        self.base_image = torch.ones((shape[0],shape[1])) * 0.5
-        self.x = torch.arange(shape[1], dtype=torch.float32).view(1, -1).repeat(shape[0], 1)
-        self.y = torch.arange(shape[0], dtype=torch.float32).view(-1, 1).repeat(1, shape[1])
+        self.base_image = torch.ones((self.shape[0],self.shape[1])) * 0.5
+        self.x = torch.arange(self.shape[1], dtype=torch.float32).view(1, -1).repeat(self.shape[0], 1)
+        self.y = torch.arange(self.shape[0], dtype=torch.float32).view(-1, 1).repeat(1, self.shape[1])
         self.next_image = self.base_image.clone()
         self.transform = T.GaussianBlur(kernel_size=(self.blur_radius*2+1, self.blur_radius*2+1), sigma=(1, 1))
         masks = [self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, 0, 360, radar.max_distance) for radar in self.radars]
@@ -157,19 +157,29 @@ class Simulation:
         self.next_image[~self.mask_image] = 0.5
         return self.next_image
 
-    def reward_slice_cross_entropy(self, last_tensor, next_image):
+    def create_hidden_target_tensor(self):
+        world_view = torch.ones((self.shape[0],self.shape[1]))
+        for target in self.targets:
+            mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
+                                   max(self.scale / 2 + 1, target.radius))
+            world_view[mask] = 0
+        # add mask of original value to everything outside mask
+        world_view[~self.mask_image] = 0.5
+        return world_view
 
-        # Using BCE loss to find the binary cross entropy of the the changing images
+    def reward_slice_cross_entropy(self, last_tensor, next_image, add_mask=True):
+
+        # Using BCE loss to find the binary cross entropy of the  changing images
         # The model is rewarded for a large change == high entropy
 
         loss = torch.nn.BCELoss(reduction='none')
         loss = loss(last_tensor, torch.floor(next_image))
-        mask = ((next_image<1)&(next_image>0)).nonzero()
-        # scaling values to be between 0 and 1.  torch BCELoss values are clipped to be between 0 and 100.
-        # this works because if the last pixel was white, and it stayed white (or white), loss is 0
-        # if the last pixel was grey, it will only now be white/black if the pixel has been viewed
-        # so we only need to mask the grey cells
-        loss[mask[:, 0], mask[:, 1]] = 0
+        if add_mask:
+            mask = ((next_image!=1)&(next_image!=0))
+            # this works because if the last pixel was white, and it stayed white (or white), loss is 0
+            # if the last pixel was grey, it will only now be white/black if the pixel has been viewed
+            # so we only need to mask the grey cells
+            loss[mask]
         reward = (torch.sum(loss))
         return reward
 

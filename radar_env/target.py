@@ -94,7 +94,7 @@ class Target:
 
     def final_stats(self):
         average_velocity = self.sum_velocity / self.time_in_view
-        time_til_first_view = self.first_viewed - self.first_in_view if self.first_viewed is not None else -1
+        time_til_first_view = (self.first_viewed - self.first_in_view) if self.first_viewed is not None else -1
         possible_observable_time = self.first_in_view - self.t
         view_rate = (len(self.views) - 1 )/possible_observable_time
         return view_rate, average_velocity, time_til_first_view

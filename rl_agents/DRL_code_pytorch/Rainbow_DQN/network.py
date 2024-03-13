@@ -3,15 +3,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 from functools import reduce
-
+import numpy as np
 
 class Dueling_Net(nn.Module):
     def __init__(self, args):
         super(Dueling_Net, self).__init__()
-        self.conv1 = nn.Conv2d(1,8,3)
-        self.pool = nn.MaxPool2d(2,2)
-        self.conv2 = nn.Conv2d(8,6,3)
-        self.fc1 = nn.Linear(8*4*3, args.hidden_dim)
+        k1 = 2
+        k2 = 3
+        mid_channels = 3
+        dimensions = np.array(args.state_dim)
+        pool_dim = 2
+        self.conv1 = nn.Conv2d(in_channels=1,out_channels=mid_channels, kernel_size=k1)
+        self.pool = nn.MaxPool2d(pool_dim,pool_dim)
+        self.conv2 = nn.Conv2d(in_channels=mid_channels,out_channels=1,kernel_size=k2)
+        self.fc1 = nn.Linear(int(np.multiply(*((dimensions-k1)/pool_dim-k2+1))), args.hidden_dim)
         self.fc2 = nn.Linear(args.hidden_dim, args.hidden_dim)
         if args.use_noisy:
             self.V = NoisyLinear(args.hidden_dim, 1)
@@ -23,7 +28,7 @@ class Dueling_Net(nn.Module):
     def forward(self, s):
         s = s.unsqueeze(1)
         s = self.pool(F.relu(self.conv1(s)))
-        s = self.pool(F.relu(self.conv2(s)))
+        s = F.relu(self.conv2(s)).squeeze(0)
         s = torch.flatten(s,1)
         s = torch.relu(self.fc1(s))
         s = torch.relu(self.fc2(s))
