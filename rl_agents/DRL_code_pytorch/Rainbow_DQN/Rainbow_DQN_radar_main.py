@@ -12,8 +12,8 @@ class Runner:
         self.number = number
         self.seed = seed
         self.blur_radius = self.args.blur_radius
-        self.env = RadarEnv(seed=seed,blur_radius=self.blur_radius)
-        self.env_evaluate = RadarEnv(seed=seed,blur_radius=self.blur_radius)
+        self.env = RadarEnv(seed=seed,blur_radius=self.blur_radius, scale=self.args.scale)
+        self.env_evaluate = RadarEnv(seed=seed,blur_radius=self.blur_radius, scale=self.args.scale)
         self.args.state_dim = self.env.observation_space['observation'].shape
         if type(self.args.state_dim) == int:
             self.args.state_dim = [self.args.state_dim]
@@ -23,7 +23,7 @@ class Runner:
         print("state_dim={}".format(self.args.state_dim))
         print("action_dim={}".format(self.args.action_dim))
         print("episode_limit={}".format(self.args.episode_limit))
-
+        print("scale={}".format(self.args.scale))
         if args.use_per and args.use_n_steps:
             self.replay_buffer = N_Steps_Prioritized_ReplayBuffer(args)
         elif args.use_per:
@@ -48,10 +48,10 @@ class Runner:
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
         if args.load_model is True:
-            if os.path.isfile('models/DQN/net_{}_env_{}_blur_radius_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius)):
-                self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}_blur_radius_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius)))
-                self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}_blur_radius_{}.pt'.format(self.algorithm, self.env_name,self.blur_radius)))
-        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}'.format(self.algorithm, self.env_name, number, seed, self.blur_radius))
+            if os.path.isfile('models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius, self.scale)):
+                self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius,self.args.scale)))
+                self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}_blur_radius_{}_scale_{}.pt'.format(self.algorithm, self.env_name,self.blur_radius,self.args.scale)))
+        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}_scale_{}'.format(self.algorithm, self.env_name, number, seed, self.blur_radius,self.args.scale))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -159,6 +159,8 @@ if __name__ == '__main__':
     parser.add_argument("--use_per", type=int, default=1, help="Whether to use PER")
     parser.add_argument("--use_n_steps", type=int, default=1, help="Whether to use n_steps Q-learning")
     parser.add_argument("--blur_radius", type=int, default=None, help="size of the radius of the gaussian filter applied to previous views")
+    parser.add_argument("--scale", type=int, default=50, help="factor by which the space is scaled down")
+
     args = parser.parse_args()
     print(args)
     env_names = ['CartPole-v1', 'LunarLander-v2']

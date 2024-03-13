@@ -28,7 +28,7 @@ class Runner:
         print("episode_limit={}".format(self.args.episode_limit))
 
         self.writer = SummaryWriter(log_dir=
-                                    'runs/Baseline_Model/{}_env_{}_number_{}_seed_{}_blur_radius_{}_baseline_type_{}'.format('baseline', self.env_name, number, seed, self.blur_radius, self.args.baseline_model_type))
+                                    'runs/Baseline_Model/{}_env_{}_number_{}_seed_{}_blur_radius_{}_baseline_type_{}_scale_{}'.format('baseline', self.env_name, number, seed, self.blur_radius, self.args.baseline_model_type,self.args.scale))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -129,6 +129,8 @@ if __name__ == '__main__':
     parser.add_argument("--blur_radius", type=int, default=None, help="size of the radius of the gaussian filter applied to previous views")
     parser.add_argument("--baseline_model_type",type=str, default='simple',
                         help="type of baseline model (simple, min_variance, max_variance")
+    parser.add_argument("--scale", type=int, default=50, help="factor by which the space is scaled down")
+
 
     args = parser.parse_args()
 
