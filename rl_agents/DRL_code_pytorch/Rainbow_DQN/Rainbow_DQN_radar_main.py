@@ -167,7 +167,7 @@ if __name__ == '__main__':
     env_index = 1
     for seed in [0, 10, 100]:
         if args.blur_radius is None:
-            for x in [0,1,2]:
+            for x in [1,0,2]:
                 args.blur_radius = x
                 runner = Runner(args=args, env_name="cognitive_radar", number=1, seed=seed)
                 runner.run()

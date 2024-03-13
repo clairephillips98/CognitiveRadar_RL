@@ -128,7 +128,6 @@ class Simulation:
 
         if recording:
             self.images.append(self.next_tensor)
-
         if self.last_tensor is not None:
             self.reward = self.reward_slice_cross_entropy(self.last_tensor, self.next_image)
         self.last_tensor = self.next_image
