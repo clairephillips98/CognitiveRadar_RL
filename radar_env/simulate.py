@@ -20,7 +20,7 @@ def create_radars(seed=None):
     radar_1 = Radar(peak_power=400, duty_cycle=3,
                     pulsewidth=4, bandwidth=1, frequency=3,
                     pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(0, 0), wavelength=3,
-                    radians_of_view=30,seed=seed)
+                    radians_of_view=45,seed=seed)
     # radar_2 = Radar(peak_power=400, duty_cycle=3,
     #                 pulsewidth=4, bandwidth=1, frequency=3,
     #                 pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(0, 400), wavelength=3,
@@ -49,7 +49,7 @@ def create_targets(n_ts, bounds,seed=None):
 class Simulation:
 
     meta_data = {'game_types': ['single_agent','MARL_shared_view', 'MARL_shared_targets']}
-    def __init__(self, blur_radius: int = 1, scale: int = 50,seed=None, game_type='single_agent'):
+    def __init__(self, blur_radius: int = 1, scale: int = 50,seed=None, game_type='single_agent', sigma = 0.5):
         self.game_type = game_type
         self.reward = None
         self.t = 0
@@ -67,7 +67,7 @@ class Simulation:
         self.x = torch.arange(self.shape[1], dtype=torch.float32).view(1, -1).repeat(self.shape[0], 1)
         self.y = torch.arange(self.shape[0], dtype=torch.float32).view(-1, 1).repeat(1, self.shape[1])
         self.next_image = self.base_image.clone()
-        self.transform = T.GaussianBlur(kernel_size=(self.blur_radius*2+1, self.blur_radius*2+1), sigma=(1, 1))
+        self.transform = T.GaussianBlur(kernel_size=(self.blur_radius*2+1, self.blur_radius*2+1), sigma=(sigma,sigma))
         masks = [self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, 0, 360, radar.max_distance) for radar in self.radars]
         self.mask_image = reduce(lambda x, y: torch.logical_or(x, y), masks)
         self.images = []
@@ -133,13 +133,18 @@ class Simulation:
         self.last_tensor = self.next_image
 
     def get_visible_targets_and_update_stats(self, radars=None):
-        radars = self.radars if radars is None else radars
-        visible_targets = []
+        radars = self.radars if radars is None else radars # if radars isnt specified use all radars
+        visible_targets = [] # make a list of visible targets
         for radar in radars:
-            visible_targets = radar.visible_targets(self.targets, visible_targets)
+            visible_targets = radar.visible_targets(self.targets, visible_targets) # check which targets are visible
         return visible_targets
 
     def create_image(self, visible_targets):
+        # create the tensor image of the world in black and white [0,1] where 1 is nothing and 0 is something
+        # blur the last image
+        # fill in the seen area as 1
+        # fill in the seen targets as 0
+        # anything that is outside of the area of view set to 0.5
         self.next_image = self.transform(torch.stack([self.next_image] * 3, dim=0))[0, :, :] # add blur
         # Create a meshgrid of coordinates
         for radar in self.radars:
@@ -157,6 +162,9 @@ class Simulation:
         return self.next_image
 
     def create_hidden_target_tensor(self):
+        # create overall view of the world. this is like create image but everything is included
+        # this is for comparison purposes
+        # set everything outside the field of view as 0.5 still
         world_view = torch.ones((self.shape[0],self.shape[1]))
         for target in self.targets:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,

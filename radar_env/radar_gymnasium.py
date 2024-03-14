@@ -28,11 +28,11 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self,seed=None,render_mode=None, size=5, blur_radius=1, scale = 50):
+    def __init__(self,seed=None,render_mode=None, size=5, blur_radius=1, scale = 50, sigma=0.5):
         self.seed = seed
         self.blur_radius = blur_radius
         self.scale = scale
-        self.game = Simulation(self.blur_radius, self.scale)
+        self.game = Simulation(blur_radius=self.blur_radius, scale=self.scale, sigma=sigma)
         self.info = torch.empty(0,4)
         self.size = size  # The size of the square grid
         self.window_size = jnp.array(self.game.next_image.size()) * self.size  # The size of the PyGame window

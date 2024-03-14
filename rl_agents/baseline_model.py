@@ -15,8 +15,8 @@ class Runner:
         self.seed = seed
         random.seed(seed)
         self.blur_radius = args.blur_radius
-        self.env = RadarEnv(seed = seed, blur_radius=self.blur_radius)
-        self.env_evaluate = RadarEnv(seed = seed, blur_radius=self.blur_radius)
+        self.env = RadarEnv(seed = seed, blur_radius=self.blur_radius, sigma=self.args.blur_sigma)
+        self.env_evaluate = RadarEnv(seed = seed, blur_radius=self.blur_radius,sigma=self.args.blur_sigma)
         self.args.state_dim = self.env.observation_space['observation'].shape
         if type(self.args.state_dim) == int:
             self.args.state_dim = [self.args.state_dim]
@@ -28,7 +28,7 @@ class Runner:
         print("episode_limit={}".format(self.args.episode_limit))
 
         self.writer = SummaryWriter(log_dir=
-                                    'runs/Baseline_Model/{}_env_{}_number_{}_seed_{}_blur_radius_{}_baseline_type_{}_scale_{}'.format('baseline', self.env_name, number, seed, self.blur_radius, self.args.baseline_model_type,self.args.scale))
+                                    'runs/Baseline_Model/{}_env_{}_number_{}_seed_{}_blur_radius_{}_baseline_type_{}_scale_{}_blur_sigma_{}'.format('baseline', self.env_name, number, seed, self.blur_radius, self.args.baseline_model_type,self.args.scale, self.args.blur_sigma))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -130,6 +130,7 @@ if __name__ == '__main__':
     parser.add_argument("--baseline_model_type",type=str, default='simple',
                         help="type of baseline model (simple, min_variance, max_variance")
     parser.add_argument("--scale", type=int, default=50, help="factor by which the space is scaled down")
+    parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
 
 
     args = parser.parse_args()
@@ -137,10 +138,8 @@ if __name__ == '__main__':
     env_names = ['CartPole-v1', 'LunarLander-v2']
     env_index = 1
     for seed in [0, 10, 100]:
-        for x in [1, 2,0]:
+        for x in [1, 0,2]:
             args.blur_radius = x
-            runner = Runner(args=args, env_name="Radar_Env_baseline_1", number=1, seed=seed)
+            runner = Runner(args=args, env_name="Radar_Env_baseline", number=1, seed=seed)
             runner.run()
-        runner = Runner(args=args, env_name=env_names[env_index], number=1, seed=seed)
-        runner.run()
 
