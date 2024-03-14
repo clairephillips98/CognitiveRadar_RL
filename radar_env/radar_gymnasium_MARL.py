@@ -30,14 +30,14 @@ class RadarEnv(gym.Env):
         self.game = Simulation(self.blur_radius, self.scale)
         self.info = torch.empty(0,4)
         self.size = size  # The size of the square grid
-        self.window_size = jnp.array(self.game.last_tensor.size()) * self.size  # The size of the PyGame window
+        self.window_size = jnp.array(self.game.next_image.size()) * self.size  # The size of the PyGame window
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.observation_space = gym.spaces.Dict(
             {
                 # "agent_angles": gym.spaces.Space(np.array([radar.viewing_angle for radar in self.game.radars])),
                 "observation": gym.spaces.Box(low=0.0, high=1.0,
-                                              shape=tuple(list(self.game.last_tensor.size())), dtype=jnp.float32),
+                                              shape=tuple(list(self.game.next_image.size())), dtype=jnp.float32),
             }
         )
 
@@ -67,7 +67,7 @@ class RadarEnv(gym.Env):
 
 
     def _get_obs(self):
-        return self.game.last_tensor
+        return self.game.next_image
 
     def _get_info(self):
         # view_count, average_velocity, time_til_first_view, possible_observable_time
@@ -129,7 +129,7 @@ class RadarEnv(gym.Env):
 
         canvas = pygame.display.set_mode(tuple(self.window_size))
         ret = jnp.empty((*self.window_size, 3), dtype=jnp.uint8)
-        plotted_arr = (self.game.last_tensor.numpy() * 255).astype(int)
+        plotted_arr = (self.game.next_image.numpy() * 255).astype(int)
         plotted_arr = jnp.repeat(plotted_arr, 5, axis=0)
         plotted_arr = jnp.repeat(plotted_arr, 5, axis=1)
         ret[:, :, 2] = ret[:, :, 1] = ret[:, :, 0] = plotted_arr

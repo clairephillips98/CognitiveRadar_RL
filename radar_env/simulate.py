@@ -164,15 +164,24 @@ class Simulation:
     def create_hidden_target_tensor(self):
         # create overall view of the world. this is like create image but everything is included
         # this is for comparison purposes
-        # set everything outside the field of view as 0.5 still
+        # we don't need to set a mask for outside the radar view, if were setting everything to 0.5 outside the view the
+        # loss will be the same wheither there is a target(1) or no target(0).  given symmetry of loss
+        # either way there is lower threshold of loss.
         world_view = torch.ones((self.shape[0],self.shape[1]))
         for target in self.targets:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
                                    max(self.scale / 2 + 1, target.radius))
             world_view[mask] = 0
-        # add mask of original value to everything outside mask
-        world_view[~self.mask_image] = 0.5
         return world_view
+
+    def measure_world_loss(self, input, target):
+        # make it so there is no loss in the areas we cannot see
+        input[~self.mask_image] = 0
+        target[~self.mask_image] = 0
+        loss = torch.nn.BCELoss(reduction='mean')
+        world_loss = loss(input=input, target=target)
+        return world_loss
+
 
     def reward_slice_cross_entropy(self, last_tensor, next_image, add_mask=True):
 

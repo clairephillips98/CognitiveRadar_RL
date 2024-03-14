@@ -3,7 +3,7 @@ from rl_agents.DRL_code_pytorch.Rainbow_DQN.replay_buffer import *
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.rainbow_dqn import DQN
 import argparse
 from radar_env.radar_gymnasium import RadarEnv
-from rl_agents.calculate_stats import radar_stats,radar_stats_analysis
+from rl_agents.calculate_stats import stats
 import os
 class Runner:
     def __init__(self, args, env_name, number,seed):
@@ -109,7 +109,7 @@ class Runner:
 
     def evaluate_policy(self, ):
         evaluate_reward = 0
-        analysis_info = {}
+        radar_stats = stats()
         self.agent.net.eval()
         for _ in range(self.args.evaluate_times):
             state = self.env_evaluate.reset()[0]
@@ -120,16 +120,17 @@ class Runner:
                 next_state, reward, done, _,_ = self.env_evaluate.step(action)
                 episode_reward += reward
                 state = next_state
-            analysis_info = radar_stats(analysis_info, self.env_evaluate.info_analysis())
+            radar_stats.add_stats(self.env_evaluate.info_analysis())
             evaluate_reward += episode_reward
         self.agent.net.train()
-        analysis = radar_stats_analysis(analysis_info)
+        analysis = radar_stats.stats_analysis()
         evaluate_reward /= self.args.evaluate_times
         self.evaluate_rewards.append(evaluate_reward)
         print("total_steps:{} \t evaluate_reward:{} \t epsilon：{}".format(self.total_steps, evaluate_reward, self.epsilon))
-        self.writer.add_scalar('step_rewards_{}'.format(self.env_name), evaluate_reward, global_step=self.total_steps)
-        self.writer.add_scalar('step_time_to_first_view_{}'.format(self.env_name), analysis['avg_time_til_first_view'], global_step=self.total_steps)
-        self.writer.add_scalar('target_view_rate_to_velocity_corr_{}'.format(self.env_name), analysis['views_vel_corr'], global_step=self.total_steps)
+        self.writer.add_scalar('step_rewards', evaluate_reward, global_step=self.total_steps)
+        self.writer.add_scalar('step_time_to_first_view', analysis['avg_time_til_first_view'], global_step=self.total_steps)
+        self.writer.add_scalar('target_view_rate_to_velocity_corr', analysis['views_vel_corr'], global_step=self.total_steps)
+        self.writer.add_scalar('world_view_avg_loss', analysis['avg_world_loss'], global_step=self.total_steps)
 
 
 if __name__ == '__main__':

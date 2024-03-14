@@ -3,7 +3,7 @@ from torch.utils.tensorboard import SummaryWriter
 import argparse
 from radar_env.radar_gymnasium import RadarEnv
 import random
-from rl_agents.calculate_stats import radar_stats,radar_stats_analysis
+from rl_agents.calculate_stats import stats
 import torch
 from functools import reduce
 
@@ -70,7 +70,7 @@ class Runner:
     def evaluate_policy(self):
         action=3
         evaluate_reward = 0
-        analysis_info = {}
+        radar_stats = stats()
         for _ in range(self.args.evaluate_times):
             state = self.env_evaluate.reset()[0]
             done = False
@@ -89,14 +89,15 @@ class Runner:
                 episode_reward += reward
                 state = next_state
             evaluate_reward += episode_reward
-            analysis_info = radar_stats(analysis_info, self.env_evaluate.info_analysis())
-        analysis = radar_stats_analysis(analysis_info)
+            radar_stats.add_stats(self.env_evaluate.info_analysis())
+        analysis = radar_stats.stats_analysis()
         evaluate_reward /= self.args.evaluate_times
         self.evaluate_rewards.append(evaluate_reward)
         print("total_steps:{} \t evaluate_reward:{} \t epsilon：{}".format(self.total_steps, evaluate_reward, "None"))
-        self.writer.add_scalar('step_rewards_{}'.format(self.env_name), evaluate_reward, global_step=self.total_steps)
-        self.writer.add_scalar('step_time_to_first_view_{}'.format(self.env_name), analysis['avg_time_til_first_view'], global_step=self.total_steps)
-        self.writer.add_scalar('target_view_rate_to_velocity_corr_{}'.format(self.env_name), analysis['views_vel_corr'], global_step=self.total_steps)
+        self.writer.add_scalar('step_rewards', evaluate_reward, global_step=self.total_steps)
+        self.writer.add_scalar('step_time_to_first_view', analysis['avg_time_til_first_view'], global_step=self.total_steps)
+        self.writer.add_scalar('target_view_rate_to_velocity_corr', analysis['views_vel_corr'], global_step=self.total_steps)
+        self.writer.add_scalar('world_view_avg_loss', analysis['avg_world_loss'], global_step=self.total_steps)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameter Setting for DQN")

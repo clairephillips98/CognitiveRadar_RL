@@ -74,17 +74,14 @@ class RadarEnv(gym.Env):
     def _get_obs(self):
         return self.game.next_image
 
-    def _get_info(self):
-        # view_count, average_velocity, time_til_first_view, possible_observable_time
-        info = torch.vstack([target.stats for target in self.game.targets])
-        # this could be a bottle neck
-        return info
-
     def info_analysis(self):
-        info = self._get_info()
+        info=torch.vstack([target.stats for target in self.game.targets])
+        world_loss = self.game.measure_world_loss(input=self.game.next_image,
+                                                  target=self.game.create_hidden_target_tensor())
         time_til_first_view = info[:,2]
         time_til_first_view[time_til_first_view == -1] = self._max_episode_steps
-        return time_til_first_view.sum(), info[:,[0,1]]
+        return {'time_til_first_view': torch.Tensor(time_til_first_view.sum()),'views_vel': info[:,[0,1]],
+                'world_loss': torch.Tensor(world_loss)}
 
     def reset(self, seed=None, options=None):
         # We need the following line to seed self.np_random
@@ -98,7 +95,6 @@ class RadarEnv(gym.Env):
         self._agent_angle = [random.randint(0, radar.num_states) for radar in self.game.radars]
 
         observation = self._get_obs()
-        info = self._get_info()  # update this for when I need info
 
         if self.render_mode == "human":
             self._render_frame()
@@ -112,7 +108,6 @@ class RadarEnv(gym.Env):
         terminated = 1 if self.game.t == 500 else 0
         reward = self.game.reward
         observation = self._get_obs()
-        # info = self._get_info()
         if self.render_mode == "human":
             self._render_frame()
 
