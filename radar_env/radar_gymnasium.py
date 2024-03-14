@@ -80,7 +80,7 @@ class RadarEnv(gym.Env):
                                                   target=self.game.create_hidden_target_tensor())
         time_til_first_view = info[:,2]
         time_til_first_view[time_til_first_view == -1] = self._max_episode_steps
-        return {'time_til_first_view': torch.Tensor(time_til_first_view.sum()),'views_vel': info[:,[0,1]],
+        return {'time_til_first_view': torch.Tensor(time_til_first_view),'views_vel': info[:,[0,1]],
                 'world_loss': torch.Tensor(world_loss)}
 
     def reset(self, seed=None, options=None):

@@ -184,19 +184,17 @@ class Simulation:
 
 
     def reward_slice_cross_entropy(self, last_tensor, next_image, add_mask=True):
-
         # Using BCE loss to find the binary cross entropy of the  changing images
         # The model is rewarded for a large change == high entropy
-
         loss = torch.nn.BCELoss(reduction='none')
-        loss = loss(last_tensor, torch.floor(next_image))
+        loss = loss(input=last_tensor, target=torch.floor(next_image))
         if add_mask:
             mask = ((next_image!=1)&(next_image!=0))
             # this works because if the last pixel was white, and it stayed white (or white), loss is 0
             # if the last pixel was grey, it will only now be white/black if the pixel has been viewed
             # so we only need to mask the grey cells
-            loss[mask]
-        reward = (torch.sum(loss))
+            loss[mask]=0
+        reward = (torch.mean(loss))
         return reward
 
 
