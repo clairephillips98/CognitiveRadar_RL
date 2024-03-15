@@ -128,6 +128,7 @@ class Prioritized_ReplayBuffer(object):
         batch = {}
         for key in self.buffer.keys():  # numpy->tensor
             if key == 'action':
+                print('checking')
                 print(self.buffer[key][batch_index])
                 print(type(self.buffer[key][batch_index]))
                 batch[key] = self.buffer[key][batch_index].to(torch.long)
