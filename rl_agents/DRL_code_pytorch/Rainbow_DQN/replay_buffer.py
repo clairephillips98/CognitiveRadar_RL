@@ -11,18 +11,18 @@ class ReplayBuffer(object):
         self.buffer_capacity = args.buffer_capacity
         self.current_size = 0
         self.count = 0
-        self.buffer = {'state': np.zeros((self.buffer_capacity, *args.state_dim)),
-                       'action': np.zeros((self.buffer_capacity, 1)),
+        self.buffer = {'state': torch.zeros((self.buffer_capacity, *args.state_dim)).to(device),
+                       'action': torch.zeros((self.buffer_capacity, 1)).to(device),
                        'reward': np.zeros(self.buffer_capacity),
-                       'next_state': np.zeros((self.buffer_capacity, *args.state_dim)),
+                       'next_state': torch.zeros((self.buffer_capacity, *args.state_dim)).to(device),
                        'terminal': np.zeros(self.buffer_capacity),
                        }
 
     def store_transition(self, state, action, reward, next_state, terminal, done):
-        self.buffer['state'][self.count] = state.cpu()
-        self.buffer['action'][self.count] = action
+        self.buffer['state'][self.count] = state.to(device)
+        self.buffer['action'][self.count] = torch.tensor(action).to(device)
         self.buffer['reward'][self.count] = reward
-        self.buffer['next_state'][self.count] = next_state.cpu()
+        self.buffer['next_state'][self.count] = next_state.to(device)
         self.buffer['terminal'][self.count] = terminal
         self.count = (self.count + 1) % self.buffer_capacity  # When the 'count' reaches buffer_capacity, it will be reset to 0.
         self.current_size = min(self.current_size + 1, self.buffer_capacity)
@@ -48,10 +48,10 @@ class N_Steps_ReplayBuffer(object):
         self.count = 0
         self.n_steps = args.n_steps
         self.n_steps_deque = deque(maxlen=self.n_steps)
-        self.buffer = {'state': np.zeros((self.buffer_capacity, *args.state_dim)),
-                       'action': np.zeros((self.buffer_capacity, 1)),
+        self.buffer = {'state': torch.zeros((self.buffer_capacity, *args.state_dim)).to(device),
+                       'action': torch.zeros((self.buffer_capacity, 1)).to(device),
                        'reward': np.zeros(self.buffer_capacity),
-                       'next_state': np.zeros((self.buffer_capacity, *args.state_dim)),
+                       'next_state': torch.zeros((self.buffer_capacity, *args.state_dim)).to(device),
                        'terminal': np.zeros(self.buffer_capacity),
                        }
 
@@ -60,10 +60,10 @@ class N_Steps_ReplayBuffer(object):
         self.n_steps_deque.append(transition)
         if len(self.n_steps_deque) == self.n_steps:
             state, action, n_steps_reward, next_state, terminal = self.get_n_steps_transition()
-            self.buffer['state'][self.count] = state.cpu()
-            self.buffer['action'][self.count] = action
+            self.buffer['state'][self.count] = state.to(device)
+            self.buffer['action'][self.count] = torch.tensor(action).to(device)
             self.buffer['reward'][self.count] = n_steps_reward
-            self.buffer['next_state'][self.count] = next_state.cpu()
+            self.buffer['next_state'][self.count] = next_state.to(device)
             self.buffer['terminal'][self.count] = terminal
             self.count = (self.count + 1) % self.buffer_capacity  # When the 'count' reaches buffer_capacity, it will be reset to 0.
             self.current_size = min(self.current_size + 1, self.buffer_capacity)
@@ -85,9 +85,9 @@ class N_Steps_ReplayBuffer(object):
         batch = {}
         for key in self.buffer.keys():  # numpy->tensor
             if key == 'action':
-                batch[key] = torch.tensor(self.buffer[key][index], dtype=torch.long).to(device)
+                batch[key] = self.buffer[key][index].to(torch.long)
             else:
-                batch[key] = torch.tensor(self.buffer[key][index], dtype=torch.float32).to(device)
+                batch[key] = self.buffer[key][index].to(torch.float32)
 
         return batch, None, None
 
@@ -103,18 +103,18 @@ class Prioritized_ReplayBuffer(object):
         self.sum_tree = SumTree(self.buffer_capacity)
         self.current_size = 0
         self.count = 0
-        self.buffer = {'state': np.zeros((self.buffer_capacity, *args.state_dim)),
-                       'action': np.zeros((self.buffer_capacity, 1)),
+        self.buffer = {'state': torch.zeros((self.buffer_capacity, *args.state_dim)).to(device),
+                       'action': torch.zeros((self.buffer_capacity, 1)).to(device),
                        'reward': np.zeros(self.buffer_capacity),
-                       'next_state': np.zeros((self.buffer_capacity, *args.state_dim)),
+                       'next_state': torch.zeros((self.buffer_capacity, *args.state_dim)).to(device),
                        'terminal': np.zeros(self.buffer_capacity),
                        }
 
     def store_transition(self, state, action, reward, next_state, terminal, done):
-        self.buffer['state'][self.count] = state.cpu()
-        self.buffer['action'][self.count] = action
+        self.buffer['state'][self.count] = state.to(device)
+        self.buffer['action'][self.count] = torch.tensor(action).to(device)
         self.buffer['reward'][self.count] = reward
-        self.buffer['next_state'][self.count] = next_state.cpu()
+        self.buffer['next_state'][self.count] = next_state.to(device)
         self.buffer['terminal'][self.count] = terminal
         # 如果是第一条经验，初始化优先级为1.0；否则，对于新存入的经验，指定为当前最大的优先级
         priority = 1.0 if self.current_size == 0 else self.sum_tree.priority_max
@@ -128,9 +128,9 @@ class Prioritized_ReplayBuffer(object):
         batch = {}
         for key in self.buffer.keys():  # numpy->tensor
             if key == 'action':
-                batch[key] = torch.tensor(self.buffer[key][batch_index], dtype=torch.long).to(device)
+                batch[key] = self.buffer[key][batch_index].to(torch.long)
             else:
-                batch[key] = torch.tensor(self.buffer[key][batch_index], dtype=torch.float32).to(device)
+                batch[key] = self.buffer[key][batch_index].to(torch.float32)
 
         return batch, batch_index, IS_weight
 
@@ -152,10 +152,10 @@ class N_Steps_Prioritized_ReplayBuffer(object):
         self.sum_tree = SumTree(self.buffer_capacity)
         self.n_steps = args.n_steps
         self.n_steps_deque = deque(maxlen=self.n_steps)
-        self.buffer = {'state': np.zeros((self.buffer_capacity, *args.state_dim)),
-                       'action': np.zeros((self.buffer_capacity, 1)),
+        self.buffer = {'state': torch.zeros((self.buffer_capacity, *args.state_dim)).to(device),
+                       'action': torch.zeros((self.buffer_capacity, 1)).to(device),
                        'reward': np.zeros(self.buffer_capacity),
-                       'next_state': np.zeros((self.buffer_capacity, *args.state_dim)),
+                       'next_state': torch.zeros((self.buffer_capacity, *args.state_dim)).to(device),
                        'terminal': np.zeros(self.buffer_capacity),
                        }
         self.current_size = 0
@@ -166,10 +166,10 @@ class N_Steps_Prioritized_ReplayBuffer(object):
         self.n_steps_deque.append(transition)
         if len(self.n_steps_deque) == self.n_steps:
             state, action, n_steps_reward, next_state, terminal = self.get_n_steps_transition()
-            self.buffer['state'][self.count] = state.cpu()
-            self.buffer['action'][self.count] = action
+            self.buffer['state'][self.count] = state.to(device)
+            self.buffer['action'][self.count] = torch.tensor(action)
             self.buffer['reward'][self.count] = n_steps_reward
-            self.buffer['next_state'][self.count] = next_state.cpu()
+            self.buffer['next_state'][self.count] = next_state.to(device)
             self.buffer['terminal'][self.count] = terminal
             # 如果是buffer中的第一条经验，那么指定priority为1.0；否则对于新存入的经验，指定为当前最大的priority
             priority = 1.0 if self.current_size == 0 else self.sum_tree.priority_max
@@ -183,9 +183,9 @@ class N_Steps_Prioritized_ReplayBuffer(object):
         batch = {}
         for key in self.buffer.keys():  # numpy->tensor
             if key == 'action':
-                batch[key] = torch.tensor(self.buffer[key][batch_index], dtype=torch.long).to(device)
+                batch[key] = self.buffer[key][batch_index].to(torch.long)
             else:
-                batch[key] = torch.tensor(self.buffer[key][batch_index], dtype=torch.float32).to(device)
+                batch[key] = self.buffer[key][batch_index].to(torch.float32)
 
         return batch, batch_index, IS_weight
 
