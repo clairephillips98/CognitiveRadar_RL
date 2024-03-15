@@ -28,8 +28,7 @@ class Dueling_Net(nn.Module):
             self.A = nn.Linear(args.hidden_dim, args.action_dim)
 
     def forward(self, s):
-        print(s.device)
-        s = s.unsqueeze(1)
+        s = s.unsqueeze(1).to(device)
         s = self.pool(F.relu(self.conv1(s)))
         s = F.relu(self.conv2(s)).squeeze(0)
         s = torch.flatten(s,1)

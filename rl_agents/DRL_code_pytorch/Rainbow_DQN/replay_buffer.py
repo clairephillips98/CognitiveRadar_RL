@@ -110,10 +110,10 @@ class Prioritized_ReplayBuffer(object):
                        }
 
     def store_transition(self, state, action, reward, next_state, terminal, done):
-        self.buffer['state'][self.count] = state
+        self.buffer['state'][self.count] = state.cpu()
         self.buffer['action'][self.count] = action
         self.buffer['reward'][self.count] = reward
-        self.buffer['next_state'][self.count] = next_state
+        self.buffer['next_state'][self.count] = next_state.cpu()
         self.buffer['terminal'][self.count] = terminal
         # 如果是第一条经验，初始化优先级为1.0；否则，对于新存入的经验，指定为当前最大的优先级
         priority = 1.0 if self.current_size == 0 else self.sum_tree.priority_max
