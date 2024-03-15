@@ -63,7 +63,7 @@ class DQN(object):
         td_errors = q_current - q_target  # shape：(batch_size,)
         if self.use_per:
             loss = (IS_weight * (td_errors ** 2)).mean()
-            replay_buffer.update_batch_priorities(batch_index, td_errors.detach().numpy())
+            replay_buffer.update_batch_priorities(batch_index, td_errors.cpu().detach().numpy())
         else:
             loss = (td_errors ** 2).mean()
 
