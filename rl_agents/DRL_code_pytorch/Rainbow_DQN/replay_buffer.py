@@ -166,10 +166,10 @@ class N_Steps_Prioritized_ReplayBuffer(object):
         if len(self.n_steps_deque) == self.n_steps:
             state, action, n_steps_reward, next_state, terminal = self.get_n_steps_transition()
             self.buffer['state'][self.count] = state.cpu()
-            self.buffer['action'][self.count] = action.cpu()
-            self.buffer['reward'][self.count] = n_steps_reward.cpu()
+            self.buffer['action'][self.count] = action
+            self.buffer['reward'][self.count] = n_steps_reward
             self.buffer['next_state'][self.count] = next_state.cpu()
-            self.buffer['terminal'][self.count] = terminal.cpu()
+            self.buffer['terminal'][self.count] = terminal
             # 如果是buffer中的第一条经验，那么指定priority为1.0；否则对于新存入的经验，指定为当前最大的priority
             priority = 1.0 if self.current_size == 0 else self.sum_tree.priority_max
             self.sum_tree.update(data_index=self.count, priority=priority)  # 更新当前经验在sum_tree中的优先级
