@@ -128,9 +128,9 @@ class Prioritized_ReplayBuffer(object):
         batch = {}
         for key in self.buffer.keys():  # numpy->tensor
             if key == 'action':
-                batch[key] = torch.tensor(self.buffer[key][index],dtype=torch.long)
+                batch[key] = torch.tensor(self.buffer[key][batch_index],dtype=torch.long)
             else:
-                batch[key] = torch.tensor(self.buffer[key][index],dtype=torch.float32)
+                batch[key] = torch.tensor(self.buffer[key][batch_index],dtype=torch.float32)
 
         return batch, batch_index, IS_weight
 
@@ -183,9 +183,9 @@ class N_Steps_Prioritized_ReplayBuffer(object):
         batch = {}
         for key in self.buffer.keys():  # numpy->tensor
             if key == 'action':
-                batch[key] = torch.tensor(self.buffer[key][index],dtype=torch.long)
+                batch[key] = torch.tensor(self.buffer[key][batch_index],dtype=torch.long)
             else:
-                batch[key] = torch.tensor(self.buffer[key][index],dtype=torch.float32)
+                batch[key] = torch.tensor(self.buffer[key][batch_index],dtype=torch.float32)
 
         return batch, batch_index, IS_weight
 
