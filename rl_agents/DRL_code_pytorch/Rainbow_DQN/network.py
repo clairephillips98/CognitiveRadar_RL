@@ -18,7 +18,7 @@ class Dueling_Net(nn.Module):
         self.conv1 = nn.Conv2d(in_channels=1,out_channels=mid_channels, kernel_size=k1)
         self.pool = nn.MaxPool2d(pool_dim,pool_dim)
         self.conv2 = nn.Conv2d(in_channels=mid_channels,out_channels=1,kernel_size=k2)
-        self.fc1 = nn.Linear(np.multiply(*(int((dimensions-k1+1)/pool_dim)-k2+1)), args.hidden_dim)
+        self.fc1 = nn.Linear(np.multiply(*(((dimensions-k1+1)/pool_dim).astype(int)-k2+1)), args.hidden_dim)
         self.fc2 = nn.Linear(args.hidden_dim, args.hidden_dim)
         if args.use_noisy:
             self.V = NoisyLinear(args.hidden_dim, 1)
@@ -51,7 +51,7 @@ class Net(nn.Module):
         self.conv1 = nn.Conv2d(in_channels=1,out_channels=mid_channels, kernel_size=k1)
         self.pool = nn.MaxPool2d(pool_dim,pool_dim)
         self.conv2 = nn.Conv2d(in_channels=mid_channels,out_channels=1,kernel_size=k2)
-        self.fc1 = nn.Linear(np.multiply(*((int(dimensions-k1+1)/pool_dim)-k2+1)), args.hidden_dim)
+        self.fc1 = nn.Linear(np.multiply(*(((dimensions-k1+1)/pool_dim).astype(int)-k2+1)), args.hidden_dim)
         self.fc2 = nn.Linear(args.hidden_dim, args.hidden_dim)
         if args.use_noisy:
             self.fc3 = NoisyLinear(args.hidden_dim, args.action_dim)
