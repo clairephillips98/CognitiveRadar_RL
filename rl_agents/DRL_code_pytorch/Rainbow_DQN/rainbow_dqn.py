@@ -61,6 +61,8 @@ class DQN(object):
         q_current = self.net(batch['state'].to(device)).gather(-1, batch['action']).squeeze(-1)  # shape：(batch_size,)
         td_errors = q_current - q_target  # shape：(batch_size,)
 
+        print(type(IS_weight))
+        print(type(td_errors))
         if self.use_per:
             loss = (IS_weight * (td_errors ** 2)).mean()
             replay_buffer.update_batch_priorities(batch_index, td_errors.detach().numpy())
