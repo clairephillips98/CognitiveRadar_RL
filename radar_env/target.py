@@ -16,9 +16,9 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 class Target:
 
     def __init__(self, radius, bounds, name=None, seed=None, common_destination=[0,0], common_destination_likelihood=0):
-        self.common_destination = self.closeset_area(common_destination)
-        self.common_destination_likelihood = common_destination_likelihood
         self.bounds = self.bounds_expanded(bounds, 0.2)
+        self.common_destination = self.point_in_square(common_destination)
+        self.common_destination_likelihood = common_destination_likelihood
         self.t = 0
         self.shift = 0
         self.chance = randrange(0,1)  # chance take off or land location is random
@@ -61,7 +61,8 @@ class Target:
             x_acc = randint(-25, 25) / 400
             y_acc = randint(-25, 25) / 400
             return x_acc, y_acc
-    def point_in_square(self,x, y):
+    def point_in_square(self,point):
+        x,y=point
         # Check if point is inside the square
         if self.bounds['x_lower'] <= x <= self.bounds['x_upper'] and self.bounds['y_lower'] <= y <= self.bounds['y_upper']:
             return [x, y]  # Point is inside, return the original point

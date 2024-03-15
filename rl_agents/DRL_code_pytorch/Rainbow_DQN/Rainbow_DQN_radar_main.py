@@ -12,6 +12,7 @@ class Runner:
         self.number = number
         self.seed = seed
         self.blur_radius = self.args.blur_radius
+        print(self.blur_radius)
         if self.args.cdl > 0:
             self.env_name += '_common_destination_{}_odds'.format(self.args.cdl)
         self.env = RadarEnv(seed=seed,blur_radius=self.blur_radius,
@@ -165,21 +166,14 @@ if __name__ == '__main__':
     parser.add_argument("--use_noisy", type=int, default=1, help="Whether to use noisy network")
     parser.add_argument("--use_per", type=int, default=1, help="Whether to use PER")
     parser.add_argument("--use_n_steps", type=int, default=1, help="Whether to use n_steps Q-learning")
-    parser.add_argument("--blur_radius", type=int, default=None, help="size of the radius of the gaussian filter applied to previous views")
+    parser.add_argument("--blur_radius", type=int, default=1, help="size of the radius of the gaussian filter applied to previous views")
     parser.add_argument("--scale", type=int, default=50, help="factor by which the space is scaled down")
     parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
     parser.add_argument("--common_destination", type=list, default=[-380,-380], help="a common location for targets come from and go to")
     parser.add_argument("--cdl", type=float, default=0.0, help="how many targets go to location")
 
     args = parser.parse_args()
-    print(args)
-    env_names = ['CartPole-v1', 'LunarLander-v2']
     env_index = 1
     for seed in [0, 10, 100]:
-        if args.blur_radius is None:
-            for x in [1,0,2]:
-                args.blur_radius = x
-                runner = Runner(args=args, env_name="cognitive_radar", number=1, seed=seed)
-                runner.run()
         runner = Runner(args=args, env_name="cognitive_radar", number=1, seed=seed)
         runner.run()
