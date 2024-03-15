@@ -33,13 +33,13 @@ class DQN(object):
         else:
             self.net = Net(args).to(device)
 
-        self.target_net = copy.deepcopy(self.net)  # Copy the online_net to the target_net
+        self.target_net = copy.deepcopy(self.net).to(device)  # Copy the online_net to the target_net
 
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=self.lr)
 
     def choose_action(self, state, epsilon):
         with torch.no_grad():
-            state = torch.unsqueeze(torch.tensor(state, dtype=torch.float), 0)
+            state = torch.unsqueeze(torch.tensor(state, dtype=torch.float), 0).to(device)
             q = self.net(state)
             if np.random.uniform() > epsilon:
                 action = q.argmax(dim=-1).item()
@@ -53,7 +53,7 @@ class DQN(object):
         with torch.no_grad():  # q_target has no gradient
             if self.use_double:  # Whether to use the 'double q-learning'
                 # Use online_net to select the action
-                a_argmax = self.net(batch['next_state']).argmax(dim=-1, keepdim=True)  # shape：(batch_size,1)
+                a_argmax = self.net(batch['next_state']).argmax(dim=-1, keepdim=True).to(device)  # shape：(batch_size,1)
                 # Use target_net to estimate the q_target
                 q_target = batch['reward'] + self.gamma * (1 - batch['terminal']) * self.target_net(batch['next_state']).gather(-1, a_argmax).squeeze(-1)  # shape：(batch_size,)
             else:
