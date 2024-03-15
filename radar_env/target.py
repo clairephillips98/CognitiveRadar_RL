@@ -105,7 +105,7 @@ class Target:
             self.y_ac = randint(-100, 100) / 200
             if self.first_in_view is not None:
                 stats = self.final_stats()
-                self.stats = torch.vstack((self.stats, torch.tensor(stats))).to(device) # view_rate, average_velocity, time_til_first_view
+                self.stats = torch.vstack((self.stats, torch.tensor(stats).to(device))) # view_rate, average_velocity, time_til_first_view
             self.first_in_view = None
             self.first_viewed = None
             self.time_in_view = 0
