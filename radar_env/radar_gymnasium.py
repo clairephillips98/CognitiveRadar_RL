@@ -28,11 +28,14 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self,seed=None,render_mode=None, size=5, blur_radius=1, scale = 50, sigma=0.5):
+    def __init__(self,seed=None,render_mode=None, size=5, blur_radius=1, scale = 50, sigma=0.5,common_destination=[0,0], cdl=0):
         self.seed = seed
         self.blur_radius = blur_radius
         self.scale = scale
-        self.game = Simulation(blur_radius=self.blur_radius, scale=self.scale, sigma=sigma)
+        self.sigma = sigma
+        self.common_destination=common_destination
+        self.cdl=cdl
+        self.game = Simulation(blur_radius=self.blur_radius, scale=self.scale, sigma=sigma,common_destination=self.common_destination, cdl=self.cdl)
         self.info = torch.empty(0,4)
         self.size = size  # The size of the square grid
         self.window_size = jnp.array(self.game.next_image.size()) * self.size  # The size of the PyGame window
@@ -75,13 +78,13 @@ class RadarEnv(gym.Env):
         return self.game.next_image
 
     def info_analysis(self):
-        info=torch.vstack([target.stats for target in self.game.targets])
+        info=torch.vstack([target.stats for target in self.game.targets]).to(device)
         world_loss = self.game.measure_world_loss(input=self.game.next_image,
                                                   target=self.game.create_hidden_target_tensor())
         time_til_first_view = info[:,2]
         time_til_first_view[time_til_first_view == -1] = self._max_episode_steps
         return {'time_til_first_view': torch.Tensor(time_til_first_view),'views_vel': info[:,[0,1]],
-                'world_loss': torch.Tensor(world_loss)}
+                'world_loss': torch.Tensor(world_loss).to(device)}
 
     def reset(self, seed=None, options=None):
         # We need the following line to seed self.np_random
@@ -89,7 +92,7 @@ class RadarEnv(gym.Env):
             self.seed += 1
         super().reset(seed=self.seed)
 
-        self.game = Simulation(self.blur_radius, self.scale, seed=self.seed)
+        self.game = Simulation(self.blur_radius, self.scale, seed=self.seed, sigma=self.sigma,common_destination=self.common_destination, cdl=self.cdl)
         # self.info = torch.empty(0,4)
         # Choose the agent starting angle at random
         self._agent_angle = [random.randint(0, radar.num_states) for radar in self.game.radars]

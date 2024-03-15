@@ -29,9 +29,9 @@ class DQN(object):
             self.gamma = self.gamma ** args.n_steps
 
         if self.use_dueling:  # Whether to use the 'dueling network'
-            self.net = Dueling_Net(args)
+            self.net = Dueling_Net(args).to(device)
         else:
-            self.net = Net(args)
+            self.net = Net(args).to(device)
 
         self.target_net = copy.deepcopy(self.net)  # Copy the online_net to the target_net
 

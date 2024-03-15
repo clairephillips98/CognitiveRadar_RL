@@ -11,12 +11,18 @@ class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
         self.env_name = env_name
+        if self.args.cdl > 0:
+            self.env_name += '_common_destination_{}_odds'.format(self.args.cdl)
         self.number = number
         self.seed = seed
         random.seed(seed)
         self.blur_radius = args.blur_radius
-        self.env = RadarEnv(seed = seed, blur_radius=self.blur_radius, sigma=self.args.blur_sigma)
-        self.env_evaluate = RadarEnv(seed = seed, blur_radius=self.blur_radius,sigma=self.args.blur_sigma)
+        self.env = RadarEnv(seed=seed,blur_radius=self.blur_radius,
+                            scale=self.args.scale, sigma=self.args.blur_sigma,
+                            common_destination=self.args.common_destination, cdl=self.args.cdl)
+        self.env_evaluate = RadarEnv(seed=seed,blur_radius=self.blur_radius,
+                                     scale=self.args.scale,sigma=self.args.blur_sigma,
+                                     common_destination=self.args.common_destination, cdl=self.args.cdl)
         self.args.state_dim = self.env.observation_space['observation'].shape
         if type(self.args.state_dim) == int:
             self.args.state_dim = [self.args.state_dim]
@@ -132,7 +138,8 @@ if __name__ == '__main__':
                         help="type of baseline model (simple, min_variance, max_variance")
     parser.add_argument("--scale", type=int, default=50, help="factor by which the space is scaled down")
     parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
-
+    parser.add_argument("--common_destination", type=list, default=[-380,-380], help="a common location for targets come from and go to")
+    parser.add_argument("--cdl", type=float, default=0.0, help="how many targets go to location")
 
     args = parser.parse_args()
 

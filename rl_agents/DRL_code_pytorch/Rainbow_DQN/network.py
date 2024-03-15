@@ -5,6 +5,8 @@ import math
 from functools import reduce
 import numpy as np
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 class Dueling_Net(nn.Module):
     def __init__(self, args):
         super(Dueling_Net, self).__init__()

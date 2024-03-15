@@ -15,6 +15,8 @@ import math
 from math import pi
 import torchvision.transforms as T
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 def create_radars(seed=None):
     radar_1 = Radar(peak_power=400, duty_cycle=3,
@@ -41,33 +43,36 @@ def overall_bounds(radars):
             'y_upper': max(map(lambda d: d['y_upper'], radars))}
 
 
-def create_targets(n_ts, bounds,seed=None):
-    targets = [Target(radius=1, bounds=bounds, name=n,seed=seed) for n in range(n_ts)]
+def create_targets(n_ts, bounds,seed=None, common_destination=[0,0],
+                                      common_destination_likelihood=0):
+    targets = [Target(radius=1, bounds=bounds, name=n,seed=seed,common_destination=common_destination,common_destination_likelihood=common_destination_likelihood) for n in range(n_ts)]
     return targets
 
 
 class Simulation:
 
     meta_data = {'game_types': ['single_agent','MARL_shared_view', 'MARL_shared_targets']}
-    def __init__(self, blur_radius: int = 1, scale: int = 50,seed=None, game_type='single_agent', sigma = 0.5):
+    def __init__(self, blur_radius: int = 1, scale: int = 50,seed=None, game_type='single_agent', sigma = 0.5,
+                 common_destination=[0,0], cdl=0):
         self.game_type = game_type
         self.reward = None
         self.t = 0
         self.radars = create_radars(seed)
         self.bounds = [bounds(radar) for radar in self.radars]
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
-        self.targets = create_targets(10, self.overall_bounds, seed=seed)
+        self.targets = create_targets(10, self.overall_bounds, seed=seed, common_destination=common_destination,
+                                      common_destination_likelihood=cdl)
         self.scale = scale
         self.blur_radius = blur_radius
         self.shape = [self.blur_radius * 3 +
                  ceil((self.overall_bounds['x_upper'] - self.overall_bounds['x_lower']) / self.scale),
                  self.blur_radius * 3 +
                  ceil((self.overall_bounds['y_upper'] - self.overall_bounds['y_lower']) / self.scale)]
-        self.base_image = torch.ones((self.shape[0],self.shape[1])) * 0.5
-        self.x = torch.arange(self.shape[1], dtype=torch.float32).view(1, -1).repeat(self.shape[0], 1)
-        self.y = torch.arange(self.shape[0], dtype=torch.float32).view(-1, 1).repeat(1, self.shape[1])
+        self.base_image = (torch.ones((self.shape[0],self.shape[1])) * 0.5).to(device)
+        self.x = (torch.arange(self.shape[1], dtype=torch.float32).view(1, -1).repeat(self.shape[0], 1)).to(device)
+        self.y = (torch.arange(self.shape[0], dtype=torch.float32).view(-1, 1).repeat(1, self.shape[1])).to(device)
         self.next_image = self.base_image.clone()
-        self.transform = T.GaussianBlur(kernel_size=(self.blur_radius*2+1, self.blur_radius*2+1), sigma=(sigma,sigma))
+        self.transform = T.GaussianBlur(kernel_size=(self.blur_radius*2+1, self.blur_radius*2+1), sigma=(sigma,sigma)).to(device)
         masks = [self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, 0, 360, radar.max_distance) for radar in self.radars]
         self.mask_image = reduce(lambda x, y: torch.logical_or(x, y), masks)
         self.images = []
@@ -79,10 +84,10 @@ class Simulation:
         # Compute distances from the center
         scaled_center = [(center[0]-self.overall_bounds['x_lower'])/self.scale+self.blur_radius,
                          (center[1]-self.overall_bounds['y_lower'])/self.scale+self.blur_radius]
-        distances = torch.sqrt((x - scaled_center[0]) ** 2 + (y - scaled_center[1]) ** 2)
+        distances = torch.sqrt((x - scaled_center[0]) ** 2 + (y - scaled_center[1]) ** 2).to(device)
         # Compute angles from the center
-        angles = torch.atan2(y - scaled_center[1], x - scaled_center[0])
-        angles = angles = (angles * 180 / torch.tensor(pi)).int() % 360  # Convert angles to degrees
+        angles = torch.atan2(y - scaled_center[1], x - scaled_center[0]).to(device)
+        angles = (angles * 180 / torch.tensor(pi)).int() % 360  # Convert angles to degrees
         # Create a binary mask for the pie slice
         scaled_radius = radius / self.scale
         if start_angle <= end_angle:
@@ -167,7 +172,7 @@ class Simulation:
         # we don't need to set a mask for outside the radar view, if were setting everything to 0.5 outside the view the
         # loss will be the same wheither there is a target(1) or no target(0).  given symmetry of loss
         # either way there is lower threshold of loss.
-        world_view = torch.ones((self.shape[0],self.shape[1]))
+        world_view = torch.ones((self.shape[0],self.shape[1])).to(device)
         for target in self.targets:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
                                    max(self.scale / 2 + 1, target.radius))
@@ -178,7 +183,7 @@ class Simulation:
         # make it so there is no loss in the areas we cannot see
         input[~self.mask_image] = 0
         target[~self.mask_image] = 0
-        loss = torch.nn.BCELoss(reduction='mean')
+        loss = torch.nn.BCELoss(reduction='mean').to(device)
         world_loss = loss(input=input, target=target)
         return world_loss
 
@@ -186,7 +191,7 @@ class Simulation:
     def reward_slice_cross_entropy(self, last_tensor, next_image, add_mask=True):
         # Using BCE loss to find the binary cross entropy of the  changing images
         # The model is rewarded for a large change == high entropy
-        loss = torch.nn.BCELoss(reduction='none')
+        loss = torch.nn.BCELoss(reduction='none').to(device)
         loss = loss(input=last_tensor, target=torch.floor(next_image))
         if add_mask:
             mask = ((next_image!=1)&(next_image!=0))

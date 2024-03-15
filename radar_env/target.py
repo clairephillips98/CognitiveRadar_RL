@@ -8,25 +8,28 @@ Defining a moving target
 import random
 
 import torch
-from random import randint
+from random import randint, randrange
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class Target:
 
-    def __init__(self, radius, bounds, name=None, seed=None):
+    def __init__(self, radius, bounds, name=None, seed=None, common_destination=[0,0], common_destination_likelihood=0):
+        self.common_destination = self.closeset_area(common_destination)
+        self.common_destination_likelihood = common_destination_likelihood
         self.bounds = self.bounds_expanded(bounds, 0.2)
         self.t = 0
         self.shift = 0
-        self.x_start = randint(self.bounds['x_lower'] * 50, self.bounds['x_upper'] * 50) / 50
-        self.y_start = randint(self.bounds['y_lower'] * 50, self.bounds['y_upper'] * 50) / 50
+        self.chance = randrange(0,1)  # chance take off or land location is random
+        self.x_start, self.y_start = self.x_y_start()
         self.x_vel = randint(-50, 50) / 100
         self.y_vel = randint(-50, 50) / 100
-        self.x_ac = randint(-25, 25) / 400
-        self.y_ac = randint(-25, 25) / 400
+        self.x_ac,self.y_ac = self.x_y_acc()
         self.bounds = bounds
         self.vel = None
         self.acc = None
-        self.stats = torch.empty(0, 3)
+        self.stats = torch.empty(0, 3).to(device)
         self.first_in_view = None
         self.first_viewed = None
         self.time_in_view = 0
@@ -37,6 +40,48 @@ class Target:
         self.radius = radius
         self.name = name
 
+    def x_y_start(self):
+        if self.chance < (self.common_destination_likelihood / 2):
+            return self.common_destination
+        else:
+            x = randint(
+                self.bounds['x_lower'] * 50, self.bounds['x_upper'] * 50) / 50
+            y = randint(
+            self.bounds['y_lower'] * 50, self.bounds['y_upper'] * 50) / 50
+            return x,y
+
+    def x_y_acc(self):
+        if (self.common_destination_likelihood / 2) < self.chance < self.common_destination_likelihood:
+            t = randint(10,150) #time to get to location
+            x_displacement = self.common_destination[0] - (self.x_start + self.x_vel * t)
+            y_displacement = self.common_destination[1] - (self.y_end + self.y_vel * t)
+            x_acc = 2 * x_displacement / (t ** 2)
+            y_acc = 2 * y_displacement / (t ** 2)
+        else:
+            x_acc = randint(-25, 25) / 400
+            y_acc = randint(-25, 25) / 400
+            return x_acc, y_acc
+    def point_in_square(self,x, y):
+        # Check if point is inside the square
+        if self.bounds['x_lower'] <= x <= self.bounds['x_upper'] and self.bounds['y_lower'] <= y <= self.bounds['y_upper']:
+            return [x, y]  # Point is inside, return the original point
+        else:
+            # Find the closest point on the perimeter of the square to the given point
+            closest_x = max(self.bounds['x_lower'], min(x, self.bounds['x_upper']))
+            closest_y = max(self.bounds['y_lower'], min(y, self.bounds['y_upper']))
+
+            # Determine which side of the square is closest to the point
+            if x < self.bounds['x_lower']:
+                closest_x = self.bounds['x_lower']
+            elif x > self.bounds['x_upper']:
+                closest_x = self.bounds['x_upper']
+
+            if y < self.bounds['y_lower']:
+                closest_y = self.bounds['y_lower']
+            elif y > self.bounds['y_upper']:
+                closest_y = self.bounds['y_upper']
+
+            return [closest_x, closest_y]  # Point is outside, return closest point on perimeter
 
     def bounds_expanded(self, bounds: dict, expanded: int):
         # expand the bounds by x percent
@@ -59,7 +104,7 @@ class Target:
             self.y_ac = randint(-100, 100) / 200
             if self.first_in_view is not None:
                 stats = self.final_stats()
-                self.stats = torch.vstack((self.stats, torch.tensor(stats))) # view_rate, average_velocity, time_til_first_view
+                self.stats = torch.vstack((self.stats, torch.tensor(stats))).to(device) # view_rate, average_velocity, time_til_first_view
             self.first_in_view = None
             self.first_viewed = None
             self.time_in_view = 0
