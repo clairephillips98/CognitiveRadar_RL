@@ -19,10 +19,10 @@ class ReplayBuffer(object):
                        }
 
     def store_transition(self, state, action, reward, next_state, terminal, done):
-        self.buffer['state'][self.count] = state
+        self.buffer['state'][self.count] = state.cpu()
         self.buffer['action'][self.count] = action
         self.buffer['reward'][self.count] = reward
-        self.buffer['next_state'][self.count] = next_state
+        self.buffer['next_state'][self.count] = next_state.cpu()
         self.buffer['terminal'][self.count] = terminal
         self.count = (self.count + 1) % self.buffer_capacity  # When the 'count' reaches buffer_capacity, it will be reset to 0.
         self.current_size = min(self.current_size + 1, self.buffer_capacity)
@@ -60,10 +60,10 @@ class N_Steps_ReplayBuffer(object):
         self.n_steps_deque.append(transition)
         if len(self.n_steps_deque) == self.n_steps:
             state, action, n_steps_reward, next_state, terminal = self.get_n_steps_transition()
-            self.buffer['state'][self.count] = state
+            self.buffer['state'][self.count] = state.cpu()
             self.buffer['action'][self.count] = action
             self.buffer['reward'][self.count] = n_steps_reward
-            self.buffer['next_state'][self.count] = next_state
+            self.buffer['next_state'][self.count] = next_state.cpu()
             self.buffer['terminal'][self.count] = terminal
             self.count = (self.count + 1) % self.buffer_capacity  # When the 'count' reaches buffer_capacity, it will be reset to 0.
             self.current_size = min(self.current_size + 1, self.buffer_capacity)
