@@ -55,6 +55,12 @@ class DQN(object):
                 # Use online_net to select the action
                 a_argmax = self.net(batch['next_state']).argmax(dim=-1, keepdim=True).to(device)  # shape：(batch_size,1)
                 # Use target_net to estimate the q_target
+                print(type(batch['reward']))
+                print(type(self.gamma))
+                print(type(self.target_net))
+                print(type(batch['next_state']))
+                print(type(batch['terminal']))
+                print(type(a_argmax))
                 q_target = batch['reward'] + self.gamma * (1 - batch['terminal']) * self.target_net(batch['next_state']).gather(-1, a_argmax).squeeze(-1)  # shape：(batch_size,)
             else:
                 q_target = batch['reward'] + self.gamma * (1 - batch['terminal']) * self.target_net(batch['next_state']).max(dim=-1)[0]  # shape：(batch_size,)
