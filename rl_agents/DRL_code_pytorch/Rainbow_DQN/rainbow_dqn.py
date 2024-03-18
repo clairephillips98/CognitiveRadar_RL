@@ -49,7 +49,8 @@ class DQN(object):
 
     def learn(self, replay_buffer, total_steps):
         batch, batch_index, IS_weight = replay_buffer.sample(total_steps)
-        IS_weight = IS_weight.to(device)
+        if self.use_per:
+            IS_weight = IS_weight.to(device)
         with torch.no_grad():  # q_target has no gradient
             if self.use_double:  # Whether to use the 'double q-learning'
                 # Use online_net to select the action
