@@ -145,7 +145,7 @@ if __name__ == '__main__':
 
     env_names = ['CartPole-v1', 'LunarLander-v2']
     env_index = 1
-    for seed in [0, 10, 100]:
+    for seed in [0]:
         for x in [1, 0,2]:
             args.blur_radius = x
             runner = Runner(args=args, env_name="Radar_Env_baseline", number=1, seed=seed)
