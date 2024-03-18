@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --nodes=2
+#SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
 #SBATCH --time=8:00:0
 #SBATCH --export=ALL
