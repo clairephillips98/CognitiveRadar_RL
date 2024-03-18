@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --nodes=2
-#SBATCH --gpus-per-node=2
+#SBATCH --gpus-per-node=4
 #SBATCH --time=16:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test.txt
