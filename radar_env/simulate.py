@@ -14,9 +14,10 @@ from functools import reduce
 import math
 from math import pi
 import torchvision.transforms as T
+from config import GPU_NAME
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
+print(device)
 
 def create_radars(seed=None):
     radar_1 = Radar(peak_power=400, duty_cycle=3,

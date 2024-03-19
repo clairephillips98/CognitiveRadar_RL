@@ -2,8 +2,10 @@ import torch
 import numpy as np
 from collections import deque
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.sum_tree import SumTree
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+from config import GPU_NAME
 
+device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
+print(device)
 
 class ReplayBuffer(object):
     def __init__(self, args):

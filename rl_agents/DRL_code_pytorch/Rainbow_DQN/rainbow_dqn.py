@@ -2,8 +2,9 @@ import torch
 import numpy as np
 import copy
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.network import Dueling_Net, Net
+from config import GPU_NAME
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
 
 

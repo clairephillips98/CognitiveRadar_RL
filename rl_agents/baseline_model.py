@@ -6,6 +6,7 @@ import random
 from rl_agents.calculate_stats import stats
 import torch
 from functools import reduce
+from config import set_gpu_name
 
 class Runner:
     def __init__(self, args, env_name, number,seed):
@@ -140,7 +141,7 @@ if __name__ == '__main__':
     parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
     parser.add_argument("--common_destination", type=list, default=[0,0], help="a common location for targets come from and go to")
     parser.add_argument("--cdl", type=float, default=0.0, help="how many targets go to location")
-    parser.add_argument("--gpu_number", type=float, default=0, help="gpu used")
+    parser.add_argument("--gpu_number", type=int, default=0, help="gpu used")
 
     args = parser.parse_args()
 
@@ -148,7 +149,8 @@ if __name__ == '__main__':
     env_index = 1
     for seed in [0]:
         for x in [1]:
+            set_gpu_name("cuda:"+str(args.gpu_number))
             args.blur_radius = x
-            runner = Runner(args=args, env_name="slow_random_dir", number=1, seed=seed)
+            runner = Runner(args=args, env_name="slow_random_dir_airport", number=1, seed=seed)
             runner.run()
 

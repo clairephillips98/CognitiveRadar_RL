@@ -9,8 +9,10 @@ import random
 
 import torch
 from random import randint, randrange
+from config import GPU_NAME
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
+print(device)
 
 time = 0.12
 
