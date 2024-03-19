@@ -79,14 +79,14 @@ class Simulation:
         self.images = []
         self.last_tensor = None
         self.polar_images = []
-        self.speed_layers = None#(torch.zeros((self.shape[0],self.shape[1],2))).to(device)
+        self.speed_layers = (torch.zeros((self.shape[0],self.shape[1],2))).to(device)
         self.initial_scan()
 
     def draw_shape(self,x, y, center, start_angle, end_angle, radius):
         # Compute distances from the center
         scaled_center = [(center[0]-self.overall_bounds['x_lower'])/self.scale+self.blur_radius,
                          (center[1]-self.overall_bounds['y_lower'])/self.scale+self.blur_radius]
-        distances = torch.sqrt((x - scaled_center[0]) ** 2 + (y - scaled_center[1]) ** 2).to(device)
+        distances = torch.sqrt((x - round(scaled_center[0])) ** 2 + (y - round(scaled_center[1])) ** 2).to(device)
         # Compute angles from the center
         angles = torch.atan2(y - scaled_center[1], x - scaled_center[0]).to(device)
         angles = (angles * 180 / torch.tensor(pi)).int() % 360  # Convert angles to degrees
@@ -160,17 +160,17 @@ class Simulation:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, start_angle, end_angle, radar.max_distance)
             # Convert mask to tensor and invert it
             self.next_image[mask] = 1
-            # if self.speed_layers:
-            #     self.speed_layers[:, :, 0][mask] = 0
-            #     self.speed_layers[:, :, 1][mask] = 0
+            if self.speed_layers is not None:
+                 self.speed_layers[:, :, 0][mask] = 0
+                 self.speed_layers[:, :, 1][mask] = 0
         for target in visible_targets:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
                                    max(self.scale/2+1,target.radius))
             self.next_image[mask] = 0
-            # if self.speed_layers:
-            #     mask_index = torch.nonzero(mask, as_tuple=False)[0]
-            #     self.speed_layers[*mask_index, 0] = max([self.speed_layers[*mask_index, 0], target.x_vel], key=abs)
-            #     self.speed_layers[*mask_index, 1] = max([self.speed_layers[*mask_index, 1], target.y_vel], key=abs)
+            if self.speed_layers is not None:
+                 mask_index = torch.nonzero(mask, as_tuple=False)[0]
+                 self.speed_layers[*mask_index, 0] = max([self.speed_layers[*mask_index, 0], target.x_vel], key=abs)
+                 self.speed_layers[*mask_index, 1] = max([self.speed_layers[*mask_index, 1], target.y_vel], key=abs)
 
         # add mask of original value to everything outside mask
         self.next_image[~self.mask_image] = 0.5

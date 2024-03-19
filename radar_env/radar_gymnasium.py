@@ -72,7 +72,13 @@ class RadarEnv(gym.Env):
 
 
     def _get_obs(self):
-        return self.game.next_image
+        if self.game.speed_layers is not None:
+            expanded_image = self.game.next_image.unsqueeze(2)
+            joined_tensor = torch.cat((expanded_image, self.game.speed_layers), dim=2).permute(2, 0, 1)
+            return joined_tensor
+        else:
+            return self.game.next_image
+
 
     def info_analysis(self):
         info=torch.vstack([target.stats for target in self.game.targets]).to(device)
