@@ -29,14 +29,10 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self,seed=None,render_mode='human', size=5, blur_radius=1, scale=50, sigma=0.5,common_destination=[0,0], cdl=0):
+    def __init__(self,args, seed=None,render_mode='human', size=5):
         self.seed = seed
-        self.blur_radius = blur_radius
-        self.scale = scale
-        self.sigma = sigma
-        self.common_destination=common_destination
-        self.cdl=cdl
-        self.game = Simulation(blur_radius=self.blur_radius, scale=self.scale, sigma=sigma,common_destination=self.common_destination, cdl=self.cdl)
+        self.args=args
+        self.game = Simulation(self.args)
         self.info = torch.empty(0,4)
         self.size = size  # The size of the square grid
         self.window_size = jnp.array(self.game.next_image.size()) * self.size  # The size of the PyGame window
@@ -93,7 +89,7 @@ class RadarEnv(gym.Env):
             self.seed += 1
         super().reset(seed=self.seed)
 
-        self.game = Simulation(self.blur_radius, self.scale, seed=self.seed, sigma=self.sigma,common_destination=self.common_destination, cdl=self.cdl)
+        self.game = Simulation(self.args,seed=self.seed)
         # self.info = torch.empty(0,4)
         # Choose the agent starting angle at random
         self._agent_angle = [random.randint(0, radar.num_states) for radar in self.game.radars]

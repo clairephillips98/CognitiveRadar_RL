@@ -15,12 +15,8 @@ class Runner:
         self.blur_radius = self.args.blur_radius
         if self.args.cdl > 0:
             self.env_name += '_common_destination_{}_odds'.format(self.args.cdl)
-        self.env = RadarEnv(seed=seed,blur_radius=self.blur_radius,
-                            scale=self.args.scale, sigma=self.args.blur_sigma,
-                            common_destination=self.args.common_destination, cdl=self.args.cdl, args=self.args)
-        self.env_evaluate = RadarEnv(seed=seed,blur_radius=self.blur_radius,
-                                     scale=self.args.scale,sigma=self.args.blur_sigma,
-                                     common_destination=self.args.common_destination, cdl=self.args.cdl, args=self.args)
+        self.env = RadarEnv(seed=seed, args=self.args)
+        self.env_evaluate = RadarEnv(seed=seed, args=self.args)
         self.args.state_dim = self.env.observation_space['observation'].shape
         if type(self.args.state_dim) == int:
             self.args.state_dim = [self.args.state_dim]

@@ -53,18 +53,18 @@ def create_targets(n_ts, bounds,seed=None, common_destination=[0,0],
 class Simulation:
 
     meta_data = {'game_types': ['single_agent','MARL_shared_view', 'MARL_shared_targets']}
-    def __init__(self, blur_radius: int = 1, scale: int = 50,seed=None, game_type='single_agent', sigma = 0.5,
-                 common_destination=[0,0], cdl=0):
+    def __init__(self, args, seed=None, game_type='single_agent'):
+        self.args = args
         self.game_type = game_type
         self.reward = None
         self.t = 0
         self.radars = create_radars(seed)
         self.bounds = [bounds(radar) for radar in self.radars]
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
-        self.targets = create_targets(10, self.overall_bounds, seed=seed, common_destination=common_destination,
-                                      common_destination_likelihood=cdl)
-        self.scale = scale
-        self.blur_radius = blur_radius
+        self.targets = create_targets(10, self.overall_bounds, seed=seed, common_destination=self.args.common_destination,
+                                      common_destination_likelihood=self.args.cdl)
+        self.scale = self.args.scale
+        self.blur_radius = self.args.blur_radius
         self.shape = [self.blur_radius * 3 +
                  ceil((self.overall_bounds['x_upper'] - self.overall_bounds['x_lower']) / self.scale),
                  self.blur_radius * 3 +
@@ -73,12 +73,13 @@ class Simulation:
         self.x = (torch.arange(self.shape[1], dtype=torch.float32).view(1, -1).repeat(self.shape[0], 1)).to(device)
         self.y = (torch.arange(self.shape[0], dtype=torch.float32).view(-1, 1).repeat(1, self.shape[1])).to(device)
         self.next_image = self.base_image.clone()
-        self.transform = T.GaussianBlur(kernel_size=(self.blur_radius*2+1, self.blur_radius*2+1), sigma=(sigma,sigma)).to(device)
+        self.transform = T.GaussianBlur(kernel_size=(self.blur_radius*2+1, self.blur_radius*2+1), sigma=(self.args.blur_sigma,self.args.blur_sigma)).to(device)
         masks = [self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, 0, 360, radar.max_distance) for radar in self.radars]
         self.mask_image = reduce(lambda x, y: torch.logical_or(x, y), masks)
         self.images = []
         self.last_tensor = None
         self.polar_images = []
+        self.speed_layers = None#(torch.zeros((self.shape[0],self.shape[1],2))).to(device)
         self.initial_scan()
 
     def draw_shape(self,x, y, center, start_angle, end_angle, radius):
@@ -159,10 +160,18 @@ class Simulation:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, start_angle, end_angle, radar.max_distance)
             # Convert mask to tensor and invert it
             self.next_image[mask] = 1
+            if self.speed_layers:
+                self.speed_layers[:, :, 0][mask] = 0
+                self.speed_layers[:, :, 1][mask] = 0
         for target in visible_targets:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
                                    max(self.scale/2+1,target.radius))
             self.next_image[mask] = 0
+            if self.speed_layers:
+                mask_index = torch.nonzero(mask, as_tuple=False)[0]
+                self.speed_layers[*mask_index, 0] = max([self.speed_layers[*mask_index, 0], target.x_vel], key=abs)
+                self.speed_layers[*mask_index, 1] = max([self.speed_layers[*mask_index, 1], target.y_vel], key=abs)
+
         # add mask of original value to everything outside mask
         self.next_image[~self.mask_image] = 0.5
         return self.next_image
