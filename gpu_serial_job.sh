@@ -5,6 +5,7 @@
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test.txt
 #SBATCH --partition=compute_full_node
+#SBATCH --ntasks=4
 module load anaconda3
 echo 1
 source activate pytorch_env
