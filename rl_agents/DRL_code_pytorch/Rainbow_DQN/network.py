@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import math
 from functools import reduce
 import numpy as np
-from config import GPU_NAME
+from rl_agents.config import GPU_NAME
 
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)

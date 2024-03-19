@@ -6,7 +6,7 @@ import random
 from rl_agents.calculate_stats import stats
 import torch
 from functools import reduce
-from config import set_gpu_name
+from rl_agents.config import set_gpu_name
 
 class Runner:
     def __init__(self, args, env_name, number,seed):

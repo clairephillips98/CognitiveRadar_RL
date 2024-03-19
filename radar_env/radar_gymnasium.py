@@ -20,7 +20,7 @@ else:
     show = True
 from functools import reduce
 import gymnasium as gym
-from config import GPU_NAME
+from rl_agents.config import GPU_NAME
 
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)

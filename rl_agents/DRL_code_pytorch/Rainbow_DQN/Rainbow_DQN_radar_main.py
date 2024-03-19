@@ -4,6 +4,7 @@ from rl_agents.DRL_code_pytorch.Rainbow_DQN.rainbow_dqn import DQN
 import argparse
 from radar_env.radar_gymnasium import RadarEnv
 from rl_agents.calculate_stats import stats
+from rl_agents.config import set_gpu_name
 import os
 class Runner:
     def __init__(self, args, env_name, number,seed):

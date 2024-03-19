@@ -9,12 +9,12 @@ import random
 
 import torch
 from random import randint, randrange
-from config import GPU_NAME
+from rl_agents.config import GPU_NAME
 
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
 
-time = 0.12
+time = 0.012
 
 class Target:
 

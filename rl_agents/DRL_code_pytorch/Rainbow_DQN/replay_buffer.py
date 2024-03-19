@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from collections import deque
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.sum_tree import SumTree
-from config import GPU_NAME
+from rl_agents.config import GPU_NAME
 
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
