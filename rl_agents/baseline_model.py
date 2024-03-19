@@ -10,7 +10,7 @@ from functools import reduce
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
-        self.env_name = 'slow_moving'
+        self.env_name = 'slow_targets_airport'
         if self.args.cdl > 0:
             self.env_name += '_common_destination_{}_odds'.format(self.args.cdl)
         self.number = number
@@ -140,6 +140,7 @@ if __name__ == '__main__':
     parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
     parser.add_argument("--common_destination", type=list, default=[0,0], help="a common location for targets come from and go to")
     parser.add_argument("--cdl", type=float, default=0.0, help="how many targets go to location")
+    parser.add_argument("--gpu_number", type=float, default=0, help="gpu used")
 
     args = parser.parse_args()
 

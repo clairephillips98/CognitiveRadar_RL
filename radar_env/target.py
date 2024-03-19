@@ -12,7 +12,7 @@ from random import randint, randrange
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-time = 0.0000012
+time = 0.12
 
 class Target:
 
@@ -24,8 +24,7 @@ class Target:
         self.shift = 0
         self.chance = randrange(0,100)/100  # chance take off or land location is random
         self.x_start, self.y_start = self.x_y_start()
-        self.x_vel = -2*time if self.chance < 0.0 else 2*time
-        self.y_vel = -2*time if self.chance < 0.0 else 2*time
+        self.x_vel,self.y_vel = self.x_y_vel()
         self.x_ac,self.y_ac = 0,0
         self.bounds = bounds
         self.vel = None
@@ -51,8 +50,21 @@ class Target:
             self.bounds['y_lower'] * 50, self.bounds['y_upper'] * 50) / 50
             return x,y
 
-    def x_y_acc(self):
+    def x_y_vel(self):
+        if (self.common_destination_likelihood / 2)< self.chance < (self.common_destination_likelihood):
+            x_vel = self.common_destination[0]-self.x_start
+            y_vel = self.common_destination[1]-self.y_start
+        else:
+            x_vel = randint(-10,10)
+            y_vel = randint(-10,10)
+        scale = (abs(x_vel) + abs(y_vel))/2
+        x_vel =( x_vel / scale ) * time
+        y_vel =( y_vel / scale )* time
+        return x_vel,y_vel
 
+
+    def x_y_acc(self):
+        # this is depreciated
         if (self.common_destination_likelihood / 2) < self.chance < (self.common_destination_likelihood):
             t = randint(100/time,300/time) #time to get to location
             x_displacement = self.common_destination[0] - (self.x_start + self.x_vel * t)
@@ -101,9 +113,8 @@ class Target:
         if not ((self.bounds['x_lower'] < pos[0] < self.bounds['x_upper']) & (
                 self.bounds['y_lower'] < pos[1] < self.bounds['y_upper'])):
             self.shift = t
-            self.x_start,self.y_start = self.x_y_start()
-            self.x_vel = -2 * time if self.chance < 0.0 else 2 * time
-            self.y_vel = -2 * time if self.chance < 0.0 else 2 * time
+            self.x_start, self.y_start = self.x_y_start()
+            self.x_vel, self.y_vel = self.x_y_vel()
             self.x_ac,self.y_ac =0,0
             if self.first_in_view is not None:
                 stats = self.final_stats()
@@ -124,8 +135,6 @@ class Target:
                     self.y_vel + 2 * self.y_ac * (t - self.shift))
 
         self.acc = (2 * self.x_ac, 2 * self.y_ac)
-        print(self.cartesian_coordinates)
-        print(self.x_vel,self.y_vel)
         return self.cartesian_coordinates
 
     def collect_stats(self, t, viewed):

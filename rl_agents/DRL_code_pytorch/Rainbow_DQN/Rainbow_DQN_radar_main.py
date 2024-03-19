@@ -8,11 +8,10 @@ import os
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
-        self.env_name = "slow_targets"
+        self.env_name = "slow_targets_airport"
         self.number = number
         self.seed = seed
         self.blur_radius = self.args.blur_radius
-        print(self.blur_radius)
         if self.args.cdl > 0:
             self.env_name += '_common_destination_{}_odds'.format(self.args.cdl)
         self.env = RadarEnv(seed=seed,blur_radius=self.blur_radius,
@@ -169,8 +168,9 @@ if __name__ == '__main__':
     parser.add_argument("--blur_radius", type=int, default=1, help="size of the radius of the gaussian filter applied to previous views")
     parser.add_argument("--scale", type=int, default=50, help="factor by which the space is scaled down")
     parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
-    parser.add_argument("--common_destination", type=list, default=[-380,-380], help="a common location for targets come from and go to")
+    parser.add_argument("--common_destination", type=list, default=[-200,-200], help="a common location for targets come from and go to")
     parser.add_argument("--cdl", type=float, default=0.0, help="how many targets go to location")
+    parser.add_argument("--gpu_number", type=float, default=0, help="gpu used")
 
     args = parser.parse_args()
     env_index = 1
