@@ -160,17 +160,17 @@ class Simulation:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, start_angle, end_angle, radar.max_distance)
             # Convert mask to tensor and invert it
             self.next_image[mask] = 1
-            if self.speed_layers:
-                self.speed_layers[:, :, 0][mask] = 0
-                self.speed_layers[:, :, 1][mask] = 0
+            # if self.speed_layers:
+            #     self.speed_layers[:, :, 0][mask] = 0
+            #     self.speed_layers[:, :, 1][mask] = 0
         for target in visible_targets:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
                                    max(self.scale/2+1,target.radius))
             self.next_image[mask] = 0
-            if self.speed_layers:
-                mask_index = torch.nonzero(mask, as_tuple=False)[0]
-                self.speed_layers[*mask_index, 0] = max([self.speed_layers[*mask_index, 0], target.x_vel], key=abs)
-                self.speed_layers[*mask_index, 1] = max([self.speed_layers[*mask_index, 1], target.y_vel], key=abs)
+            # if self.speed_layers:
+            #     mask_index = torch.nonzero(mask, as_tuple=False)[0]
+            #     self.speed_layers[*mask_index, 0] = max([self.speed_layers[*mask_index, 0], target.x_vel], key=abs)
+            #     self.speed_layers[*mask_index, 1] = max([self.speed_layers[*mask_index, 1], target.y_vel], key=abs)
 
         # add mask of original value to everything outside mask
         self.next_image[~self.mask_image] = 0.5
