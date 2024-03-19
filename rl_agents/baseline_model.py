@@ -147,6 +147,6 @@ if __name__ == '__main__':
         for x in [1]:
             set_gpu_name("cuda:"+str(args.gpu_number))
             args.blur_radius = x
-            runner = Runner(args=args, env_name="slow_random_dir_airport", number=1, seed=seed)
+            runner = Runner(args=args, env_name="slow_random_dir_airport_speed_layers", number=1, seed=seed)
             runner.run()
 

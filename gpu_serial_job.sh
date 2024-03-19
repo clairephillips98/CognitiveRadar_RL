@@ -3,7 +3,7 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --time=4:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_airport.txt
+#SBATCH --output=cphil_test_airport_speed_layers.txt
 #SBATCH --partition=compute_full_node
 #SBATCH --ntasks=4
 module load anaconda3

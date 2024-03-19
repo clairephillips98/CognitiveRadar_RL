@@ -172,5 +172,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     env_index = 1
     set_gpu_name("cuda:" + str(args.gpu_number))
-    runner = Runner(args=args, env_name="slow_random_dir_airport", number=1, seed=0)
+    runner = Runner(args=args, env_name="slow_random_dir_airport_speed_layers", number=1, seed=0)
     runner.run()
