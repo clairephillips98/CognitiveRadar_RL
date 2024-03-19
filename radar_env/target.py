@@ -12,6 +12,7 @@ from random import randint, randrange
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+time = 0.0000012
 
 class Target:
 
@@ -21,11 +22,11 @@ class Target:
         self.common_destination_likelihood = common_destination_likelihood
         self.t = 0
         self.shift = 0
-        self.chance = randrange(0,1)  # chance take off or land location is random
+        self.chance = randrange(0,100)/100  # chance take off or land location is random
         self.x_start, self.y_start = self.x_y_start()
-        self.x_vel = randint(-50, 50) / 100
-        self.y_vel = randint(-50, 50) / 100
-        self.x_ac,self.y_ac = self.x_y_acc()
+        self.x_vel = -2*time if self.chance < 0.0 else 2*time
+        self.y_vel = -2*time if self.chance < 0.0 else 2*time
+        self.x_ac,self.y_ac = 0,0
         self.bounds = bounds
         self.vel = None
         self.acc = None
@@ -51,16 +52,19 @@ class Target:
             return x,y
 
     def x_y_acc(self):
-        if (self.common_destination_likelihood / 2) < self.chance < self.common_destination_likelihood:
-            t = randint(10,150) #time to get to location
+
+        if (self.common_destination_likelihood / 2) < self.chance < (self.common_destination_likelihood):
+            t = randint(100/time,300/time) #time to get to location
             x_displacement = self.common_destination[0] - (self.x_start + self.x_vel * t)
-            y_displacement = self.common_destination[1] - (self.y_end + self.y_vel * t)
-            x_acc = 2 * x_displacement / (t ** 2)
-            y_acc = 2 * y_displacement / (t ** 2)
+            y_displacement = self.common_destination[1] - (self.y_start + self.y_vel * t)
+            abs_max = time * 25 / 400
+            x_acc = max(-abs_max,min(2 * x_displacement / (t ** 2),time*25/400))
+            y_acc = max(-abs_max,min(2 * y_displacement / (t ** 2),time*25/400))
         else:
-            x_acc = randint(-25, 25) / 400
-            y_acc = randint(-25, 25) / 400
-            return x_acc, y_acc
+            x_acc = (randint(-25, 25) / 400)* (time**2)
+            y_acc = (randint(-25, 25) / 400)* (time**2)
+        return x_acc, y_acc
+
     def point_in_square(self,point):
         x,y=point
         # Check if point is inside the square
@@ -97,12 +101,10 @@ class Target:
         if not ((self.bounds['x_lower'] < pos[0] < self.bounds['x_upper']) & (
                 self.bounds['y_lower'] < pos[1] < self.bounds['y_upper'])):
             self.shift = t
-            self.x_start = randint(self.bounds['x_lower'] * 50, self.bounds['x_upper'] * 50) / 50
-            self.y_start = randint(self.bounds['y_lower'] * 50, self.bounds['y_upper'] * 50) / 50
-            self.x_vel = randint(-100, 100) / 100
-            self.y_vel = randint(-100, 100) / 100
-            self.x_ac = randint(-100, 100) / 200
-            self.y_ac = randint(-100, 100) / 200
+            self.x_start,self.y_start = self.x_y_start()
+            self.x_vel = -2 * time if self.chance < 0.0 else 2 * time
+            self.y_vel = -2 * time if self.chance < 0.0 else 2 * time
+            self.x_ac,self.y_ac =0,0
             if self.first_in_view is not None:
                 stats = self.final_stats()
                 self.stats = torch.vstack((self.stats, torch.tensor(stats).to(device))) # view_rate, average_velocity, time_til_first_view
@@ -122,6 +124,8 @@ class Target:
                     self.y_vel + 2 * self.y_ac * (t - self.shift))
 
         self.acc = (2 * self.x_ac, 2 * self.y_ac)
+        print(self.cartesian_coordinates)
+        print(self.x_vel,self.y_vel)
         return self.cartesian_coordinates
 
     def collect_stats(self, t, viewed):

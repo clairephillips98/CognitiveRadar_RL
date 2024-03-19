@@ -28,7 +28,7 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self,seed=None,render_mode=None, size=5, blur_radius=1, scale=50, sigma=0.5,common_destination=[0,0], cdl=0):
+    def __init__(self,seed=None,render_mode='human', size=5, blur_radius=1, scale=50, sigma=0.5,common_destination=[0,0], cdl=0):
         self.seed = seed
         self.blur_radius = blur_radius
         self.scale = scale
@@ -108,7 +108,7 @@ class RadarEnv(gym.Env):
         # Map the action to angle of view of all agents
         self._agent_angle = self._action_to_angle[action]
         self.game.update_t(self._agent_angle)
-        terminated = 1 if self.game.t == 500 else 0
+        terminated = 1 if self.game.t == 500000 else 0
         reward = self.game.reward
         observation = self._get_obs()
         if self.render_mode == "human":

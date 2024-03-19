@@ -10,7 +10,7 @@ from functools import reduce
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
-        self.env_name = env_name
+        self.env_name = 'slow_moving'
         if self.args.cdl > 0:
             self.env_name += '_common_destination_{}_odds'.format(self.args.cdl)
         self.number = number
@@ -138,7 +138,7 @@ if __name__ == '__main__':
                         help="type of baseline model (simple, min_variance, max_variance")
     parser.add_argument("--scale", type=int, default=50, help="factor by which the space is scaled down")
     parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
-    parser.add_argument("--common_destination", type=list, default=[-380,-380], help="a common location for targets come from and go to")
+    parser.add_argument("--common_destination", type=list, default=[0,0], help="a common location for targets come from and go to")
     parser.add_argument("--cdl", type=float, default=0.0, help="how many targets go to location")
 
     args = parser.parse_args()
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     env_names = ['CartPole-v1', 'LunarLander-v2']
     env_index = 1
     for seed in [0]:
-        for x in [1, 0,2]:
+        for x in [1]:
             args.blur_radius = x
             runner = Runner(args=args, env_name="Radar_Env_baseline", number=1, seed=seed)
             runner.run()

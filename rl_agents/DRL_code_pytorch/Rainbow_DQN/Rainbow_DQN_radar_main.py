@@ -8,7 +8,7 @@ import os
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
-        self.env_name = "Radar_Env_Radar"
+        self.env_name = "slow_targets"
         self.number = number
         self.seed = seed
         self.blur_radius = self.args.blur_radius
@@ -54,11 +54,11 @@ class Runner:
                 self.algorithm += '_PER'
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
+        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}_scale_{}_blur_sigma_{}'.format(self.algorithm, self.env_name, number, seed, self.blur_radius,self.args.scale,self.args.blur_sigma))
         if args.load_model is True:
             if os.path.isfile('models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_simga_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius, self.scale,self.args.blur_sigma)):
                 self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_sigma_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius,self.args.scale,self.args.blur_sigma)))
                 self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}_blur_radius_{}_scale_{}_blur_sigma_{}.pt'.format(self.algorithm, self.env_name,self.blur_radius,self.args.scale,self.args.blur_sigma)))
-        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}_scale_{}_blur_sigma_{}'.format(self.algorithm, self.env_name, number, seed, self.blur_radius,self.args.scale,self.args.blur_sigma))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -110,8 +110,8 @@ class Runner:
         np.save('data_train/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(self.evaluate_rewards))
 
     def save_models(self):
-        torch.save(self.agent.net.state_dict(),'models/DQN/net_{}_env_{}_blur_radius_{}.pt'.format(self.algorithm, self.env_name,self.blur_radius))
-        torch.save(self.agent.target_net.state_dict(), 'models/DQN/target_net_{}_env_{}_blur_radius_{}.pt'.format(self.algorithm, self.env_name,self.blur_radius))
+        torch.save(self.agent.net.state_dict(),'models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_simga_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius, self.scale,self.args.blur_sigma))
+        torch.save(self.agent.target_net.state_dict(), 'models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_simga_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius, self.scale,self.args.blur_sigma))
 
     def evaluate_policy(self, ):
         evaluate_reward = 0

@@ -124,7 +124,7 @@ class Runner:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameter Setting for DQN")
-    parser.add_argument("--max_train_steps", type=int, default=int(4e5), help=" Maximum number of training steps")
+    parser.add_argument("--max_train_steps", type=int, default=int(5e5), help=" Maximum number of training steps")
     parser.add_argument("--evaluate_freq", type=float, default=1e3, help="Evaluate the policy every 'evaluate_freq' steps")
     parser.add_argument("--evaluate_times", type=float, default=3, help="Evaluate times")
 
