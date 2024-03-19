@@ -10,7 +10,7 @@ from functools import reduce
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
-        self.env_name = 'slow_targets_airport'
+        self.env_name = env_name
         if self.args.cdl > 0:
             self.env_name += '_common_destination_{}_odds'.format(self.args.cdl)
         self.number = number
@@ -149,6 +149,6 @@ if __name__ == '__main__':
     for seed in [0]:
         for x in [1]:
             args.blur_radius = x
-            runner = Runner(args=args, env_name="Radar_Env_baseline", number=1, seed=seed)
+            runner = Runner(args=args, env_name="slow_random_dir", number=1, seed=seed)
             runner.run()
 

@@ -8,7 +8,7 @@ import os
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
-        self.env_name = "slow_targets_airport"
+        self.env_name = env_name
         self.number = number
         self.seed = seed
         self.blur_radius = self.args.blur_radius
@@ -174,5 +174,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     env_index = 1
-    runner = Runner(args=args, env_name="cognitive_radar", number=1, seed=0)
+    runner = Runner(args=args, env_name="slow_random_dir", number=1, seed=0)
     runner.run()
