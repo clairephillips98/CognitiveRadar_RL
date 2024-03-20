@@ -168,9 +168,8 @@ class Simulation:
                                    max(self.scale/2+1,target.radius))
             self.next_image[mask] = 0
             if self.speed_layers is not None:
-                 mask_index = torch.nonzero(mask, as_tuple=False)[0]
-                 self.speed_layers[*mask_index, 0] = max([self.speed_layers[*mask_index, 0], target.x_vel], key=abs)
-                 self.speed_layers[*mask_index, 1] = max([self.speed_layers[*mask_index, 1], target.y_vel], key=abs)
+                 self.speed_layers[:,:,0][mask] = target.x_vel
+                 self.speed_layers[:,:,1][mask] = target.y_vel
 
         # add mask of original value to everything outside mask
         self.next_image[~self.mask_image] = 0.5
