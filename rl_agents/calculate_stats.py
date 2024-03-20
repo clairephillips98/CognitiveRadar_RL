@@ -5,7 +5,6 @@ class stats:
     def __init__(self):
         self.stats = None
     def add_stats(self, additional_stats):
-
         if self.stats is None:
             self.stats = additional_stats
         else:

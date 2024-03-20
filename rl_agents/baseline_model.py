@@ -135,7 +135,7 @@ if __name__ == '__main__':
                         help="type of baseline model (simple, min_variance, max_variance")
     parser.add_argument("--scale", type=int, default=50, help="factor by which the space is scaled down")
     parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
-    parser.add_argument("--common_destination", type=list, default=[0,0], help="a common location for targets come from and go to")
+    parser.add_argument("--common_destination", type=list, default=[-200,-200], help="a common location for targets come from and go to")
     parser.add_argument("--cdl", type=float, default=0.0, help="how many targets go to location")
     parser.add_argument("--gpu_number", type=int, default=0, help="gpu used")
 
