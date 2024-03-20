@@ -111,7 +111,7 @@ class RadarEnv(gym.Env):
         # Map the action to angle of view of all agents
         self._agent_angle = self._action_to_angle[action]
         self.game.update_t(self._agent_angle)
-        terminated = 1 if self.game.t == 500000 else 0
+        terminated = 1 if self.game.t == 500 else 0
         reward = self.game.reward
         observation = self._get_obs()
         if self.render_mode == "human":
