@@ -59,7 +59,7 @@ class Target:
         else:
             x_vel = randint(-10,10)
             y_vel = randint(-10,10)
-        scale = (abs(x_vel) + abs(y_vel))/2
+        scale = max((abs(x_vel) + abs(y_vel))/2,1)
         x_vel =( x_vel / scale ) * time
         y_vel =( y_vel / scale )* time
         return x_vel,y_vel
