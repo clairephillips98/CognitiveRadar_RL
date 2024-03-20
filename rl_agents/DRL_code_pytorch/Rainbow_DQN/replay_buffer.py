@@ -13,10 +13,10 @@ class ReplayBuffer(object):
         self.buffer_capacity = args.buffer_capacity
         self.current_size = 0
         self.count = 0
-        self.buffer = {'state': np.zeros((self.buffer_capacity, *args.state_dim)),
+        self.buffer = {'state': np.zeros((self.buffer_capacity, 3,*args.state_dim)),
                        'action': np.zeros((self.buffer_capacity, 1)),
                        'reward': np.zeros(self.buffer_capacity),
-                       'next_state': np.zeros((self.buffer_capacity, *args.state_dim)),
+                       'next_state': np.zeros((self.buffer_capacity, 3,*args.state_dim)),
                        'terminal': np.zeros(self.buffer_capacity),
                        }
 
