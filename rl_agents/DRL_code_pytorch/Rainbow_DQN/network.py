@@ -50,7 +50,7 @@ class Net(nn.Module):
         mid_channels = 3
         dimensions = np.array(args.state_dim)
         pool_dim = 2
-        self.conv1 = nn.Conv2d(in_channels=1,out_channels=mid_channels, kernel_size=k1)
+        self.conv1 = nn.Conv2d(in_channels=3,out_channels=mid_channels, kernel_size=k1)
         self.pool = nn.MaxPool2d(pool_dim,pool_dim)
         self.conv2 = nn.Conv2d(in_channels=mid_channels,out_channels=1,kernel_size=k2)
         self.fc1 = nn.Linear(np.multiply(*(((dimensions-k1+1)/pool_dim).astype(int)-k2+1)), args.hidden_dim)
@@ -61,7 +61,6 @@ class Net(nn.Module):
             self.fc3 = nn.Linear(args.hidden_dim, args.action_dim)
 
     def forward(self, s):
-        s = s.unsqueeze(1)
         s = self.pool(F.relu(self.conv1(s)))
         s = F.relu(self.conv2(s)).squeeze(0)
         s = torch.flatten(s, 1)
