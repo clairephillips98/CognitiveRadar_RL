@@ -128,6 +128,7 @@ class Target:
             self.sum_velocity = 0
 
 
+
     def update_t(self, t):
         self.cartesian_coordinates = (
             self.x_start + self.x_vel * (t - self.shift) + self.x_ac * (t - self.shift) ** 2,
@@ -159,3 +160,9 @@ class Target:
         possible_observable_time = self.first_in_view - self.t
         view_rate = (len(self.views) - 1 )/possible_observable_time
         return view_rate, average_velocity, time_til_first_view
+
+    def episode_end(self):
+        if self.first_in_view is not None:
+            stats = self.final_stats()
+            self.stats = torch.vstack(
+                (self.stats, torch.tensor(stats).to(device)))  # view_rate, average_velocity, time_til_first_view

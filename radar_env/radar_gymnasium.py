@@ -29,7 +29,7 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self,args, seed=None,render_mode='human', size=5):
+    def __init__(self,args, seed=None,render_mode=None, size=5):
         self.seed = seed
         self.args=args
         self.game = Simulation(self.args)
@@ -81,6 +81,7 @@ class RadarEnv(gym.Env):
 
 
     def info_analysis(self):
+        print('here')
         info=torch.vstack([target.stats for target in self.game.targets]).to(device)
         world_loss = self.game.measure_world_loss(input=self.game.next_image,
                                                   target=self.game.create_hidden_target_tensor())
@@ -112,6 +113,8 @@ class RadarEnv(gym.Env):
         self._agent_angle = self._action_to_angle[action]
         self.game.update_t(self._agent_angle)
         terminated = 1 if self.game.t == 500 else 0
+        if terminated:
+            [target.episode_end() for target in self.game.targets]
         reward = self.game.reward
         observation = self._get_obs()
         if self.render_mode == "human":
