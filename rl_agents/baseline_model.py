@@ -52,7 +52,7 @@ class Runner:
         return total_masks
 
     def run(self):
-        while self.total_steps < (self.args.max_train_steps/self.args.evaluate_freq):
+        while self.total_steps < self.args.max_train_steps:
             self.evaluate_policy()
             self.total_steps += 1
 
