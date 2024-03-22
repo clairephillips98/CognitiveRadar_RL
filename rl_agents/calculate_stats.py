@@ -16,5 +16,4 @@ class stats:
            'avg_time_til_first_view': float(self.stats['time_til_first_view'].mean()),
            'views_vel_corr': float(torch.corrcoef(self.stats['views_vel'].t())[0,1]),
             'avg_world_loss': self.stats['world_loss'].mean()}
-        print(stats)
         return stats
