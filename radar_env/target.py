@@ -10,7 +10,8 @@ import random
 import torch
 from random import randint, randrange
 from rl_agents.config import GPU_NAME
-
+from utils import cartesian_to_polar
+from math import cos,pi
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
 
@@ -41,7 +42,8 @@ class Target:
         self.update_t(0)
         self.radius = radius
         self.name = name
-
+        self.target_angle = None
+        self.rho = [random.random(), random.random()]
     def x_y_start(self):
         if self.chance < (self.common_destination_likelihood / 2):
             return self.common_destination
@@ -128,6 +130,10 @@ class Target:
             self.sum_velocity = 0
 
 
+    def velocity(self):
+        abs_vel, vel_angle = cartesian_to_polar((self.x_vel,self.y_vel))
+        doppler_velocity = abs_vel*cos(pi*(vel_angle-self.target_angle)/180)
+        return doppler_velocity
 
     def update_t(self, t):
         self.cartesian_coordinates = (

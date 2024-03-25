@@ -1,16 +1,13 @@
 """""
-ABANDONNING THIS FILE AS I DONt THINK I NEED IT!
-I may be wrong and I may return 
-"""""
+Claire Phillips
+ECE2500
+Jan 18 2024
 
+Creating the Gym Simulated Environment 
+"""""
 import random
 from radar_env.simulate import Simulation
 import torch
-
-# if torch.cuda.is_available():
-#     import jax.numpy as jnp
-#
-# else:
 import numpy as jnp
 if torch.cuda.is_available():
     show = False
@@ -29,7 +26,7 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self,args, seed=None,render_mode=None, size=5):
+    def __init__(self,args, seed=None, render_mode='human', size=5):
         self.seed = seed
         self.args=args
         self.game = Simulation(self.args)
@@ -72,12 +69,14 @@ class RadarEnv(gym.Env):
 
 
     def _get_obs(self):
-        if self.game.speed_layers is not None:
-            expanded_image = self.game.next_image.unsqueeze(2)
-            joined_tensor = torch.cat((expanded_image, self.game.speed_layers), dim=2).permute(2, 0, 1)
-            return joined_tensor
+        if self.args.speed_layer == 1:
+            expanded_image = self.game.next_image.unsqueeze(0)
+            joined_tensor = torch.cat((expanded_image, self.game.speed_layers.unsqueeze(0)), dim=0)
+            return joined_tensor.squeeze(0).squeeze(0)
+            #[:,self.game.blur_radius:-self.game.blur_radius,self.game.blur_radius:-self.game.blur_radius]
         else:
             return self.game.next_image
+            #[self.game.blur_radius:-self.game.blur_radius,self.game.blur_radius:-self.game.blur_radius]
 
 
     def info_analysis(self):

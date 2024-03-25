@@ -1,6 +1,8 @@
 """
 Claire Phillips
 Jan. 26, 2024
+
+Pulling together radar and target to create the environment, and define the reward.
 """
 
 from radar_env.radar import Radar
@@ -20,10 +22,10 @@ device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
 
 def create_radars(seed=None):
-    radar_1 = Radar(peak_power=400, duty_cycle=3,
+    radar_1 = Radar(max_distance=184, duty_cycle=3,
                     pulsewidth=4, bandwidth=1, frequency=3,
                     pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(0, 0), wavelength=3,
-                    radians_of_view=45,seed=seed)
+                    radians_of_view=12,seed=seed)
     # radar_2 = Radar(peak_power=400, duty_cycle=3,
     #                 pulsewidth=4, bandwidth=1, frequency=3,
     #                 pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(0, 400), wavelength=3,
@@ -58,6 +60,7 @@ class Simulation:
         self.game_type = game_type
         self.reward = None
         self.t = 0
+        self.speed_scale = self.args.speed_scale
         self.radars = create_radars(seed)
         self.bounds = [bounds(radar) for radar in self.radars]
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
@@ -79,7 +82,7 @@ class Simulation:
         self.images = []
         self.last_tensor = None
         self.polar_images = []
-        self.speed_layers = None#(torch.zeros((self.shape[0],self.shape[1],2))).to(device)
+        self.speed_layers = (torch.zeros((self.shape[0],self.shape[1]))).to(device)
         self.initial_scan()
 
     def draw_shape(self,x, y, center, start_angle, end_angle, radius):
@@ -160,17 +163,16 @@ class Simulation:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, start_angle, end_angle, radar.max_distance)
             # Convert mask to tensor and invert it
             self.next_image[mask] = 1
-            # if self.speed_layers:
-            #     self.speed_layers[:, :, 0][mask] = 0
-            #     self.speed_layers[:, :, 1][mask] = 0
+            if self.speed_layers is not None:
+                 self.speed_layers[mask] = 0
         for target in visible_targets:
             mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
                                    max(self.scale/2+1,target.radius))
             self.next_image[mask] = 0
-            # if self.speed_layers:
-            #     mask_index = torch.nonzero(mask, as_tuple=False)[0]
-            #     self.speed_layers[*mask_index, 0] = max([self.speed_layers[*mask_index, 0], target.x_vel], key=abs)
-            #     self.speed_layers[*mask_index, 1] = max([self.speed_layers[*mask_index, 1], target.y_vel], key=abs)
+            if self.speed_layers is not None:
+                radial_vel = target.velocity()
+                vel_mask = abs(radial_vel)>self.speed_layers.squeeze(0).abs()
+                self.speed_layers[mask&vel_mask] = radial_vel
 
         # add mask of original value to everything outside mask
         self.next_image[~self.mask_image] = 0.5
@@ -198,7 +200,7 @@ class Simulation:
         return world_loss
 
 
-    def reward_slice_cross_entropy(self, last_tensor, next_image, add_mask=True):
+    def reward_slice_cross_entropy(self, last_tensor, next_image, add_mask=True, speed_scale = True ):
         # Using BCE loss to find the binary cross entropy of the  changing images
         # The model is rewarded for a large change == high entropy
         loss = torch.nn.BCELoss(reduction='none').to(device)
@@ -209,9 +211,11 @@ class Simulation:
             # if the last pixel was grey, it will only now be white/black if the pixel has been viewed
             # so we only need to mask the grey cells
             loss[mask]=0
+        if speed_scale:
+            # scale the rewards so something with an absolute
+            loss = torch.mul(self.speed_layers.abs()*self.speed_scale+1,loss)
         reward = (torch.mean(loss))
         return reward
-
 
 def main():
     transform = T.ToPILImage()

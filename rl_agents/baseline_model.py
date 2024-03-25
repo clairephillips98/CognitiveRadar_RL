@@ -31,7 +31,7 @@ class Runner:
         print("episode_limit={}".format(self.args.episode_limit))
 
         self.writer = SummaryWriter(log_dir=
-                                    'runs/Baseline_Model/{}_env_{}_number_{}_seed_{}_blur_radius_{}_baseline_type_{}_scale_{}_blur_sigma_{}'.format('baseline', self.env_name, number, seed, self.blur_radius, self.args.baseline_model_type,self.args.scale, self.args.blur_sigma))
+                                    'runs/Baseline_Model/{}_env_{}_number_{}_br_{}_bt_{}_scale_{}_bs_{}'.format('baseline', self.env_name, number, seed, self.blur_radius, self.args.baseline_model_type,self.args.scale, self.args.blur_sigma))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -60,6 +60,8 @@ class Runner:
         action = (prev_action + self.env.game.radars[0].num_states + 1) % self.env.action_size
         return action
     def variance_baseline(self,state, var_type='min'):
+        if self.args.speed_layer == 1:
+            state = state[0,:,:]
         if random.choice([0,1]) == 1:
             variances = [torch.var(state[mask]) for mask in self.masks]
             if var_type == 'min':
@@ -130,14 +132,16 @@ if __name__ == '__main__':
     parser.add_argument("--use_noisy", type=bool, default=True, help="Whether to use noisy network")
     parser.add_argument("--use_per", type=bool, default=True, help="Whether to use PER")
     parser.add_argument("--use_n_steps", type=bool, default=True, help="Whether to use n_steps Q-learning")
-    parser.add_argument("--blur_radius", type=int, default=None, help="size of the radius of the gaussian filter applied to previous views")
+    parser.add_argument("--blur_radius", type=int, default=1, help="size of the radius of the gaussian filter applied to previous views")
     parser.add_argument("--baseline_model_type",type=str, default='simple',
                         help="type of baseline model (simple, min_variance, max_variance")
-    parser.add_argument("--scale", type=int, default=50, help="factor by which the space is scaled down")
-    parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
+    parser.add_argument("--scale", type=int, default=23, help="factor by which the space is scaled down")
+    parser.add_argument("--blur_sigma", type=float, default=0.35, help="guassian blur sigma")
     parser.add_argument("--common_destination", type=list, default=[-200,-200], help="a common location for targets come from and go to")
     parser.add_argument("--cdl", type=float, default=0.0, help="how many targets go to location")
     parser.add_argument("--gpu_number", type=int, default=0, help="gpu used")
+    parser.add_argument("--speed_layer", type=int, default=0, help="if speed is included in state space")
+    parser.add_argument("--speed_scale", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
 
     args = parser.parse_args()
 
@@ -147,6 +151,6 @@ if __name__ == '__main__':
         for x in [1]:
             set_gpu_name("cuda:"+str(args.gpu_number))
             args.blur_radius = x
-            runner = Runner(args=args, env_name="slow_random_dir_airport", number=1, seed=seed)
+            runner = Runner(args=args, env_name="airport_speed_layer_chance_of_no_detection", number=1, seed=seed)
             runner.run()
 

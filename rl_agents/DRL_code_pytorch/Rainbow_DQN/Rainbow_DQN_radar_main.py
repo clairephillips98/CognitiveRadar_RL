@@ -50,7 +50,7 @@ class Runner:
                 self.algorithm += '_PER'
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
-        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}_scale_{}_blur_sigma_{}'.format(self.algorithm, self.env_name, number, seed, self.blur_radius,self.args.scale,self.args.blur_sigma))
+        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_br_{}_scale_{}_bs_{}'.format(self.algorithm, self.env_name, number, seed, self.blur_radius,self.args.scale,self.args.blur_sigma))
         if args.load_model is True:
             if os.path.isfile('models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_simga_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius, self.args.scale,self.args.blur_sigma)):
                 self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_sigma_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius,self.args.scale,self.args.blur_sigma)))
@@ -163,14 +163,16 @@ if __name__ == '__main__':
     parser.add_argument("--use_per", type=int, default=1, help="Whether to use PER")
     parser.add_argument("--use_n_steps", type=int, default=1, help="Whether to use n_steps Q-learning")
     parser.add_argument("--blur_radius", type=int, default=1, help="size of the radius of the gaussian filter applied to previous views")
-    parser.add_argument("--scale", type=int, default=50, help="factor by which the space is scaled down")
-    parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
+    parser.add_argument("--scale", type=int, default=23, help="factor by which the space is scaled down")
+    parser.add_argument("--blur_sigma", type=float, default=0.35, help="guassian blur sigma")
     parser.add_argument("--common_destination", type=list, default=[-200,-200], help="a common location for targets come from and go to")
     parser.add_argument("--cdl", type=float, default=0.0, help="how many targets go to location")
     parser.add_argument("--gpu_number", type=int, default=0, help="gpu used")
+    parser.add_argument("--speed_layer", type=int, default=0, help="if speed is included in state space")
+    parser.add_argument("--speed_scale", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
 
     args = parser.parse_args()
     env_index = 1
     set_gpu_name("cuda:" + str(args.gpu_number))
-    runner = Runner(args=args, env_name="slow_random_dir_airport", number=1, seed=0)
+    runner = Runner(args=args, env_name="airport_speed_layer_chance_of_no_detection", number=1, seed=0)
     runner.run()
