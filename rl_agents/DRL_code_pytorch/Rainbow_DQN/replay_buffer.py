@@ -113,10 +113,14 @@ class Prioritized_ReplayBuffer(object):
         self.sum_tree = SumTree(self.buffer_capacity)
         self.current_size = 0
         self.count = 0
-        self.buffer = {'state': np.zeros((self.buffer_capacity, *args.state_dim)),
+        if args.speed_layer == 1:
+            state_size = (2,*args.state_dim)
+        else:
+            state_size = args.state_dim
+        self.buffer = {'state': np.zeros((self.buffer_capacity, *state_size)),
                        'action': np.zeros((self.buffer_capacity, 1)),
                        'reward': np.zeros(self.buffer_capacity),
-                       'next_state': np.zeros((self.buffer_capacity, *args.state_dim)),
+                       'next_state': np.zeros((self.buffer_capacity, *state_size)),
                        'terminal': np.zeros(self.buffer_capacity),
                        }
 
@@ -162,10 +166,14 @@ class N_Steps_Prioritized_ReplayBuffer(object):
         self.sum_tree = SumTree(self.buffer_capacity)
         self.n_steps = args.n_steps
         self.n_steps_deque = deque(maxlen=self.n_steps)
-        self.buffer = {'state': np.zeros((self.buffer_capacity, *args.state_dim)),
+        if args.speed_layer == 1:
+            state_size = (2,*args.state_dim)
+        else:
+            state_size = args.state_dim
+        self.buffer = {'state': np.zeros((self.buffer_capacity, *state_size)),
                        'action': np.zeros((self.buffer_capacity, 1)),
                        'reward': np.zeros(self.buffer_capacity),
-                       'next_state': np.zeros((self.buffer_capacity, *args.state_dim)),
+                       'next_state': np.zeros((self.buffer_capacity, *state_size)),
                        'terminal': np.zeros(self.buffer_capacity),
                        }
         self.current_size = 0
