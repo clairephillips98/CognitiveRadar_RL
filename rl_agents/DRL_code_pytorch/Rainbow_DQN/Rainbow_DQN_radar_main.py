@@ -103,7 +103,7 @@ class Runner:
                     self.save_models()
         self.save_models()
         # Save reward
-        np.save('data_train/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(self.evaluate_rewards))
+        np.save('data_train/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(self.evaluate_rewards.cpu()))
 
     def save_models(self):
         torch.save(self.agent.net.state_dict(),'models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_simga_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius, self.args.scale,self.args.blur_sigma))
