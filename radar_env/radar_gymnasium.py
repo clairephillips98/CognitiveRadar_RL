@@ -86,7 +86,7 @@ class RadarEnv(gym.Env):
         time_til_first_view = info[:,2]
         time_til_first_view[time_til_first_view == -1] = self._max_episode_steps
         return {'time_til_first_view': torch.Tensor(time_til_first_view),'views_vel': info[:,[0,1]],
-                'world_loss': torch.Tensor(world_loss).to(device)}
+                'world_loss': torch.Tensor(world_loss).to(device), 'seen': info[:,3]}
 
     def reset(self, seed=None, options=None):
         # We need the following line to seed self.np_random

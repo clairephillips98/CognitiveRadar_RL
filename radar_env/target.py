@@ -32,7 +32,7 @@ class Target:
         self.bounds = bounds
         self.vel = None
         self.acc = None
-        self.stats = torch.empty(0, 3).to(device)
+        self.stats = torch.empty(0, 4).to(device)
         self.first_in_view = None
         self.first_viewed = None
         self.time_in_view = 0
@@ -122,7 +122,7 @@ class Target:
             self.x_ac,self.y_ac =0,0
             if self.first_in_view is not None:
                 stats = self.final_stats()
-                self.stats = torch.vstack((self.stats, torch.tensor(stats).to(device))) # view_rate, average_velocity, time_til_first_view
+                self.stats = torch.vstack((self.stats, torch.tensor(stats).to(device))) # view_rate, average_velocity, time_til_first_view, seen
             self.first_in_view = None
             self.first_viewed = None
             self.time_in_view = 0
@@ -163,9 +163,10 @@ class Target:
     def final_stats(self):
         average_velocity = self.sum_velocity / self.time_in_view
         time_til_first_view = (self.first_viewed - self.first_in_view) if self.first_viewed is not None else -1
+        seen = 0 if self.first_viewed is None else 1
         possible_observable_time = self.first_in_view - self.t
         view_rate = (len(self.views) - 1 )/possible_observable_time
-        return view_rate, average_velocity, time_til_first_view
+        return view_rate, average_velocity, time_til_first_view, seen
 
     def episode_end(self):
         if self.first_in_view is not None:
