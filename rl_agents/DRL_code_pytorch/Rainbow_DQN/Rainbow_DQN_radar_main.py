@@ -103,7 +103,8 @@ class Runner:
                     self.save_models()
         self.save_models()
         # Save reward
-        np.save('data_train/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(self.evaluate_rewards.cpu()))
+        er = self.evaluate_rewards.cpu()
+        np.save('data_train/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(er))
 
     def save_models(self):
         torch.save(self.agent.net.state_dict(),'models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_simga_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius, self.args.scale,self.args.blur_sigma))
@@ -170,9 +171,10 @@ if __name__ == '__main__':
     parser.add_argument("--gpu_number", type=int, default=0, help="gpu used")
     parser.add_argument("--speed_layer", type=int, default=0, help="if speed is included in state space")
     parser.add_argument("--speed_scale", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--env_name", type=str, default ='radar_sim', help="how much the reward is scaled for seeing moving objects compared to not moving object")
 
     args = parser.parse_args()
     env_index = 1
     set_gpu_name("cuda:" + str(args.gpu_number))
-    runner = Runner(args=args, env_name="airport_speed_layer_chance_of_no_detection", number=1, seed=0)
+    runner = Runner(args=args, env_name=args.env_name, number=1, seed=0)
     runner.run()

@@ -142,6 +142,7 @@ if __name__ == '__main__':
     parser.add_argument("--gpu_number", type=int, default=0, help="gpu used")
     parser.add_argument("--speed_layer", type=int, default=0, help="if speed is included in state space")
     parser.add_argument("--speed_scale", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--env_name", type=str, default ='radar_sim', help="how much the reward is scaled for seeing moving objects compared to not moving object")
 
     args = parser.parse_args()
 
@@ -151,6 +152,6 @@ if __name__ == '__main__':
         for x in [1]:
             set_gpu_name("cuda:"+str(args.gpu_number))
             args.blur_radius = x
-            runner = Runner(args=args, env_name="airport_speed_layer_chance_of_no_detection", number=1, seed=seed)
+            runner = Runner(args=args, env_name=args.env_name, number=1, seed=seed)
             runner.run()
 
