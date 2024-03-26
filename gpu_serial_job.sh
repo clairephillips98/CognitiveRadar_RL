@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=4:00:0
+#SBATCH --time=8:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_mar20.txt
+#SBATCH --output=cphil_test_mar26.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
