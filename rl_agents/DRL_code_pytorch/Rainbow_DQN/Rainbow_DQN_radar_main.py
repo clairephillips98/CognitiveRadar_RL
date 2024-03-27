@@ -103,6 +103,8 @@ class Runner:
                     self.save_models()
         self.save_models()
         # Save reward
+        print(self.evaluate_rewards)
+        print(type(self.evaluate_rewards))
         if isinstance(self.evaluate_rewards, torch.Tensor):
             er = self.evaluate_rewards.cpu()
         else:
@@ -169,7 +171,7 @@ if __name__ == '__main__':
     parser.add_argument("--use_n_steps", type=int, default=1, help="Whether to use n_steps Q-learning")
     parser.add_argument("--blur_radius", type=int, default=1, help="size of the radius of the gaussian filter applied to previous views")
     parser.add_argument("--scale", type=int, default=23, help="factor by which the space is scaled down")
-    parser.add_argument("--blur_sigma", type=float, default=0.35, help="guassian blur sigma")
+    parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
     parser.add_argument("--common_destination", type=list, default=[-200,-200], help="a common location for targets come from and go to")
     parser.add_argument("--cdl", type=float, default=0.0, help="how many targets go to location")
     parser.add_argument("--gpu_number", type=int, default=0, help="gpu used")
