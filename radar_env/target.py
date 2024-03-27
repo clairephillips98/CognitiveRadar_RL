@@ -11,28 +11,28 @@ import torch
 from random import randint, randrange
 from rl_agents.config import GPU_NAME
 from utils import cartesian_to_polar
-from math import cos,pi
+from math import cos, pi
+
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
 
 time = 0.012
 
+
 class Target:
 
-    def __init__(self, radius, bounds, name=None, seed=None, common_destination=[0,0], common_destination_likelihood=0):
+    def __init__(self, radius, bounds, args, name=None, seed=None):
         self.bounds = self.bounds_expanded(bounds, 0.2)
-        self.common_destination = self.point_in_square(common_destination)
-        self.common_destination_likelihood = common_destination_likelihood
+        self.common_destination = self.point_in_square(args.common_destination)
+        self.common_destination_likelihood = args.cdl
         self.t = 0
         self.shift = 0
-        self.chance = randrange(0,100)/100  # chance take off or land location is random
+        self.chance = randrange(0, 100) / 100  # chance take off or land location is random
         self.x_start, self.y_start = self.x_y_start()
-        self.x_vel,self.y_vel = self.x_y_vel()
-        self.x_ac,self.y_ac = 0,0
+        self.vel = self.x_y_vel()
+        self.acc = 0, 0
         self.bounds = bounds
-        self.vel = None
-        self.acc = None
-        self.stats = torch.empty(0, 4).to(device)
+        self.stats = torch.empty(0, 6).to(device)
         self.first_in_view = None
         self.first_viewed = None
         self.time_in_view = 0
@@ -44,6 +44,7 @@ class Target:
         self.name = name
         self.target_angle = None
         self.rho = [random.random(), random.random()]
+
     def x_y_start(self):
         if self.chance < (self.common_destination_likelihood / 2):
             return self.common_destination
@@ -51,40 +52,45 @@ class Target:
             x = randint(
                 self.bounds['x_lower'] * 50, self.bounds['x_upper'] * 50) / 50
             y = randint(
-            self.bounds['y_lower'] * 50, self.bounds['y_upper'] * 50) / 50
-            return x,y
+                self.bounds['y_lower'] * 50, self.bounds['y_upper'] * 50) / 50
+            return x, y
 
     def x_y_vel(self):
-        if (self.common_destination_likelihood / 2)< self.chance < (self.common_destination_likelihood):
-            x_vel = self.common_destination[0]-self.x_start
-            y_vel = self.common_destination[1]-self.y_start
+        if (self.common_destination_likelihood / 2) < self.chance < (self.common_destination_likelihood):
+            x_vel = self.common_destination[0] - self.x_start
+            y_vel = self.common_destination[1] - self.y_start
+            scale = (x_vel ** 2 + y_vel ** 2) ** (1 / 2)
+            x_vel = x_vel / scale
+            y_vel = y_vel / scale
         else:
-            x_vel = randint(-10,10)
-            y_vel = randint(-10,10)
-        scale = max((abs(x_vel) + abs(y_vel))/2,1)
-        x_vel =( x_vel / scale ) * time
-        y_vel =( y_vel / scale )* time
-        return x_vel,y_vel
-
+            x_vel = randint(-10, 10)
+            y_vel = randint(-10, 10)
+        scale = (x_vel ** 2 + y_vel ** 2) ** (1 / 2)
+        scale = scale if scale != 0 else 1
+        vary = randint(1, 10)
+        x_vel = vary * (x_vel / scale) * time
+        y_vel = vary * (y_vel / scale) * time
+        return x_vel, y_vel
 
     def x_y_acc(self):
         # this is depreciated
         if (self.common_destination_likelihood / 2) < self.chance < (self.common_destination_likelihood):
-            t = randint(100/time,300/time) #time to get to location
+            t = randint(100 / time, 300 / time)  # time to get to location
             x_displacement = self.common_destination[0] - (self.x_start + self.x_vel * t)
             y_displacement = self.common_destination[1] - (self.y_start + self.y_vel * t)
             abs_max = time * 25 / 400
-            x_acc = max(-abs_max,min(2 * x_displacement / (t ** 2),time*25/400))
-            y_acc = max(-abs_max,min(2 * y_displacement / (t ** 2),time*25/400))
+            x_acc = max(-abs_max, min(2 * x_displacement / (t ** 2), time * 25 / 400))
+            y_acc = max(-abs_max, min(2 * y_displacement / (t ** 2), time * 25 / 400))
         else:
-            x_acc = (randint(-25, 25) / 400)* (time**2)
-            y_acc = (randint(-25, 25) / 400)* (time**2)
+            x_acc = (randint(-25, 25) / 400) * (time ** 2)
+            y_acc = (randint(-25, 25) / 400) * (time ** 2)
         return x_acc, y_acc
 
-    def point_in_square(self,point):
-        x,y=point
+    def point_in_square(self, point):
+        x, y = point
         # Check if point is inside the square
-        if self.bounds['x_lower'] <= x <= self.bounds['x_upper'] and self.bounds['y_lower'] <= y <= self.bounds['y_upper']:
+        if self.bounds['x_lower'] <= x <= self.bounds['x_upper'] and self.bounds['y_lower'] <= y <= self.bounds[
+            'y_upper']:
             return [x, y]  # Point is inside, return the original point
         else:
             # Find the closest point on the perimeter of the square to the given point
@@ -118,55 +124,54 @@ class Target:
                 self.bounds['y_lower'] < pos[1] < self.bounds['y_upper'])):
             self.shift = t
             self.x_start, self.y_start = self.x_y_start()
-            self.x_vel, self.y_vel = self.x_y_vel()
-            self.x_ac,self.y_ac =0,0
+            self.vel = self.x_y_vel()
+            self.acc = 0, 0
             if self.first_in_view is not None:
-                stats = self.final_stats()
-                self.stats = torch.vstack((self.stats, torch.tensor(stats).to(device))) # view_rate, average_velocity, time_til_first_view, seen
+                stats = self.final_stats(True)
+                self.stats = torch.vstack((self.stats, torch.tensor(stats).to(
+                    device)))  # view_rate, average_velocity, time_til_first_view, seen
             self.first_in_view = None
             self.first_viewed = None
             self.time_in_view = 0
             self.views = [None]
             self.sum_velocity = 0
-
+            self.time_in_view = 0
 
     def velocity(self):
-        abs_vel, vel_angle = cartesian_to_polar((self.x_vel,self.y_vel))
-        doppler_velocity = abs_vel*cos(pi*(vel_angle-self.target_angle)/180)
+        abs_vel, vel_angle = cartesian_to_polar(self.vel)
+        doppler_velocity = abs_vel * cos(pi * (vel_angle - self.target_angle) / 180)
         return doppler_velocity
 
     def update_t(self, t):
         self.cartesian_coordinates = (
-            self.x_start + self.x_vel * (t - self.shift) + self.x_ac * (t - self.shift) ** 2,
-            self.y_start + self.y_vel * (t - self.shift) + self.y_ac * (t - self.shift) ** 2)
+            self.x_start + self.vel[0] * (t - self.shift) + self.acc[0] * (t - self.shift) ** 2,
+            self.y_start + self.vel[1] * (t - self.shift) + self.acc[1] * (t - self.shift) ** 2)
         self.re_init(self.cartesian_coordinates, t)
-        self.vel = (self.x_vel + 2 * self.x_ac * (t - self.shift),
-                    self.y_vel + 2 * self.y_ac * (t - self.shift))
+        self.vel = (self.vel[0] + 2 * self.acc[0] * (t - self.shift),
+                    self.vel[1] + 2 * self.acc[1] * (t - self.shift))
 
-        self.acc = (2 * self.x_ac, 2 * self.y_ac)
+        self.acc = (self.acc[0], self.acc[1])
         return self.cartesian_coordinates
 
     def collect_stats(self, t, viewed):
-        #collect stats on the target after each step
+        # collect stats on the target after each step
         if self.first_in_view is None:
             self.first_in_view = t
-            self.time_in_view=1
-        else:
-            self.time_in_view += 1
+        self.time_in_view += 1
         if viewed is True:
             if (self.first_viewed is None):
                 self.first_viewed = t
-
             self.views.append(t)
-        self.sum_velocity += sum(map(lambda v: v ** 2, self.vel))
+        self.sum_velocity += sum(map(lambda v: v ** 2, self.vel)) ** (1 / 2)
 
-    def final_stats(self):
+    def final_stats(self, reinit=False):
         average_velocity = self.sum_velocity / self.time_in_view
         time_til_first_view = (self.first_viewed - self.first_in_view) if self.first_viewed is not None else -1
         seen = 0 if self.first_viewed is None else 1
+        in_view = 1 if self.first_in_view is not None else 0
         possible_observable_time = self.first_in_view - self.t
-        view_rate = (len(self.views) - 1 )/possible_observable_time
-        return view_rate, average_velocity, time_til_first_view, seen
+        view_rate = (len(self.views) - 1) / possible_observable_time
+        return view_rate, average_velocity, time_til_first_view, seen, in_view, int(reinit)
 
     def episode_end(self):
         if self.first_in_view is not None:

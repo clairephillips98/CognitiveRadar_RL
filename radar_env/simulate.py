@@ -46,9 +46,8 @@ def overall_bounds(radars):
             'y_upper': max(map(lambda d: d['y_upper'], radars))}
 
 
-def create_targets(n_ts, bounds,seed=None, common_destination=[0,0],
-                                      common_destination_likelihood=0):
-    targets = [Target(radius=1, bounds=bounds, name=n,seed=seed,common_destination=common_destination,common_destination_likelihood=common_destination_likelihood) for n in range(n_ts)]
+def create_targets(n_ts, bounds,args,seed=None):
+    targets = [Target(radius=1, bounds=bounds,args=args, name=n,seed=seed) for n in range(n_ts)]
     return targets
 
 
@@ -64,8 +63,7 @@ class Simulation:
         self.radars = create_radars(seed)
         self.bounds = [bounds(radar) for radar in self.radars]
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
-        self.targets = create_targets(10, self.overall_bounds, seed=seed, common_destination=self.args.common_destination,
-                                      common_destination_likelihood=self.args.cdl)
+        self.targets = create_targets(15, self.overall_bounds, args,seed=seed)
         self.scale = self.args.scale
         self.blur_radius = self.args.blur_radius
         self.shape = [self.blur_radius * 3 +

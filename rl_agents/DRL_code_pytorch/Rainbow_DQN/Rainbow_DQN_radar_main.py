@@ -50,11 +50,11 @@ class Runner:
                 self.algorithm += '_PER'
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
-        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_br_{}_scale_{}_bs_{}'.format(self.algorithm, self.env_name, number, seed, self.blur_radius,self.args.scale,self.args.blur_sigma))
+        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer))
         if args.load_model is True:
-            if os.path.isfile('models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_simga_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius, self.args.scale,self.args.blur_sigma)):
-                self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_sigma_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius,self.args.scale,self.args.blur_sigma)))
-                self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}_blur_radius_{}_scale_{}_blur_sigma_{}.pt'.format(self.algorithm, self.env_name,self.blur_radius,self.args.scale,self.args.blur_sigma)))
+            if os.path.isfile('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)):
+                self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)))
+                self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -102,9 +102,9 @@ class Runner:
                 if (self.total_steps/10) % self.args.evaluate_freq == 0:
                     self.save_models()
         self.save_models()
-        # Save reward
-        print(self.evaluate_rewards)
-        print(type(self.evaluate_rewards))
+        # self.save_rewards()
+
+    def save_rewards(self):
         if isinstance(self.evaluate_rewards, torch.Tensor):
             er = self.evaluate_rewards.cpu()
         else:
@@ -112,8 +112,8 @@ class Runner:
         np.save('data_train/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(er))
 
     def save_models(self):
-        torch.save(self.agent.net.state_dict(),'models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_simga_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius, self.args.scale,self.args.blur_sigma))
-        torch.save(self.agent.target_net.state_dict(), 'models/DQN/net_{}_env_{}_blur_radius_{}_scale_{}_blur_simga_{}.pt'.format(self.algorithm, self.env_name, self.blur_radius, self.args.scale,self.args.blur_sigma))
+        torch.save(self.agent.net.state_dict(),'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer))
+        torch.save(self.agent.target_net.state_dict(), 'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer))
 
     def evaluate_policy(self, ):
         evaluate_reward = 0
@@ -140,11 +140,13 @@ class Runner:
         self.writer.add_scalar('target_view_rate_to_velocity_corr', analysis['views_vel_corr'], global_step=self.total_steps)
         self.writer.add_scalar('world_view_avg_loss', analysis['avg_world_loss'], global_step=self.total_steps)
         self.writer.add_scalar('percent_targets_seen', analysis['percent_targets_seen'], global_step=self.total_steps)
+        self.writer.add_scalar('targets_in_view', analysis['targets_in_view'], global_step=self.total_steps)
+        self.writer.add_scalar('reinitialized_targets', analysis['reinitialized_targets'], global_step=self.total_steps)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameter Setting for DQN")
-    parser.add_argument("--max_train_steps", type=int, default=int(8e5), help=" Maximum number of training steps")
+    parser.add_argument("--max_train_steps", type=int, default=int(5e5), help=" Maximum number of training steps")
     parser.add_argument("--evaluate_freq", type=float, default=1e3, help="Evaluate the policy every 'evaluate_freq' steps")
     parser.add_argument("--evaluate_times", type=float, default=3, help="Evaluate times")
     parser.add_argument("--buffer_capacity", type=int, default=int(1e5), help="The maximum replay-buffer capacity ")

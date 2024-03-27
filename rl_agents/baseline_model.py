@@ -31,7 +31,7 @@ class Runner:
         print("episode_limit={}".format(self.args.episode_limit))
 
         self.writer = SummaryWriter(log_dir=
-                                    'runs/Baseline_Model/{}_env_{}_number_{}_br_{}_bt_{}_scale_{}_bs_{}'.format('baseline', self.env_name, number, seed, self.blur_radius, self.args.baseline_model_type,self.args.scale, self.args.blur_sigma))
+                                    'runs/Baseline_Model/{}_env_{}_number_{}_br_{}_bt_{}_scale_{}_bs_{}_ss_{}'.format('baseline', self.env_name, number, self.blur_radius, self.args.baseline_model_type,self.args.scale, self.args.blur_sigma,self.args.speed_scale))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -104,6 +104,8 @@ class Runner:
         self.writer.add_scalar('target_view_rate_to_velocity_corr', analysis['views_vel_corr'], global_step=self.total_steps)
         self.writer.add_scalar('world_view_avg_loss', analysis['avg_world_loss'], global_step=self.total_steps)
         self.writer.add_scalar('percent_targets_seen', analysis['percent_targets_seen'], global_step=self.total_steps)
+        self.writer.add_scalar('targets_in_view', analysis['targets_in_view'], global_step=self.total_steps)
+        self.writer.add_scalar('reinitialized_targets', analysis['reinitialized_targets'], global_step=self.total_steps)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameter Setting for DQN")
