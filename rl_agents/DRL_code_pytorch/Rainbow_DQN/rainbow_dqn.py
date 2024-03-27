@@ -10,6 +10,7 @@ print(device)
 
 class DQN(object):
     def __init__(self, args):
+        self.layers = args.speed_layer+1
         self.action_dim = args.action_dim
         self.batch_size = args.batch_size  # batch size
         self.max_train_steps = args.max_train_steps

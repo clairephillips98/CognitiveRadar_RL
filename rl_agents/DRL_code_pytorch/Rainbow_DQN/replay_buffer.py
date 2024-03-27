@@ -16,7 +16,7 @@ class ReplayBuffer(object):
         if args.speed_layer == 1:
             state_size = (2,*args.state_dim)
         else:
-            state_size= args.state_dim
+            state_size = (1,*args.state_dim)
         self.buffer = {'state': np.zeros((self.buffer_capacity, *state_size)),
                        'action': np.zeros((self.buffer_capacity, 1)),
                        'reward': np.zeros(self.buffer_capacity),
@@ -57,7 +57,7 @@ class N_Steps_ReplayBuffer(object):
         if args.speed_layer == 1:
             state_size = (2,*args.state_dim)
         else:
-            state_size= args.state_dim
+            state_size= (1,*args.state_dim)
         self.buffer = {'state': np.zeros((self.buffer_capacity, *state_size)),
                        'action': np.zeros((self.buffer_capacity, 1)),
                        'reward': np.zeros(self.buffer_capacity),
@@ -169,7 +169,7 @@ class N_Steps_Prioritized_ReplayBuffer(object):
         if args.speed_layer == 1:
             state_size = (2,*args.state_dim)
         else:
-            state_size = args.state_dim
+            state_size = (1,*args.state_dim)
         self.buffer = {'state': np.zeros((self.buffer_capacity, *state_size)),
                        'action': np.zeros((self.buffer_capacity, 1)),
                        'reward': np.zeros(self.buffer_capacity),

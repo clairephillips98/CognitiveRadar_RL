@@ -62,10 +62,10 @@ class Net(nn.Module):
             self.fc3 = nn.Linear(args.hidden_dim, args.action_dim)
 
     def forward(self, s):
-        s = s
+        s = s.to(device)
         s = self.pool(F.relu(self.conv1(s)))
         s = F.relu(self.conv2(s)).squeeze(0)
-        s = torch.flatten(s, 1)
+        s = torch.flatten(s,1)
         s = torch.relu(self.fc1(s))
         s = torch.relu(self.fc2(s))
         Q = self.fc3(s)

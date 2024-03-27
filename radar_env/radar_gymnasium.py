@@ -75,7 +75,7 @@ class RadarEnv(gym.Env):
             return joined_tensor.squeeze(0).squeeze(0)
             #[:,self.game.blur_radius:-self.game.blur_radius,self.game.blur_radius:-self.game.blur_radius]
         else:
-            return self.game.next_image
+            return self.game.next_image.unsqueeze(0)
             #[self.game.blur_radius:-self.game.blur_radius,self.game.blur_radius:-self.game.blur_radius]
 
 
