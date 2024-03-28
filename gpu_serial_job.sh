@@ -14,10 +14,10 @@ source activate pytorch_env
 speed_layer = 1
 speed_scale = 100
 
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --cdl=1 --epsilon_init=1 --epsilon_init=0.5 --load_model=0 --env_name=$name --speed_layer=$speed_layer --speed_scale=$speed_scale
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=0 --use_noisy=0 --use_per=0 --use_n_steps=1 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name=$name  --speed_layer=1 --speed_scale=100
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=1 --use_noisy=0 --use_per=1 --use_n_steps=0 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name=$name  --speed_layer=1 --speed_scale=100
-python -m rl_agents.baseline_model --cdl=1 --env_name=$name --speed_scale=$speed_scale
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --cdl=1 --epsilon_init=1 --epsilon_init=0.5 --load_model=0 --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=0 --use_noisy=0 --use_per=0 --use_n_steps=1 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=1 --use_noisy=0 --use_per=1 --use_n_steps=0 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
+python -m rl_agents.baseline_model --cdl=1 --env_name="$name" --speed_scale="$speed_scale"
 EOT
 sbatch <<EOT &
 #!/bin/bash
@@ -32,9 +32,9 @@ source activate pytorch_env
 speed_layer = 0
 speed_scale = 100
 
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --cdl=1 --epsilon_init=1 --epsilon_init=0.5 --load_model=0 --env_name=$name --speed_layer=$speed_layer --speed_scale=$speed_scale
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=0 --use_noisy=0 --use_per=0 --use_n_steps=1 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name=$name  --speed_layer=1 --speed_scale=100
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=1 --use_noisy=0 --use_per=1 --use_n_steps=0 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name=$name  --speed_layer=1 --speed_scale=100
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --cdl=1 --epsilon_init=1 --epsilon_init=0.5 --load_model=0 --env_name=$name --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=0 --use_noisy=0 --use_per=0 --use_n_steps=1 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=1 --use_noisy=0 --use_per=1 --use_n_steps=0 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
 EOT
 sbatch <<EOT &
 #!/bin/bash
@@ -49,10 +49,10 @@ source activate pytorch_env
 speed_layer = 1
 speed_scale = 1
 
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --cdl=1 --epsilon_init=1 --epsilon_init=0.5 --load_model=0 --env_name=$name --speed_layer=$speed_layer --speed_scale=$speed_scale
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=0 --use_noisy=0 --use_per=0 --use_n_steps=1 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name=$name  --speed_layer=1 --speed_scale=100
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=1 --use_noisy=0 --use_per=1 --use_n_steps=0 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name=$name  --speed_layer=1 --speed_scale=100
-python -m rl_agents.baseline_model --cdl=1 --env_name=$name --speed_scale=$speed_scale
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --cdl=1 --epsilon_init=1 --epsilon_init=0.5 --load_model=0 --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=0 --use_noisy=0 --use_per=0 --use_n_steps=1 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=1 --use_noisy=0 --use_per=1 --use_n_steps=0 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
+python -m rl_agents.baseline_model --cdl=1 --env_name="$name" --speed_scale="$speed_scale"
 EOT
 sbatch <<EOT &
 #!/bin/bash
@@ -67,7 +67,7 @@ source activate pytorch_env
 speed_layer = 0
 speed_scale = 1
 
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --cdl=1 --epsilon_init=1 --epsilon_init=0.5 --load_model=0 --env_name=$name --speed_layer=$speed_layer --speed_scale=$speed_scale
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=0 --use_noisy=0 --use_per=0 --use_n_steps=1 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name=$name  --speed_layer=1 --speed_scale=100
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=1 --use_noisy=0 --use_per=1 --use_n_steps=0 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name=$name  --speed_layer=1 --speed_scale=100
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --cdl=1 --epsilon_init=1 --epsilon_init=0.5 --load_model=0 --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=0 --use_noisy=0 --use_per=0 --use_n_steps=1 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --use_double=0 --use_dueling=1 --use_noisy=0 --use_per=1 --use_n_steps=0 --cdl=1  --epsilon_init=0.5 --load_model=0 --env_name="$name" --speed_layer="$speed_layer" --speed_scale="$speed_scale"
 EOT
