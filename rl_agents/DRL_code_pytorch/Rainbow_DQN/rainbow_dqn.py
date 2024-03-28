@@ -20,7 +20,6 @@ class DQN(object):
         self.use_soft_update = args.use_soft_update
         self.target_update_freq = args.target_update_freq  # hard update
         self.update_count = 0
-
         self.grad_clip = args.grad_clip
         self.use_lr_decay = args.use_lr_decay
         self.use_double = args.use_double
@@ -49,7 +48,7 @@ class DQN(object):
                 action = np.random.randint(0, self.action_dim)
             return action
 
-    def learn(self, replay_buffer, total_steps):
+    def learn(self, replay_buffer, total_steps, action=None):
         batch, batch_index, IS_weight = replay_buffer.sample(total_steps)
         if self.use_per:
             IS_weight = IS_weight.to(device)
@@ -61,8 +60,8 @@ class DQN(object):
                 q_target = batch['reward'].to(device) + self.gamma * (1 - batch['terminal'].to(device)) * self.target_net(batch['next_state'].to(device)).gather(-1, a_argmax).squeeze(-1)  # shape：(batch_size,)
             else:
                 q_target = batch['reward'].to(device) + self.gamma * (1 - batch['terminal'].to(device)) * self.target_net(batch['next_state'].to(device)).max(dim=-1)[0]  # shape：(batch_size,)
-
-        q_current = self.net(batch['state'].to(device)).gather(-1, batch['action']).squeeze(-1)  # shape：(batch_size,)
+        batch_action = batch['action'] if action is None else batch['action'][:,action].unsqueeze(1)
+        q_current = self.net(batch['state'].to(device)).gather(-1, batch_action).squeeze(-1)  # shape：(batch_size,)
         td_errors = q_current - q_target  # shape：(batch_size,)
         if self.use_per:
             loss = (IS_weight * (td_errors ** 2)).mean()
@@ -91,3 +90,20 @@ class DQN(object):
         lr_now = 0.9 * self.lr * (1 - total_steps / self.max_train_steps) + 0.1 * self.lr
         for p in self.optimizer.param_groups:
             p['lr'] = lr_now
+
+    def net_eval(self):
+        self.net.eval()
+    def net_train(self):
+        self.net.train()
+
+    def net_load_state_dict(self, path):
+        self.net.load_state_dict(path)
+
+    def target_net_load_state_dict(self, path):
+        self.target_net.load_state_dict(path)
+
+    def net_state_dict(self):
+        return self.net.state_dict()
+
+    def target_net_state_dict(self):
+        return self.target_net.state_dict()

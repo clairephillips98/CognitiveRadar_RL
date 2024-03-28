@@ -6,7 +6,7 @@ def cartesian_to_polar(cartesian_p):
     x, y = cartesian_p
     z = complex(x, y)
     r, theta = cmath.polar(z)
-    return r, 360*theta/(2*math.pi)
+    return r, 360 * theta / (2 * math.pi)
 
 
 def polar_to_cartesian(angle_radians, radius):
@@ -46,20 +46,24 @@ def is_angle_between(angle, start_angle, end_angle):
         # Handle the case where the range spans across 0
         return start_angle <= angle or angle <= end_angle
 
+
 def in_circle_cartesian(target, radar, radius):
     # take in target location and radar location ad the wedge to look in
-    tar_radius,_ = cartesian_to_polar(relative_location(target, radar))
+    tar_radius, _ = cartesian_to_polar(relative_location(target, radar))
     if (tar_radius < radius):
         return True
     else:
         return False
+
+
 def in_wedge_cartesian(target, radar, radius, angle_start, angle_end):
     # take in target location and radar location ad the wedge to look in
-    tar_radius,tar_angle = cartesian_to_polar(relative_location(target, radar))
+    tar_radius, tar_angle = cartesian_to_polar(relative_location(target, radar))
     if (tar_radius < radius) & (is_angle_between(tar_angle, angle_start, angle_end)):
-        return True, tar_radius,tar_angle
+        return True, tar_radius, tar_angle
     else:
-        return False, tar_radius,tar_angle
+        return False, tar_radius, tar_angle
+
 
 def min_max_radar_breadth(radar):
     x_lower = radar.cartesian_coordinates[0] - radar.max_distance
@@ -68,6 +72,7 @@ def min_max_radar_breadth(radar):
     y_upper = radar.cartesian_coordinates[1] + radar.max_distance
     return x_lower, y_lower, x_upper, y_upper
 
+
 def in_wedge_polar(rel_location_polar, radius, angle_start, angle_end):
     # take in relative location and the wedge to look in
     if (rel_location_polar[0] < radius) & (is_angle_between(rel_location_polar[1], angle_start, angle_end)):
@@ -75,11 +80,12 @@ def in_wedge_polar(rel_location_polar, radius, angle_start, angle_end):
     else:
         return False
 
+
 def merge_dictionaries(*dicts):
-  merged = {}
-  for d in dicts:
-    merged.update(d)
-  return merged
+    merged = {}
+    for d in dicts:
+        merged.update(d)
+    return merged
 
 
 def draw_shape(x, y, center, start_angle, end_angle, radius):
@@ -97,3 +103,9 @@ def draw_shape(x, y, center, start_angle, end_angle, radius):
     else:
         mask = (distances <= scaled_radius) & ((angles >= start_angle) | (angles <= end_angle))
     return mask
+
+
+def action_unpack(action, num_states):
+    factor = int(num_states**(1/2))
+    actions = [action % factor, math.floor(action / factor)]
+    return actions

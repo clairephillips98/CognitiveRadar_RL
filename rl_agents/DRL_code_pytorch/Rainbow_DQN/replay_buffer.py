@@ -18,7 +18,7 @@ class ReplayBuffer(object):
         else:
             state_size = (1,*args.state_dim)
         self.buffer = {'state': np.zeros((self.buffer_capacity, *state_size)),
-                       'action': np.zeros((self.buffer_capacity, 1)),
+                       'action': np.zeros((self.buffer_capacity, args.agents)),
                        'reward': np.zeros(self.buffer_capacity),
                        'next_state': np.zeros((self.buffer_capacity, *state_size)),
                        'terminal': np.zeros(self.buffer_capacity),
@@ -59,7 +59,7 @@ class N_Steps_ReplayBuffer(object):
         else:
             state_size= (1,*args.state_dim)
         self.buffer = {'state': np.zeros((self.buffer_capacity, *state_size)),
-                       'action': np.zeros((self.buffer_capacity, 1)),
+                       'action': np.zeros((self.buffer_capacity, args.agents)),
                        'reward': np.zeros(self.buffer_capacity),
                        'next_state': np.zeros((self.buffer_capacity, *state_size)),
                        'terminal': np.zeros(self.buffer_capacity),
@@ -118,7 +118,7 @@ class Prioritized_ReplayBuffer(object):
         else:
             state_size = args.state_dim
         self.buffer = {'state': np.zeros((self.buffer_capacity, *state_size)),
-                       'action': np.zeros((self.buffer_capacity, 1)),
+                       'action': np.zeros((self.buffer_capacity, args.agents)),
                        'reward': np.zeros(self.buffer_capacity),
                        'next_state': np.zeros((self.buffer_capacity, *state_size)),
                        'terminal': np.zeros(self.buffer_capacity),
@@ -171,7 +171,7 @@ class N_Steps_Prioritized_ReplayBuffer(object):
         else:
             state_size = (1,*args.state_dim)
         self.buffer = {'state': np.zeros((self.buffer_capacity, *state_size)),
-                       'action': np.zeros((self.buffer_capacity, 1)),
+                       'action': np.zeros((self.buffer_capacity, args.agents)),
                        'reward': np.zeros(self.buffer_capacity),
                        'next_state': np.zeros((self.buffer_capacity, *state_size)),
                        'terminal': np.zeros(self.buffer_capacity),

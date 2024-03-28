@@ -46,6 +46,7 @@ class RadarEnv(gym.Env):
         )
 
         self.action_size = int(reduce(lambda x, y: x * y, [radar.num_states for radar in self.game.radars]))
+        print(self.action_size)
         # 1 radar for now, so the number of actions is the number of states
         self.action_space = gym.spaces.Discrete(self.action_size)
 
@@ -55,7 +56,6 @@ class RadarEnv(gym.Env):
         I.e. 0 corresponds to "right", 1 to "up" etc.
         """
 
-        self._action_to_angle = {i: self.game.to_action(i) for i in range(self.action_size)}  # only up to 2 radars
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
         """
@@ -106,9 +106,12 @@ class RadarEnv(gym.Env):
 
         return observation, None
 
+
+
     def step(self, action):
-        # Map the action to angle of view of all agents
-        self._agent_angle = self._action_to_angle[action]
+        # Map the action to prinangle of view of all agents
+
+        self._agent_angle = action if type(action) == list else [action]
         self.game.update_t(self._agent_angle)
         terminated = 1 if self.game.t == 500 else 0
         if terminated:

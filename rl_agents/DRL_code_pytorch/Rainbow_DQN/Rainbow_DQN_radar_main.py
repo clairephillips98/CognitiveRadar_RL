@@ -1,11 +1,14 @@
+import torch
 from torch.utils.tensorboard import SummaryWriter
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.replay_buffer import *
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.rainbow_dqn import DQN
+from rl_agents.DRL_code_pytorch.Rainbow_DQN.MARL_orchestrate import MARL_Double_Agent
 import argparse
 from radar_env.radar_gymnasium import RadarEnv
 from rl_agents.calculate_stats import stats
 from rl_agents.config import set_gpu_name
 import os
+from utils import action_unpack
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
@@ -20,7 +23,7 @@ class Runner:
         self.args.state_dim = self.env.observation_space['observation'].shape
         if type(self.args.state_dim) == int:
             self.args.state_dim = [self.args.state_dim]
-        self.args.action_dim = self.env.action_space.n
+        self.args.action_dim = self.env.action_space.n if args.agents == 1 else int(self.env.action_space.n**(1/2)) # action dim is square root possible action space if 2 agents
         self.args.episode_limit = self.env._max_episode_steps  # Maximum number of steps per episode
         print("env={}".format(self.env_name))
         print("state_dim={}".format(self.args.state_dim))
@@ -35,7 +38,8 @@ class Runner:
             self.replay_buffer = N_Steps_ReplayBuffer(args)
         else:
             self.replay_buffer = ReplayBuffer(args)
-        self.agent = DQN(args)
+
+        self.agent = DQN(args) if self.args.agents == 1 else MARL_Double_Agent(args) #create 2 agents in case of MARL
         self.algorithm = 'DQN'
         if args.use_double and args.use_dueling and args.use_noisy and args.use_per and args.use_n_steps:
             self.algorithm = 'Rainbow_' + self.algorithm
@@ -53,8 +57,8 @@ class Runner:
         self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer))
         if args.load_model is True:
             if os.path.isfile('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)):
-                self.agent.net.load_state_dict(torch.load('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)))
-                self.agent.target_net.load_state_dict(torch.load('models/DQN/target_net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)))
+                self.agent.net_load_state_dict(torch.load('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)))
+                self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -74,7 +78,9 @@ class Runner:
             episode_steps = 0
             while not done:
                 action = self.agent.choose_action(state, epsilon=self.epsilon)
-                next_state, reward, done, _,_ = self.env.step(action)
+                action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) and (self.args.agents == 1) else action
+                print(action_)
+                next_state, reward, done, _,_ = self.env.step(action_)
                 episode_steps += 1
                 self.total_steps += 1
 
@@ -91,7 +97,7 @@ class Runner:
                 else:
                     terminal = False
 
-                self.replay_buffer.store_transition(state, action, reward, next_state, terminal, done)  # Store the transition
+                self.replay_buffer.store_transition(state, np.array(action), reward, next_state, terminal, done)  # Store the transition
                 state = next_state
 
                 if self.replay_buffer.current_size >= self.args.batch_size:
@@ -101,7 +107,7 @@ class Runner:
                     self.evaluate_policy()
                 if (self.total_steps/10) % self.args.evaluate_freq == 0:
                     self.save_models()
-        self.save_models()
+        #self.save_models()
         # self.save_rewards()
 
     def save_rewards(self):
@@ -112,25 +118,26 @@ class Runner:
         np.save('data_train/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(er))
 
     def save_models(self):
-        torch.save(self.agent.net.state_dict(),'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer))
-        torch.save(self.agent.target_net.state_dict(), 'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer))
+        torch.save(self.agent.net_state_dict(),'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer))
+        torch.save(self.agent.target_net_state_dict(), 'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer))
 
     def evaluate_policy(self, ):
         evaluate_reward = 0
         radar_stats = stats()
-        self.agent.net.eval()
+        self.agent.net_eval()
         for _ in range(self.args.evaluate_times):
             state = self.env_evaluate.reset()[0]
             done = False
             episode_reward = 0
             while not done:
                 action = self.agent.choose_action(state, epsilon=0)
-                next_state, reward, done, _,_ = self.env_evaluate.step(action)
+                action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) and (self.args.agents == 1) else action
+                next_state, reward, done, _,_ = self.env_evaluate.step(action_)
                 episode_reward += reward
                 state = next_state
             radar_stats.add_stats(self.env_evaluate.info_analysis())
             evaluate_reward += episode_reward
-        self.agent.net.train()
+        self.agent.net_train()
         analysis = radar_stats.stats_analysis()
         evaluate_reward /= self.args.evaluate_times
         self.evaluate_rewards.append(evaluate_reward)
@@ -150,7 +157,7 @@ if __name__ == '__main__':
     parser.add_argument("--evaluate_freq", type=float, default=1e3, help="Evaluate the policy every 'evaluate_freq' steps")
     parser.add_argument("--evaluate_times", type=float, default=3, help="Evaluate times")
     parser.add_argument("--buffer_capacity", type=int, default=int(1e5), help="The maximum replay-buffer capacity ")
-    parser.add_argument("--batch_size", type=int, default=256, help="batch size")
+    parser.add_argument("--batch_size", type=int, default=8, help="batch size")
     parser.add_argument("--hidden_dim", type=int, default=256, help="The number of neurons in hidden layers of the neural network")
     parser.add_argument("--lr", type=float, default=1e-4, help="Learning rate of actor")
     parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor")
@@ -180,6 +187,8 @@ if __name__ == '__main__':
     parser.add_argument("--speed_layer", type=int, default=0, help="if speed is included in state space")
     parser.add_argument("--speed_scale", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--env_name", type=str, default ='radar_sim', help="how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--agents", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--radars", type=int, default =2, help="how much the reward is scaled for seeing moving objects compared to not moving object")
 
     args = parser.parse_args()
     env_index = 1
