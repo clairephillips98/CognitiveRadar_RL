@@ -7,7 +7,7 @@ from rl_agents.calculate_stats import stats
 import torch
 from functools import reduce
 from rl_agents.config import set_gpu_name
-
+from utils import action_unpack
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
@@ -59,6 +59,7 @@ class Runner:
     def simple_baseline(self, prev_action):
         action = (prev_action + self.env.game.radars[0].num_states + 1) % self.env.action_size
         return action
+
     def variance_baseline(self,state, var_type='min'):
         if self.args.speed_layer == 1:
             state = state[0,:,:]
@@ -90,7 +91,8 @@ class Runner:
                     action = self.variance_baseline(state, var_type='max')
                 else:
                     raise Exception("Sorry, not a valid baseline model type")
-                next_state, reward, done, _, _ = self.env_evaluate.step(action)
+                action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) else action
+                next_state, reward, done, _, _ = self.env_evaluate.step(action_)
                 episode_reward += reward
                 state = next_state
             evaluate_reward += episode_reward
@@ -146,6 +148,7 @@ if __name__ == '__main__':
     parser.add_argument("--speed_layer", type=int, default=0, help="if speed is included in state space")
     parser.add_argument("--speed_scale", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--env_name", type=str, default ='radar_sim', help="how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--radars", type=int, default =2, help="how much the reward is scaled for seeing moving objects compared to not moving object")
 
     args = parser.parse_args()
 

@@ -27,11 +27,11 @@ def create_radars(seed=None):
     radar_1 = Radar(max_distance=184, duty_cycle=3,
                     pulsewidth=4, bandwidth=1, frequency=3,
                     pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(0, 0), wavelength=3,
-                    radians_of_view=45, seed=seed)
+                    radians_of_view=45, seed=seed, radar_num=0)
     radar_2 = Radar(max_distance=184, duty_cycle=3,
                     pulsewidth=4, bandwidth=1, frequency=3,
-                    pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(400, 0), wavelength=3,
-                    radians_of_view=45, seed=seed)
+                    pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(150, 0), wavelength=3,
+                    radians_of_view=45, seed=seed, radar_num=1)
     return [radar_1, radar_2]  # just 1 radar for now
 
 
@@ -73,10 +73,9 @@ class Simulation:
                       ceil((self.overall_bounds['y_upper'] - self.overall_bounds['y_lower']) / self.scale),
                       self.blur_radius * 3 +
                       ceil((self.overall_bounds['x_upper'] - self.overall_bounds['x_lower']) / self.scale)]
-        self.base_image = (torch.ones((self.shape[0], self.shape[1])) * 0.5).to(device)
+        self.next_image = (torch.ones((self.shape[0], self.shape[1])) * 0.5).to(device)
         self.x = (torch.arange(self.shape[1], dtype=torch.float32).view(1, -1).repeat(self.shape[0], 1)).to(device)
         self.y = (torch.arange(self.shape[0], dtype=torch.float32).view(-1, 1).repeat(1, self.shape[1])).to(device)
-        self.next_image = self.base_image.clone()
         self.transform = T.GaussianBlur(kernel_size=(self.blur_radius * 2 + 1, self.blur_radius * 2 + 1),
                                         sigma=(self.args.blur_sigma, self.args.blur_sigma)).to(device)
         masks = [
@@ -85,7 +84,6 @@ class Simulation:
         self.mask_image = reduce(lambda x, y: torch.logical_or(x, y), masks)
         self.images = []
         self.last_tensor = None
-        self.polar_images = []
         self.speed_layers = (torch.zeros((self.shape[0], self.shape[1]))).to(device)
         self.initial_scan()
 
@@ -132,13 +130,21 @@ class Simulation:
         [tar.update_t(self.t) for tar in self.targets]
         visible_targets = self.get_visible_targets_and_update_stats()
         if self.game_type == 'single_agent':
-            self.step_for_single_agent(visible_targets, recording)
+            self.step_for_single_view(visible_targets, recording)
         elif self.game_type == 'MARL_shared_view':
-            self.step_for_shared_view(visible_targets, recording)
+            self.step_for_single_view(visible_targets, recording)
         else:
             self.step_for_shared_targets(visible_targets, recording)
 
-    def step_for_single_agent(self, visible_targets, recording):
+    def step_for_shared_targets(self, visible_targets, recording):
+        # create view for each radar
+        # 2 radars
+        # 2 seperate views
+        # reward for each radar
+
+        return
+
+    def step_for_single_view(self, visible_targets, recording):
         self.create_image(visible_targets)  # makes next image
 
         if recording:
