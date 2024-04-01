@@ -54,11 +54,11 @@ class Runner:
                 self.algorithm += '_PER'
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
-        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer))
+        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer, self.args.agents))
         if args.load_model is True:
-            if os.path.isfile('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)):
-                self.agent.net_load_state_dict(torch.load('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)))
-                self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)))
+            if os.path.isfile('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer)):
+                self.agent.net_load_state_dict(torch.load('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents)))
+                self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents)))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -118,8 +118,8 @@ class Runner:
         np.save('data_train/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(er))
 
     def save_models(self):
-        torch.save(self.agent.net_state_dict(),'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer))
-        torch.save(self.agent.target_net_state_dict(), 'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer))
+        torch.save(self.agent.net_state_dict(),'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents))
+        torch.save(self.agent.target_net_state_dict(), 'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents))
 
     def evaluate_policy(self, ):
         evaluate_reward = 0
