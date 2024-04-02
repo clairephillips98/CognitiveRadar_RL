@@ -136,6 +136,7 @@ class Runner:
                 next_state, reward, done, _,_ = self.env_evaluate.step(action_)
                 episode_reward += reward
                 state = next_state
+                actions = action[0]+action[1]*0.1 if args.agents == 2
                 actions.append(action)
             radar_stats.add_stats(self.env_evaluate.info_analysis(),actions)
             evaluate_reward += episode_reward
