@@ -74,7 +74,7 @@ class Runner:
         else:
             return random.choice(range(self.env.action_size))
     def evaluate_policy(self):
-        action=3
+        action=random.randrange(self.args.action_dim)
         evaluate_reward = 0
         radar_stats = stats()
         for _ in range(self.args.evaluate_times):
@@ -89,7 +89,7 @@ class Runner:
                     action = self.variance_baseline(state, var_type='min')
                 elif self.args.baseline_model_type == 'max_variance':
                     action = self.variance_baseline(state, var_type='max')
-                else:
+                elif self.args.baseline_model_type != 'no_movement':
                     raise Exception("Sorry, not a valid baseline model type")
                 action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) else action
                 next_state, reward, done, _, _ = self.env_evaluate.step(action_)
@@ -111,35 +111,32 @@ class Runner:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameter Setting for DQN")
-    parser.add_argument("--max_train_steps", type=int, default=int(4e5), help=" Maximum number of training steps")
+    parser.add_argument("--max_train_steps", type=int, default=int(5e5), help=" Maximum number of training steps")
     parser.add_argument("--evaluate_freq", type=float, default=1e3, help="Evaluate the policy every 'evaluate_freq' steps")
     parser.add_argument("--evaluate_times", type=float, default=3, help="Evaluate times")
-
     parser.add_argument("--buffer_capacity", type=int, default=int(1e5), help="The maximum replay-buffer capacity ")
-    parser.add_argument("--batch_size", type=int, default=256, help="batch size")
+    parser.add_argument("--batch_size", type=int, default=8, help="batch size")
     parser.add_argument("--hidden_dim", type=int, default=256, help="The number of neurons in hidden layers of the neural network")
     parser.add_argument("--lr", type=float, default=1e-4, help="Learning rate of actor")
     parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor")
     parser.add_argument("--epsilon_init", type=float, default=0.5, help="Initial epsilon")
     parser.add_argument("--epsilon_min", type=float, default=0.1, help="Minimum epsilon")
-    parser.add_argument("--epsilon_decay_steps", type=int, default=int(1e5), help="How many steps before the epsilon decays to the minimum")
+    parser.add_argument("--epsilon_decay_steps", type=int, default=int(1e6), help="How many steps before the epsilon decays to the minimum")
     parser.add_argument("--tau", type=float, default=0.005, help="soft update the target network")
     parser.add_argument("--use_soft_update", type=bool, default=True, help="Whether to use soft update")
     parser.add_argument("--target_update_freq", type=int, default=200, help="Update frequency of the target network(hard update)")
     parser.add_argument("--n_steps", type=int, default=5, help="n_steps")
     parser.add_argument("--alpha", type=float, default=0.6, help="PER parameter")
     parser.add_argument("--beta_init", type=float, default=0.4, help="Important sampling parameter in PER")
-    parser.add_argument("--use_lr_decay", type=bool, default=True, help="Learning rate Decay")
+    parser.add_argument("--use_lr_decay", type=int, default=1, help="Learning rate Decay")
     parser.add_argument("--grad_clip", type=float, default=10.0, help="Gradient clip")
-
-    parser.add_argument("--use_double", type=bool, default=True, help="Whether to use double Q-learning")
-    parser.add_argument("--use_dueling", type=bool, default=True, help="Whether to use dueling network")
-    parser.add_argument("--use_noisy", type=bool, default=True, help="Whether to use noisy network")
-    parser.add_argument("--use_per", type=bool, default=True, help="Whether to use PER")
-    parser.add_argument("--use_n_steps", type=bool, default=True, help="Whether to use n_steps Q-learning")
+    parser.add_argument("--load_model", type=int, default=1, help="Whether to pick up the last model")
+    parser.add_argument("--use_double", type=int, default=1, help="Whether to use double Q-learning")
+    parser.add_argument("--use_dueling", type=int, default=1, help="Whether to use dueling network")
+    parser.add_argument("--use_noisy", type=int, default=1, help="Whether to use noisy network")
+    parser.add_argument("--use_per", type=int, default=1, help="Whether to use PER")
+    parser.add_argument("--use_n_steps", type=int, default=1, help="Whether to use n_steps Q-learning")
     parser.add_argument("--blur_radius", type=int, default=1, help="size of the radius of the gaussian filter applied to previous views")
-    parser.add_argument("--baseline_model_type",type=str, default='simple',
-                        help="type of baseline model (simple, min_variance, max_variance")
     parser.add_argument("--scale", type=int, default=23, help="factor by which the space is scaled down")
     parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
     parser.add_argument("--common_destination", type=list, default=[-200,-200], help="a common location for targets come from and go to")
@@ -148,7 +145,10 @@ if __name__ == '__main__':
     parser.add_argument("--speed_layer", type=int, default=0, help="if speed is included in state space")
     parser.add_argument("--speed_scale", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--env_name", type=str, default ='radar_sim', help="how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--agents", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--radars", type=int, default =2, help="how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--baseline_model_type",type=str, default='simple',
+                        help="type of baseline model (simple, min_variance, max_variance, no_movement")
 
     args = parser.parse_args()
 
