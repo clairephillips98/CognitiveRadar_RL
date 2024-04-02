@@ -81,7 +81,7 @@ class Runner:
             state = self.env_evaluate.reset()[0]
             done = False
             episode_reward = 0
-            episode_sum_view_time = 0
+            actions = []
             while not done:
                 if self.args.baseline_model_type == 'simple':
                     action = self.simple_baseline(action)
@@ -95,8 +95,9 @@ class Runner:
                 next_state, reward, done, _, _ = self.env_evaluate.step(action_)
                 episode_reward += reward
                 state = next_state
+                actions.append(action)
             evaluate_reward += episode_reward
-            radar_stats.add_stats(self.env_evaluate.info_analysis())
+            radar_stats.add_stats(self.env_evaluate.info_analysis(),actions)
         analysis = radar_stats.stats_analysis()
         evaluate_reward /= self.args.evaluate_times
         self.evaluate_rewards.append(evaluate_reward)
@@ -106,8 +107,7 @@ class Runner:
         self.writer.add_scalar('target_view_rate_to_velocity_corr', analysis['views_vel_corr'], global_step=self.total_steps)
         self.writer.add_scalar('world_view_avg_loss', analysis['avg_world_loss'], global_step=self.total_steps)
         self.writer.add_scalar('percent_targets_seen', analysis['percent_targets_seen'], global_step=self.total_steps)
-        self.writer.add_scalar('targets_in_view', analysis['targets_in_view'], global_step=self.total_steps)
-        self.writer.add_scalar('reinitialized_targets', analysis['reinitialized_targets'], global_step=self.total_steps)
+        self.writer.add_scalar('actions_taken', analysis['unique_actions'], global_step=self.total_steps)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameter Setting for DQN")
@@ -145,7 +145,6 @@ if __name__ == '__main__':
     parser.add_argument("--speed_layer", type=int, default=0, help="if speed is included in state space")
     parser.add_argument("--speed_scale", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--env_name", type=str, default ='radar_sim', help="how much the reward is scaled for seeing moving objects compared to not moving object")
-    parser.add_argument("--agents", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--radars", type=int, default =2, help="how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--baseline_model_type",type=str, default='simple',
                         help="type of baseline model (simple, min_variance, max_variance, no_movement")

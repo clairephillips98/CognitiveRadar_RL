@@ -129,13 +129,15 @@ class Runner:
             state = self.env_evaluate.reset()[0]
             done = False
             episode_reward = 0
+            actions = []
             while not done:
                 action = self.agent.choose_action(state, epsilon=0)
                 action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) and (self.args.agents == 1) else action
                 next_state, reward, done, _,_ = self.env_evaluate.step(action_)
                 episode_reward += reward
                 state = next_state
-            radar_stats.add_stats(self.env_evaluate.info_analysis())
+                actions.append(action)
+            radar_stats.add_stats(self.env_evaluate.info_analysis(),actions)
             evaluate_reward += episode_reward
         self.agent.net_train()
         analysis = radar_stats.stats_analysis()
@@ -147,8 +149,7 @@ class Runner:
         self.writer.add_scalar('target_view_rate_to_velocity_corr', analysis['views_vel_corr'], global_step=self.total_steps)
         self.writer.add_scalar('world_view_avg_loss', analysis['avg_world_loss'], global_step=self.total_steps)
         self.writer.add_scalar('percent_targets_seen', analysis['percent_targets_seen'], global_step=self.total_steps)
-        self.writer.add_scalar('targets_in_view', analysis['targets_in_view'], global_step=self.total_steps)
-        self.writer.add_scalar('reinitialized_targets', analysis['reinitialized_targets'], global_step=self.total_steps)
+        self.writer.add_scalar('actions_taken', analysis['unique_actions'], global_step=self.total_steps)
 
 
 if __name__ == '__main__':
