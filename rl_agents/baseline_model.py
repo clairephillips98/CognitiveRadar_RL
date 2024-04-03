@@ -31,7 +31,7 @@ class Runner:
         print("episode_limit={}".format(self.args.episode_limit))
 
         self.writer = SummaryWriter(log_dir=
-                                    'runs/Baseline_Model/{}_env_{}_number_{}_br_{}_bt_{}_scale_{}_bs_{}_ss_{}'.format('baseline', self.env_name, number, self.blur_radius, self.args.baseline_model_type,self.args.scale, self.args.blur_sigma,self.args.speed_scale))
+                                    'runs/Baseline_Model/{}_env_{}_number_{}_br_{}_bt_{}_scale_{}_bs_{}_ss_{}_pnm_{}'.format('baseline', self.env_name, number, self.blur_radius, self.args.baseline_model_type,self.args.scale, self.args.blur_sigma,self.args.speed_scale,self.args.penalize_no_movement))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
@@ -149,6 +149,8 @@ if __name__ == '__main__':
     parser.add_argument("--radars", type=int, default =2, help="how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--baseline_model_type",type=str, default='simple',
                         help="type of baseline model (simple, min_variance, max_variance, no_movement")
+    parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
+    parser.add_argument("--relative_change", type=int, default =0, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
 
     args = parser.parse_args()
 

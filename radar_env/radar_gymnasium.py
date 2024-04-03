@@ -68,6 +68,7 @@ class RadarEnv(gym.Env):
         self.window = None
         self.clock = None
         self._max_episode_steps = 300
+        self.last_action = None
 
     def _get_obs(self):
         if self.args.speed_layer == 1:
@@ -97,6 +98,7 @@ class RadarEnv(gym.Env):
         self.game = Simulation(self.args, seed=self.seed)
         # self.info = torch.empty(0,4)
         # Choose the agent starting angle at random
+        self.last_action = None
         self._agent_angle = [random.randint(0, radar.num_states) for radar in self.game.radars]
 
         observation = self._get_obs()
@@ -111,16 +113,19 @@ class RadarEnv(gym.Env):
     def step(self, action):
         # Map the action to prinangle of view of all agents
 
-        self._agent_angle = action if type(action) == list else [action]
+        self._agent_angle = action if type(action) == list else [action]  # same format for 1 vs 2 radars
+
         self.game.update_t(self._agent_angle)
         terminated = 1 if self.game.t == 500 else 0
         if terminated:
             [target.episode_end() for target in self.game.targets]
         reward = self.game.reward
+        if (self.args.penalize_no_movement == 1) & (self.last_action == self._agent_angle) & (reward == 0):
+            reward = reward-1
         observation = self._get_obs()
         if self.render_mode == "human":
             self._render_frame()
-
+        self.last_action=self._agent_angle
         return observation, reward, terminated, False, None
 
     def render(self):

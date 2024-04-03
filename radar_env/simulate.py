@@ -117,16 +117,14 @@ class Simulation:
         steps = max([radar.num_states for radar in self.radars])
         for step in range(int(ceil(steps))):
             step = [step] * len(self.radars)
-            self.update_t(dir_list=step, recording=False)
+            self.update_t(dir_list=step, recording=False, agent_learning = False)
 
-    def update_t(self, dir_list=None, recording=False):
+    def update_t(self, dir_list=None, recording=False, agent_learning = True):
         # radar direction moves
         # targets move
         # compute the reward
         self.t += 1
-        if dir_list is None:
-            dir_list = [None] * len(self.radars)
-        [rad.update_t(self.t, dir_list[i]) for i, rad in enumerate(self.radars)]  # i think this is acutally pointless
+        [rad.update_t(self.t, dir_list[i], (bool(self.args.relative_change) & agent_learning)) for i, rad in enumerate(self.radars)]  # i think this is acutally pointless
         [tar.update_t(self.t) for tar in self.targets]
         visible_targets = self.get_visible_targets_and_update_stats()
         if self.game_type == 'single_agent':
@@ -222,6 +220,7 @@ class Simulation:
             # if the last pixel was grey, it will only now be white/black if the pixel has been viewed
             # so we only need to mask the grey cells
             loss[mask] = 0
+        loss_og = loss
         if speed_scale:
             # scale the rewards so something with an absolute
             loss = torch.mul(self.speed_layers.abs() * self.speed_scale + 1, loss)

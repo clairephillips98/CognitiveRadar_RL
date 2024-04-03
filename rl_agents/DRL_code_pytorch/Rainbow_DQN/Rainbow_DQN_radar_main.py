@@ -54,13 +54,13 @@ class Runner:
                 self.algorithm += '_PER'
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
-        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer, self.args.agents))
+        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}_pnm_{}_rc_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer, self.args.agents,self.args.penalize_no_movement, self.args.relative_change))
         if args.load_model==True:
             print('here')
-            if os.path.isfile('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents)):
+            if os.path.isfile('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}_pnm_{}_rc_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change)):
                 print('here')
-                self.agent.net_load_state_dict(torch.load('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents),map_location=torch.device('cpu')))
-                self.agent.target_net_load_state_dict(torch.load('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents),map_location=torch.device('cpu')))
+                self.agent.net_load_state_dict(torch.load('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}_pnm_{}_rc_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change),map_location=torch.device('cpu')))
+                self.agent.target_net_load_state_dict(torch.load('models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}_pnm_{}_rc_{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change),map_location=torch.device('cpu')))
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
         self.total_steps = 0  # Record the total steps during the training
@@ -118,8 +118,8 @@ class Runner:
         np.save('data_train/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(er))
 
     def save_models(self):
-        torch.save(self.agent.net_state_dict(),'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents))
-        torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents))
+        torch.save(self.agent.net_state_dict(),'models/DQN/net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}_pnm_{}_rc_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change))
+        torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}_env_{}_number_{}_br_{}_scale_{}_bs_{}_ss_{}_sl_{}_a_{}_pnm_{}_rc_{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change))
 
     def evaluate_policy(self, ):
         evaluate_reward = 0
@@ -182,17 +182,19 @@ if __name__ == '__main__':
     parser.add_argument("--use_noisy", type=int, default=1, help="Whether to use noisy network")
     parser.add_argument("--use_per", type=int, default=1, help="Whether to use PER")
     parser.add_argument("--use_n_steps", type=int, default=1, help="Whether to use n_steps Q-learning")
-    parser.add_argument("--blur_radius", type=int, default=1, help="size of the radius of the gaussian filter applied to previous views")
-    parser.add_argument("--scale", type=int, default=23, help="factor by which the space is scaled down")
-    parser.add_argument("--blur_sigma", type=float, default=0.5, help="guassian blur sigma")
-    parser.add_argument("--common_destination", type=list, default=[-200,-200], help="a common location for targets come from and go to")
-    parser.add_argument("--cdl", type=float, default=0.0, help="how many targets go to location")
+    parser.add_argument("--blur_radius", type=int, default=1, help="br: size of the radius of the gaussian filter applied to previous views")
+    parser.add_argument("--scale", type=int, default=23, help="s: factor by which the space is scaled down")
+    parser.add_argument("--blur_sigma", type=float, default=0.5, help="bs: guassian blur sigma")
+    parser.add_argument("--common_destination", type=list, default=[-200,-200], help="cd: a common location for targets come from and go to")
+    parser.add_argument("--cdl", type=float, default=0.0, help="common destination likelihood : how many targets go to location")
     parser.add_argument("--gpu_number", type=int, default=0, help="gpu used")
-    parser.add_argument("--speed_layer", type=int, default=0, help="if speed is included in state space")
-    parser.add_argument("--speed_scale", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--speed_layer", type=int, default=0, help="sl: if speed is included in state space")
+    parser.add_argument("--speed_scale", type=int, default =1, help="ss: how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--env_name", type=str, default ='radar_sim', help="how much the reward is scaled for seeing moving objects compared to not moving object")
-    parser.add_argument("--agents", type=int, default =1, help="how much the reward is scaled for seeing moving objects compared to not moving object")
-    parser.add_argument("--radars", type=int, default =2, help="how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--agents", type=int, default =1, help="a: how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--radars", type=int, default =2, help="r: how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--relative_change", type=int, default =0, help="rc: if 0 then an action is a direction to look in, if 1 then an action is a change in direction to look in since the last action")
+    parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
 
     args = parser.parse_args()
     env_index = 1

@@ -29,7 +29,7 @@ class Radar:
         self.t=0
         self.seen_list = {}
         self.num_states = 360/self.radians_of_view
-        self.rho_0 = 0.3475 # rho_0 such that an object with a rho of 0.5 is seen 75 percent of the time at furtherest distance
+        self.rho_0 = 0.003475 # rho_0 such that an object with a rho of 0.5 is seen 75 percent of the time at furtherest distance
         self.prob_f = 10e-4
         self.SNR_0 = 16
 
@@ -37,10 +37,14 @@ class Radar:
         self.viewing_angle = new_angle
         return
 
-    def update_t(self, t, given_dir=None):
+    def update_t(self, t, given_dir=None, relative_change = False):
+        # if relative_change = True then update the angle relative to the last position, otherwise change it to the absolute angel
         self.t=t
         if given_dir != None:
-            self.viewing_angle = (given_dir*360)/self.num_states
+            if relative_change is True:
+                self.viewing_angle = (self.viewing_angle +(given_dir*360)/self.num_states)%360
+            else:
+                self.viewing_angle = (given_dir * 360) / self.num_states
         else:
             self.viewing_angle = look_new_direction()
         return

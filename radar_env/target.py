@@ -43,7 +43,7 @@ class Target:
         self.radius = radius
         self.name = name
         self.target_angle = None
-        self.rho = [random.random(), random.random()]
+        self.rho = [random.random()/100, random.random()/100]
 
     def x_y_start(self):
         if self.chance < (self.common_destination_likelihood / 2):
