@@ -74,10 +74,10 @@ class Runner:
         else:
             return random.choice(range(self.env.action_size))
     def evaluate_policy(self):
-        action=random.randrange(self.args.action_dim)
         evaluate_reward = 0
         radar_stats = stats()
         for _ in range(self.args.evaluate_times):
+            action = random.randrange(self.args.action_dim)
             state = self.env_evaluate.reset()[0]
             done = False
             episode_reward = 0
@@ -108,6 +108,7 @@ class Runner:
         self.writer.add_scalar('world_view_avg_loss', analysis['avg_world_loss'], global_step=self.total_steps)
         self.writer.add_scalar('percent_targets_seen', analysis['percent_targets_seen'], global_step=self.total_steps)
         self.writer.add_scalar('actions_taken', analysis['unique_actions'], global_step=self.total_steps)
+        self.writer.add_scalar('target_view_rate_to_velocity_slope', analysis['veiws_vel_slope'], global_step=self.total_steps)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameter Setting for DQN")

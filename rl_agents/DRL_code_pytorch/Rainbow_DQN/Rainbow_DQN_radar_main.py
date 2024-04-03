@@ -137,7 +137,7 @@ class Runner:
                 episode_reward += reward
                 state = next_state
                 if args.agents == 2:
-                    action = action[0]+action[1]*0.1
+                    action = action[0]+action[1]*self.args.action_dim
                 actions.append(action)
             radar_stats.add_stats(self.env_evaluate.info_analysis(),actions)
             evaluate_reward += episode_reward
@@ -152,6 +152,7 @@ class Runner:
         self.writer.add_scalar('world_view_avg_loss', analysis['avg_world_loss'], global_step=self.total_steps)
         self.writer.add_scalar('percent_targets_seen', analysis['percent_targets_seen'], global_step=self.total_steps)
         self.writer.add_scalar('actions_taken', analysis['unique_actions'], global_step=self.total_steps)
+        self.writer.add_scalar('target_view_rate_to_velocity_slope', analysis['veiws_vel_slope'], global_step=self.total_steps)
 
 
 if __name__ == '__main__':
