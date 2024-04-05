@@ -153,6 +153,8 @@ class Runner:
         self.writer.add_scalar('percent_targets_seen', analysis['percent_targets_seen'], global_step=self.total_steps)
         self.writer.add_scalar('actions_taken', analysis['unique_actions'], global_step=self.total_steps)
         self.writer.add_scalar('target_view_rate_to_velocity_slope', analysis['veiws_vel_slope'], global_step=self.total_steps)
+        self.writer.add_scalar('target_view_rate_to_doppler_velocity_corr', analysis['views_doppler_corr'], global_step=self.total_steps)
+        self.writer.add_scalar('average_view_rate', analysis['average_view_rate'], global_step=self.total_steps)
 
 
 if __name__ == '__main__':

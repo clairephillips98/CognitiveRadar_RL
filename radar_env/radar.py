@@ -6,7 +6,7 @@ Jan 18 2024
 Defining a radar and its capabilities
 """""
 import random
-from utils import in_wedge_cartesian,in_circle_cartesian
+from utils import in_wedge_cartesian,in_circle_cartesian,is_angle_between
 import math
 class Radar:
 
@@ -49,29 +49,32 @@ class Radar:
             self.viewing_angle = look_new_direction()
         return
 
-    def object_detected(self, target, target_radius):
+    def object_detected(self, target_rho, target_distance):
         # calculate the likelihood of a target being seen and return a boolean of whether the target is detected
-        snr_target = ((self.max_distance/target_radius)**4)*((target.rho[self.radar_num]/self.rho_0))*self.SNR_0
+        snr_target = ((self.max_distance/target_distance)**4)*((target_rho/self.rho_0))*self.SNR_0
         prob_detection = self.prob_f**(1/(1+snr_target))
         detected = random.random() < prob_detection
         return detected
 
-    def visible_targets(self, targets, viewed_targets):
+    def visible_targets(self, targets):
+        viewed_targets= []
         for target in targets:
-            if target.views[-1] != self.t:
-                if in_circle_cartesian(target.cartesian_coordinates,
-                                       self.cartesian_coordinates,
-                                       self.max_distance):
-                    in_wedge,radius,angle = in_wedge_cartesian(target.cartesian_coordinates,
-                                                                     self.cartesian_coordinates,
-                                                                     self.max_distance,self.viewing_angle,
-                                                                     self.viewing_angle+self.radians_of_view)
-                    if in_wedge & self.object_detected(target,radius):
+            in_circle, radius, angle = in_circle_cartesian(target.cartesian_coordinates,
+                                   self.cartesian_coordinates,
+                                   self.max_distance)
+            if in_circle:
+                target.target_angle[self.radar_num] = angle
+                target.calc_doppler_vel(self.radar_num)
+                if target.views[-1] != self.t:
+                    in_wedge = is_angle_between(angle, self.viewing_angle, self.viewing_angle+self.radians_of_view)
+                    target_rho = target.calculating_rho(self)
+                    if in_wedge & self.object_detected(target_rho,radius):
                         target.collect_stats(self.t, True)
                         viewed_targets.append(target)
-                        target.target_angle = angle
                     else:
-                        target.collect_stats(self.t,False)
+                        target.collect_stats(self.t, False)
+                else:
+                    target.doppler_velocity[self.radar_num] = 0
         return viewed_targets
 
 def look_new_direction(degrees = None):

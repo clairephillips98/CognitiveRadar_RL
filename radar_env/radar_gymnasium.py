@@ -28,11 +28,11 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, args, seed=None, render_mode=None, size=5):
+    def __init__(self, args, seed=None, render_mode='human', size=5):
         self.seed = seed
         self.args = args
         self.game = Simulation(self.args)
-        self.info = torch.empty(0, 4)
+        self.info = torch.empty(0, 5)
         self.size = size  # The size of the square grid
         self.window_size = jnp.array(self.game.next_image.size()) * self.size  # The size of the PyGame window
         # Observations are dictionaries with the agent's and the target's location.
@@ -85,7 +85,7 @@ class RadarEnv(gym.Env):
         world_loss = self.game.measure_world_loss(input=self.game.next_image,
                                                   target=self.game.create_hidden_target_tensor())
         info[:, 2][info[:, 2] == -1] = self._max_episode_steps
-        return {'time_til_first_view': info[:, 2], 'views_vel': info[:, [0, 1]],
+        return {'time_til_first_view': info[:, 2], 'views_vel': info[:, [0, 1,4]],
                 'world_loss': torch.Tensor(world_loss).to(device),
                 'seen': info[:, 3]}
 

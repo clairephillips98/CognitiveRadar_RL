@@ -50,7 +50,7 @@ def overall_bounds(radars):
 
 
 def create_targets(n_ts, bounds, args, seed=None):
-    targets = [Target(radius=1, bounds=bounds, args=args, name=n, seed=seed) for n in range(n_ts)]
+    targets = [Target(bounds=bounds, args=args, name=n, seed=seed) for n in range(n_ts)]
     return targets
 
 
@@ -64,6 +64,7 @@ class Simulation:
         self.t = 0
         self.speed_scale = self.args.speed_scale
         self.radars = create_radars(seed)
+        if self.args.radars == 1: self.radars = self.radars[0]
         self.bounds = [bounds(radar) for radar in self.radars]
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
         self.targets = create_targets(15, self.overall_bounds, args, seed=seed)
@@ -117,14 +118,15 @@ class Simulation:
         steps = max([radar.num_states for radar in self.radars])
         for step in range(int(ceil(steps))):
             step = [step] * len(self.radars)
-            self.update_t(dir_list=step, recording=False, agent_learning = False)
+            self.update_t(dir_list=step, recording=False, agent_learning=False)
 
-    def update_t(self, dir_list=None, recording=False, agent_learning = True):
+    def update_t(self, dir_list=None, recording=False, agent_learning=True):
         # radar direction moves
         # targets move
         # compute the reward
         self.t += 1
-        [rad.update_t(self.t, dir_list[i], (bool(self.args.relative_change) & agent_learning)) for i, rad in enumerate(self.radars)]  # i think this is acutally pointless
+        [rad.update_t(self.t, dir_list[i], (bool(self.args.relative_change) & agent_learning)) for i, rad in
+         enumerate(self.radars)]  # i think this is acutally pointless
         [tar.update_t(self.t) for tar in self.targets]
         visible_targets = self.get_visible_targets_and_update_stats()
         if self.game_type == 'single_agent':
@@ -153,9 +155,9 @@ class Simulation:
 
     def get_visible_targets_and_update_stats(self, radars=None):
         radars = self.radars if radars is None else radars  # if radars isnt specified use all radars
-        visible_targets = []  # make a list of visible targets
+        visible_targets = {}  # make a list of visible targets
         for radar in radars:
-            visible_targets = radar.visible_targets(self.targets, visible_targets)  # check which targets are visible
+            visible_targets[radar.radar_num] = (radar.visible_targets(self.targets))  # check which targets are visible
         return visible_targets
 
     def create_image(self, visible_targets):
@@ -175,14 +177,15 @@ class Simulation:
             self.next_image[mask] = 1
             if self.speed_layers is not None:
                 self.speed_layers[mask] = 0
-        for target in visible_targets:
-            mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
-                                   max(self.scale / 2 + 1, target.radius))
-            self.next_image[mask] = 0
-            if self.speed_layers is not None:
-                radial_vel = target.velocity()
-                vel_mask = abs(radial_vel) > self.speed_layers.squeeze(0).abs()
-                self.speed_layers[mask & vel_mask] = radial_vel
+        for radar in visible_targets:
+            for target in visible_targets[radar]:
+                mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
+                                       max(self.scale / 2 + 1, target.radius))
+                self.next_image[mask] = 0
+                if self.speed_layers is not None:
+                    radial_vel = max(target.doppler_velocity.values())
+                    vel_mask = abs(radial_vel) > self.speed_layers.squeeze(0).abs()
+                    self.speed_layers[mask & vel_mask] = radial_vel
 
         # add mask of original value to everything outside mask
         self.next_image[~self.mask_image] = 0.5

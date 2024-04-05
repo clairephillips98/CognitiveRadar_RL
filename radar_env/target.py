@@ -6,12 +6,12 @@ Jan 18 2024
 Defining a moving target
 """""
 import random
-
+import numpy as np
 import torch
 from random import randint, randrange
 from rl_agents.config import GPU_NAME
 from utils import cartesian_to_polar
-from math import cos, pi
+from math import cos, pi,sqrt,acos
 
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
@@ -21,7 +21,7 @@ time = 0.012
 
 class Target:
 
-    def __init__(self, radius, bounds, args, name=None, seed=None):
+    def __init__(self, bounds, args, name=None, seed=None):
         self.bounds = self.bounds_expanded(bounds, 0.2)
         self.common_destination = self.point_in_square(args.common_destination)
         self.common_destination_likelihood = args.cdl
@@ -32,18 +32,33 @@ class Target:
         self.vel = self.x_y_vel()
         self.acc = 0, 0
         self.bounds = bounds
-        self.stats = torch.empty(0, 4).to(device)
+        self.stats = torch.empty(0, 5).to(device)
         self.first_in_view = None
         self.first_viewed = None
         self.time_in_view = 0
         self.views = [None]
         self.sum_velocity = 0
+        self.sum_doppler_velocity=0
         self.cartesian_coordinates = None
         self.update_t(0)
-        self.radius = radius
         self.name = name
-        self.target_angle = None
+        self.target_angle = {}
         self.rho = [random.random()/100, random.random()/100]
+        self.box = [[self.rho[0]/2,self.rho[1]/2],[self.rho[0]/2,-self.rho[1]/2],[-self.rho[0]/2,-self.rho[1]/2],[-self.rho[0]/2,self.rho[1]/2]]
+        self.diameter = sqrt((self.rho[0]) ** 2 + (self.rho[1]) ** 2)
+        self.radius = self.diameter/2# radius for drawing on the diagram
+        self.angle = [acos]
+        self.doppler_velocity={}
+    def calculating_rho(self, radar):
+        relatives = [np.array(self.cartesian_coordinates)-np.array(radar.cartesian_coordinates)+np.array(pt) for pt in self.box]
+        polar_coords = [cartesian_to_polar(pt) for pt in relatives]
+        min_polar_coord = min(polar_coords, key=lambda x: x[1])
+        max_polar_coord= max(polar_coords, key=lambda x: x[1])
+        interior_angle = max_polar_coord[1]-min_polar_coord[1]
+        posterior_angles = (180-interior_angle)/2
+        mid_distance = (min_polar_coord[0] + max_polar_coord[0]) / 2
+        rho = mid_distance*cos(pi*posterior_angles/180)
+        return rho
 
     def x_y_start(self):
         if self.chance < (self.common_destination_likelihood / 2):
@@ -135,12 +150,15 @@ class Target:
             self.time_in_view = 0
             self.views = [None]
             self.sum_velocity = 0
+            self.sum_doppler_velocity=0
+            self.sum_doppler_velocity=0
             self.time_in_view = 0
+            self.target_angle = {}
+            self.doppler_velocity = {}
 
-    def velocity(self):
+    def calc_doppler_vel(self, radar_num):
         abs_vel, vel_angle = cartesian_to_polar(self.vel)
-        doppler_velocity = abs_vel * cos(pi * (vel_angle - self.target_angle) / 180)
-        return doppler_velocity
+        self.doppler_velocity[radar_num] = abs_vel * cos(pi * (vel_angle - self.target_angle[radar_num]) / 180)
 
     def update_t(self, t):
         self.cartesian_coordinates = (
@@ -151,6 +169,7 @@ class Target:
                     self.vel[1] + 2 * self.acc[1] * (t - self.shift))
 
         self.acc = (self.acc[0], self.acc[1])
+
         return self.cartesian_coordinates
 
     def collect_stats(self, t, viewed):
@@ -163,9 +182,11 @@ class Target:
                 self.first_viewed = t
             self.views.append(t)
         self.sum_velocity += sum(map(lambda v: v ** 2, self.vel)) ** (1 / 2)
+        self.sum_doppler_velocity += max(self.doppler_velocity.values())  # observed doppler_velocity
 
     def final_stats(self, reinit=False):
         average_velocity = self.sum_velocity / self.time_in_view
+        average_doppler_velocity = self.sum_doppler_velocity/ self.time_in_view
         if self.first_viewed is None:
             time_til_first_view = -1
             seen = 0
@@ -173,8 +194,8 @@ class Target:
             time_til_first_view = (self.first_viewed - self.first_in_view)
             seen = 1
         possible_observable_time = self.first_in_view - self.t
-        view_rate = (len(self.views) - 1) / possible_observable_time
-        return view_rate, average_velocity, time_til_first_view, seen
+        view_rate = (len(self.views)-1) / possible_observable_time
+        return view_rate, average_velocity, time_til_first_view, seen, average_doppler_velocity
 
     def episode_end(self):
         if self.first_in_view is not None:
