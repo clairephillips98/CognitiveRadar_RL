@@ -35,6 +35,6 @@ class stats:
             'avg_world_loss': self.stats['world_loss'].mean(),
             'percent_targets_seen': self.stats['seen'].mean() * 100,
             'unique_actions': mean(self.stats['actions']),
-            'average_view_rate': mean(self.stats['views_vel'][0])
+            'average_view_rate': self.stats['views_vel'][0].mean()
         }
         return stats
