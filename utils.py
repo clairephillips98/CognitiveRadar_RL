@@ -6,7 +6,7 @@ def cartesian_to_polar(cartesian_p):
     x, y = cartesian_p
     z = complex(x, y)
     r, theta = cmath.polar(z)
-    return r, 360 * theta / (2 * math.pi)
+    return r, (360 * theta / (2 * math.pi))%360
 
 
 def polar_to_cartesian(angle_radians, radius):
@@ -49,11 +49,11 @@ def is_angle_between(angle, start_angle, end_angle):
 
 def in_circle_cartesian(target, radar, radius):
     # take in target location and radar location ad the wedge to look in
-    tar_radius, _ = cartesian_to_polar(relative_location(target, radar))
+    tar_radius, tar_angle = cartesian_to_polar(relative_location(target, radar))
     if (tar_radius < radius):
-        return True
+        return True, tar_radius, tar_angle
     else:
-        return False
+        return False, tar_radius, tar_angle
 
 
 def in_wedge_cartesian(target, radar, radius, angle_start, angle_end):
