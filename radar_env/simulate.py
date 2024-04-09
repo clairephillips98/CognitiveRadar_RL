@@ -64,7 +64,7 @@ class Simulation:
         self.t = 0
         self.speed_scale = self.args.speed_scale
         self.radars = create_radars(seed)
-        if self.args.radars == 1: self.radars = self.radars[0]
+        if self.args.radars == 1: self.radars = [self.radars[0]]
         self.bounds = [bounds(radar) for radar in self.radars]
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
         self.targets = create_targets(15, self.overall_bounds, args, seed=seed)
