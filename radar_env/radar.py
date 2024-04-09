@@ -67,7 +67,7 @@ class Radar:
                 target.calc_doppler_vel(self.radar_num)
                 if target.views[-1] != self.t:
                     in_wedge = is_angle_between(angle, self.viewing_angle, self.viewing_angle+self.radians_of_view)
-                    target_rho = target.calculating_rho(self)
+                    target_rho = target.calculating_rho()
                     if in_wedge & self.object_detected(target_rho,radius):
                         target.collect_stats(self.t, True)
                         viewed_targets.append(target)

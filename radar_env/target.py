@@ -44,6 +44,7 @@ class Target:
         self.name = name
         self.target_angle = {}
         self.avg_rho = random.random()/50 # average radar cross section (this is 10m)
+        self.radius = self.avg_rho
         self.doppler_velocity={}
 
     def calculating_rho(self):
