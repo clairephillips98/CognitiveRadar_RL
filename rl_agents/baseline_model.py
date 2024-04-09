@@ -31,7 +31,7 @@ class Runner:
         print("episode_limit={}".format(self.args.episode_limit))
 
         self.writer = SummaryWriter(log_dir=
-                                    'runs/Baseline_Model/{}_env_{}_number_{}_br_{}_bt_{}_scale_{}_bs_{}_ss_{}_pnm_{}'.format('baseline', self.env_name, number, self.blur_radius, self.args.baseline_model_type,self.args.scale, self.args.blur_sigma,self.args.speed_scale,self.args.penalize_no_movement))
+                                    'runs/Baseline_Model/{}_env_{}_n{}_br{}_bt{}_se{}_bs{}_ss{}_pnm{}_r{}'.format('baseline', self.env_name, number, self.blur_radius, self.args.baseline_model_type,self.args.scale, self.args.blur_sigma,self.args.speed_scale,self.args.penalize_no_movement,self.args.radars))
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating

@@ -22,3 +22,24 @@
 # are we seeing targets more often with the 2 radars?
 
 # document everything for 1 radar case
+
+# intro
+# motivation
+# talk about what other people are doing
+
+# organization - chapter one explains da da da, chapter to is about la la la
+# acronyms
+
+# system model
+# how its being modelled, approach, training, testing
+
+# two radars
+
+# results chapter
+# why this model is the best
+# different scenarios
+# only show big differences
+
+# conclusion
+# these are the results, future work
+

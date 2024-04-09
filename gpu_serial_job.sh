@@ -8,7 +8,7 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=9:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr3_5.txt
+#SBATCH --output=cphil_test_apr9_0.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
@@ -20,10 +20,11 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=9:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr3_6.txt
+#SBATCH --output=cphil_test_apr9_1.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
+# 2 radars, nm, pnm
 python -m rl_agents.baseline_model --env_name="$name" --speed_scale=1 --radars=2 --baseline_model_type="no_movement" --penalize_no_movement=1
 EOT
 sbatch <<EOT &
@@ -32,7 +33,7 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=9:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr3_6.txt
+#SBATCH --output=cphil_test_apr9_2.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
@@ -44,7 +45,7 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=9:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr3_6.txt
+#SBATCH --output=cphil_test_apr9_3.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
@@ -56,7 +57,7 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=9:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr3_6.txt
+#SBATCH --output=cphil_test_apr9_4.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
@@ -68,7 +69,7 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=9:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr3_6.txt
+#SBATCH --output=cphil_test_apr9_5.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
@@ -80,7 +81,7 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=9:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr3_6.txt
+#SBATCH --output=cphil_test_apr9_6.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
@@ -92,7 +93,7 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=9:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr3_6.txt
+#SBATCH --output=cphil_test_apr9_7.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
@@ -104,7 +105,7 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=9:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr3_6.txt
+#SBATCH --output=cphil_test_apr9_8.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
@@ -116,7 +117,7 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=9:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr3_6.txt
+#SBATCH --output=cphil_test_apr9_9.txt
 module load anaconda3
 echo 1
 source activate pytorch_env

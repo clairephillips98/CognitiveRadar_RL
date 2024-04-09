@@ -11,7 +11,7 @@ import torch
 from random import randint, randrange
 from rl_agents.config import GPU_NAME
 from utils import cartesian_to_polar
-from math import cos, pi,sqrt,acos
+from math import cos, pi,sqrt,acos, log
 
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
@@ -43,21 +43,16 @@ class Target:
         self.update_t(0)
         self.name = name
         self.target_angle = {}
-        self.rho = [random.random()/100, random.random()/100]
-        self.box = [[self.rho[0]/2,self.rho[1]/2],[self.rho[0]/2,-self.rho[1]/2],[-self.rho[0]/2,-self.rho[1]/2],[-self.rho[0]/2,self.rho[1]/2]]
-        self.diameter = sqrt((self.rho[0]) ** 2 + (self.rho[1]) ** 2)
-        self.radius = self.diameter/2# radius for drawing on the diagram
-        self.angle = [acos]
+        self.avg_rho = random.random()/50 # average radar cross section (this is 10m)
         self.doppler_velocity={}
-    def calculating_rho(self, radar):
-        relatives = [np.array(self.cartesian_coordinates)-np.array(radar.cartesian_coordinates)+np.array(pt) for pt in self.box]
-        polar_coords = [cartesian_to_polar(pt) for pt in relatives]
-        min_polar_coord = min(polar_coords, key=lambda x: x[1])
-        max_polar_coord= max(polar_coords, key=lambda x: x[1])
-        interior_angle = max_polar_coord[1]-min_polar_coord[1]
-        posterior_angles = (180-interior_angle)/2
-        mid_distance = (min_polar_coord[0] + max_polar_coord[0]) / 2
-        rho = mid_distance*cos(pi*posterior_angles/180)
+
+    def calculating_rho(self):
+        # swerling I
+        # pdf(rho) = (1/avg_rho)*e^(rho/avg_rho)
+        # cdf(rho) =[integral(pdf(x)) from 0 to x ] = 1-e^(-rho/avg_rho)
+        # rho = inverse_cdf(x) = -ln(1-x)*avg_rho (x is num between 0 and 1)
+        x = random.random()
+        rho = -log(1-x)*self.avg_rho
         return rho
 
     def x_y_start(self):
