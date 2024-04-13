@@ -30,7 +30,7 @@ def create_radars(seed=None):
                     radians_of_view=45, seed=seed, radar_num=0)
     radar_2 = Radar(max_distance=184, duty_cycle=3,
                     pulsewidth=4, bandwidth=1, frequency=3,
-                    pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(150, 0), wavelength=3,
+                    pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(234, 0), wavelength=3,
                     radians_of_view=45, seed=seed, radar_num=1)
     return [radar_1, radar_2]  # just 1 radar for now
 
@@ -243,12 +243,14 @@ def main():
     parser.add_argument("--speed_layer", type=int, default=0, help="if speed is included in state space")
     parser.add_argument("--speed_scale", type=int, default=1,
                         help="how much the reward is scaled for seeing moving objects compared to not moving object")
+    parser.add_argument("--radars", type=int, default=2)
+    parser.add_argument("--relative_change", type=int, default=0)
     args = parser.parse_args()
     transform = T.ToPILImage()
     test = Simulation(args)
     images = []
     for t in range(20):
-        test.update_t()
+        test.update_t([t%8,((-t)%8)])
         images.append(transform(torch.stack([test.next_image] * 3, dim=0)))
     # images = [Image.fromarray(jnp.repeat(im,repeats = 3,axis=0)) for im in test.images]
     images[0].save("./images/cartesian.gif", save_all=True, append_images=images, duration=test.t, loop=0)

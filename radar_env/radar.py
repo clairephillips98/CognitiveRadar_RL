@@ -29,7 +29,7 @@ class Radar:
         self.t=0
         self.seen_list = {}
         self.num_states = 360/self.radians_of_view
-        self.rho_0 = 0.00032241 # rho_0 such that an object with a rho of 0.01km is seen 75 percent of the time at furtherest distance
+        self.rho_0 = 0.005158 # rho_0 such that an object with a rho of 0.01km is seen 75 percent of the time at furtherest distance
         self.prob_f = 10e-4
         self.SNR_0 = 16
 

@@ -46,7 +46,6 @@ class RadarEnv(gym.Env):
         )
 
         self.action_size = int(reduce(lambda x, y: x * y, [radar.num_states for radar in self.game.radars]))
-        print(self.action_size)
         # 1 radar for now, so the number of actions is the number of states
         self.action_space = gym.spaces.Discrete(self.action_size)
 
@@ -67,7 +66,7 @@ class RadarEnv(gym.Env):
         """
         self.window = None
         self.clock = None
-        self._max_episode_steps = 300
+        self._max_episode_steps = 500
         self.last_action = None
 
     def _get_obs(self):

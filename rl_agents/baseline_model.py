@@ -57,7 +57,8 @@ class Runner:
             self.total_steps += 1
 
     def simple_baseline(self, prev_action):
-        action = (prev_action + self.env.game.radars[0].num_states + 1) % self.env.action_size
+        action = list(map(lambda x: x + 1, action_unpack(prev_action, self.env.action_size)))
+        action = action[0]+action[1]* self.env.action_size**(1/2)
         return action
 
     def variance_baseline(self,state, var_type='min'):
