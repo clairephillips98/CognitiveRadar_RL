@@ -83,7 +83,6 @@ class Simulation:
             self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, 0, 360, radar.max_distance) for
             radar in self.radars]
         self.mask_image = reduce(lambda x, y: torch.logical_or(x, y), masks)
-        self.images = []
         self.last_tensor = None
         self.speed_layers = (torch.zeros((self.shape[0], self.shape[1]))).to(device)
         self.initial_scan()
@@ -120,7 +119,7 @@ class Simulation:
             step = [step] * len(self.radars)
             self.update_t(dir_list=step, recording=False, agent_learning=False)
 
-    def update_t(self, dir_list=None, recording=False, agent_learning=True):
+    def update_t(self, dir_list=None, recording=True, agent_learning=True):
         # radar direction moves
         # targets move
         # compute the reward
@@ -128,13 +127,13 @@ class Simulation:
         [rad.update_t(self.t, dir_list[i], (bool(self.args.relative_change) & agent_learning)) for i, rad in
          enumerate(self.radars)]  # i think this is acutally pointless
         [tar.update_t(self.t) for tar in self.targets]
-        visible_targets = self.get_visible_targets_and_update_stats()
+        visible_targets = self.get_visible_targets_and_update_stats(recording=recording)
         if self.game_type == 'single_agent':
-            self.step_for_single_view(visible_targets, recording)
+            self.step_for_single_view(visible_targets)
         elif self.game_type == 'MARL_shared_view':
-            self.step_for_single_view(visible_targets, recording)
+            self.step_for_single_view(visible_targets)
         else:
-            self.step_for_shared_targets(visible_targets, recording)
+            self.step_for_shared_targets(visible_targets)
 
     def step_for_shared_targets(self, visible_targets, recording):
         # create view for each radar
@@ -144,20 +143,18 @@ class Simulation:
 
         return
 
-    def step_for_single_view(self, visible_targets, recording):
+    def step_for_single_view(self, visible_targets):
         self.create_image(visible_targets)  # makes next image
 
-        if recording:
-            self.images.append(self.next_tensor)
         if self.last_tensor is not None:
             self.reward = self.reward_slice_cross_entropy(self.last_tensor, self.next_image)
         self.last_tensor = self.next_image
 
-    def get_visible_targets_and_update_stats(self, radars=None):
+    def get_visible_targets_and_update_stats(self, radars=None, recording = True):
         radars = self.radars if radars is None else radars  # if radars isnt specified use all radars
         visible_targets = {}  # make a list of visible targets
         for radar in radars:
-            visible_targets[radar.radar_num] = (radar.visible_targets(self.targets))  # check which targets are visible
+            visible_targets[radar.radar_num] = (radar.visible_targets(self.targets, recording))  # check which targets are visible
         return visible_targets
 
     def create_image(self, visible_targets):

@@ -56,7 +56,7 @@ class Radar:
         detected = random.random() < prob_detection
         return detected
 
-    def visible_targets(self, targets):
+    def visible_targets(self, targets, recording = True ):
         viewed_targets= []
         for target in targets:
             in_circle, radius, angle = in_circle_cartesian(target.cartesian_coordinates,
@@ -69,10 +69,10 @@ class Radar:
                     in_wedge = is_angle_between(angle, self.viewing_angle, self.viewing_angle+self.radians_of_view)
                     target_rho = target.calculating_rho()
                     if in_wedge & self.object_detected(target_rho,radius):
-                        target.collect_stats(self.t, True)
+                        if recording: target.collect_stats(self.t, True)
                         viewed_targets.append(target)
                     else:
-                        target.collect_stats(self.t, False)
+                        if recording: target.collect_stats(self.t, False)
                 else:
                     target.doppler_velocity[self.radar_num] = 0
         return viewed_targets

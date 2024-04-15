@@ -21,7 +21,7 @@ time = 0.012
 
 class Target:
 
-    def __init__(self, bounds, args, name=None, seed=None):
+    def __init__(self, bounds, args, name=None, seed=None, id = None):
         self.bounds = self.bounds_expanded(bounds, 0.2)
         self.common_destination = self.point_in_square(args.common_destination)
         self.common_destination_likelihood = args.cdl
