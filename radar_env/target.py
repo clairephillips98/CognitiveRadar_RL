@@ -156,6 +156,7 @@ class Target:
         self.doppler_velocity[radar_num] = abs_vel * cos(pi * (vel_angle - self.target_angle[radar_num]) / 180)
 
     def update_t(self, t):
+        self.t = t
         self.cartesian_coordinates = (
             self.x_start + self.vel[0] * (t - self.shift) + self.acc[0] * (t - self.shift) ** 2,
             self.y_start + self.vel[1] * (t - self.shift) + self.acc[1] * (t - self.shift) ** 2)
@@ -188,7 +189,7 @@ class Target:
         else:
             time_til_first_view = (self.first_viewed - self.first_in_view)
             seen = 1
-        possible_observable_time = self.first_in_view - self.t
+        possible_observable_time = self.t - self.first_in_view
         view_rate = (len(self.views)-1) / possible_observable_time
         return view_rate, average_velocity, time_til_first_view, seen, average_doppler_velocity
 
