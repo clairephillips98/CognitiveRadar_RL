@@ -54,11 +54,11 @@ class Runner:
                 self.algorithm += '_PER'
             if args.use_n_steps:
                 self.algorithm += "_N_steps"
-        self.writer = SummaryWriter(log_dir='runs/DQN/{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer, self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
-        if args.load_model==True:
-            if os.path.isfile('models/DQN/net_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents)):
-                self.agent.net_load_state_dict(torch.load('models/DQN/net_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents),map_location=torch.device('cpu')))
-                self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents),map_location=torch.device('cpu')))
+        self.writer = SummaryWriter(log_dir='runs/DQN/{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer, self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
+        if args.load_model:
+            if os.path.isfile('models/DQN/net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents)):
+                self.agent.net_load_state_dict(torch.load('models/DQN/net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents),map_location=torch.device('cpu')))
+                self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents),map_location=torch.device('cpu')))
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
         self.total_steps = 0  # Record the total steps during the training
@@ -113,11 +113,11 @@ class Runner:
             er = self.evaluate_rewards.cpu()
         else:
             er = self.evaluate_rewards
-        np.save('data_train/DQN/{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(er))
+        np.save('data_train/DQN/{}_{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.args.type_of_MARL, self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(er))
 
     def save_models(self):
-        torch.save(self.agent.net_state_dict(),'models/DQN/net_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
-        torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
+        torch.save(self.agent.net_state_dict(),'models/DQN/net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
+        torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
 
     def evaluate_policy(self, ):
         evaluate_reward = 0
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     parser.add_argument("--radars", type=int, default =2, help="r: how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--relative_change", type=int, default =0, help="rc: if 0 then an action is a direction to look in, if 1 then an action is a change in direction to look in since the last action")
     parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
-
+    parser.add_argmunet("--type_of_MARL", type=str, default = "single_agent", help="type of shared info in the MARL system")
     args = parser.parse_args()
     env_index = 1
     set_gpu_name("cuda:" + str(args.gpu_number))

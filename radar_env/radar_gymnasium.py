@@ -34,14 +34,16 @@ class RadarEnv(gym.Env):
         self.game = Simulation(self.args)
         self.info = torch.empty(0, 5)
         self.size = size  # The size of the square grid
-        self.window_size = jnp.array(self.game.world_view.next_image.size()) * self.size  # The size of the PyGame window
-        # Observations are dictionaries with the agent's and the target's location.
-        # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
+        self.window_size = jnp.array(
+            self.game.world_view.next_image.size()) * self.size  # The size of the PyGame window
+        if self.game.diff_view == 1:
+            obs_shape = tuple([x.size() for x in self.game.individual_views])
+        else:
+            obs_shape = tuple(list(self.game.world_view.next_image.size()))
         self.observation_space = gym.spaces.Dict(
             {
-                # "agent_angles": gym.spaces.Space(np.array([radar.viewing_angle for radar in self.game.radars])),
                 "observation": gym.spaces.Box(low=0.0, high=1.0,
-                                              shape=tuple(list(self.game.world_view.next_image.size())), dtype=jnp.float32),
+                                              shape=obs_shape, dtype=jnp.float32),
             }
         )
 
@@ -70,21 +72,18 @@ class RadarEnv(gym.Env):
         self.last_action = None
 
     def _get_obs(self):
-        if self.args.speed_layer == 1:
-            expanded_image = self.game.world_view.next_image.unsqueeze(0)
-            joined_tensor = torch.cat((expanded_image, self.game.world_view.speed_layers.unsqueeze(0)), dim=0)
-            return joined_tensor.squeeze(0).squeeze(0)
-            # [:,self.game.blur_radius:-self.game.blur_radius,self.game.blur_radius:-self.game.blur_radius]
+        if self.game.diff_view == 1:
+            return [arr.unsqueeze(0) for arr in self.game.individual_views]
         else:
             return self.game.world_view.next_image.unsqueeze(0)
-            # [self.game.blur_radius:-self.game.blur_radius,self.game.blur_radius:-self.game.blur_radius]
 
     def info_analysis(self):
         info = torch.vstack([target.stats for target in self.game.targets]).to(device)
         world_loss = self.game.measure_world_loss(input=self.game.world_view.next_image,
-                                                  target=self.game.world_view.create_hidden_target_tensor(self.game.targets))
+                                                  target=self.game.world_view.create_hidden_target_tensor(
+                                                      self.game.targets))
         info[:, 2][info[:, 2] == -1] = self._max_episode_steps
-        return {'time_til_first_view': info[:, 2], 'views_vel': info[:, [0, 1,4]],
+        return {'time_til_first_view': info[:, 2], 'views_vel': info[:, [0, 1, 4]],
                 'world_loss': torch.Tensor(world_loss).to(device),
                 'seen': info[:, 3]}
 
@@ -107,7 +106,12 @@ class RadarEnv(gym.Env):
 
         return observation, None
 
-
+    @staticmethod
+    def penalize_no_action(reward, action, last_action):
+        if (reward == 0) & (action == last_action):
+            return reward - 1
+        else:
+            return reward
 
     def step(self, action):
         # Map the action to prinangle of view of all agents
@@ -118,13 +122,21 @@ class RadarEnv(gym.Env):
         terminated = 1 if self.game.t == 500 else 0
         if terminated:
             [target.episode_end() for target in self.game.targets]
-        reward = self.game.reward
-        if (self.args.penalize_no_movement == 1) & (self.last_action == self._agent_angle) & (reward == 0):
-            reward = reward-1
+        if self.game.diff_reward:
+            reward = self.game.rewards
+            if self.args.penalize_no_movement == 1:
+                reward = list(
+                    map(lambda x: self.penalize_no_action(reward[x], self._agent_angle[x], self.last_action[x]),
+                        range(len(reward))))
+        else:
+            reward = self.game.reward
+            if self.args.penalize_no_movement == 1:
+                reward = self.penalize_no_action(reward, self._agent_angle, self.last_action)
+
         observation = self._get_obs()
         if self.render_mode == "human":
             self._render_frame()
-        self.last_action=self._agent_angle
+        self.last_action = self._agent_angle
         return observation, reward, terminated, False, None
 
     def render(self):

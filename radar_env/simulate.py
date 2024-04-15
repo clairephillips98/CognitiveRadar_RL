@@ -55,8 +55,6 @@ class Simulation:
 
     def __init__(self, args, seed=None, game_type='single_agent'):
         self.args = args
-        self.args.game_type = 'single_agent'
-
         self.game_type = game_type
         self.reward = None
         self.t = 0
@@ -66,12 +64,26 @@ class Simulation:
         self.bounds = [bounds(radar) for radar in self.radars]
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
         self.targets = create_targets(15, self.overall_bounds, args, seed=seed)
-        if self.args.game_type in ['single_agent', 'MARL_shared_everything']:
+        if self.args.type_of_MARL in ['single_agent', 'MARL_shared_everything']:
             self.world_view = View(self.radars, self.overall_bounds, self.args, 0)
-        else:
-            self.views = [View(self.radars[x], self.bounds[x], self.args, x) for x in len(self.radars)]
+            self.diff_view = False
+            self.diff_reward = False
+        elif self.args.type_of_MARL in ['some_shared_info']:
             self.world_view = View(self.radars, self.overall_bounds, self.args)
             self.rewards = None
+            self.diff_view = True
+            self.diff_reward = True
+        elif self.args.type_of_MARL in ['some_shared_info_shared_reward']:
+            self.world_view = View(self.radars, self.overall_bounds, self.args)
+            self.rewards = None
+            self.diff_view = True
+            self.diff_reward = True
+
+        else: # no shared info, only shared target location
+            self.views = [View(self.radars[x], self.bounds[x], self.args, x) for x in len(self.radars)]
+            self.diff_view = True
+            self.diff_reward = True
+        self.individual_views=None
         self.initial_scan()
 
     def to_action(self, i):
@@ -99,8 +111,10 @@ class Simulation:
          enumerate(self.radars)]  # i think this is acutally pointless
         [tar.update_t(self.t) for tar in self.targets]
         visible_targets = self.get_visible_targets_and_update_stats(recording=recording)
-        if self.args.game_type in ['single_agent', 'MARL_shared_everything']:
+        if self.args.type_of_MARL in ['single_agent', 'MARL_shared_everything']:
             self.step_for_single_view(visible_targets)
+        elif self.args.type_of_MARL in ['some_shared_info', 'some_shared_info_shared_reward']:
+            self.step_for_shared_view_diff_reward(visible_targets)
         else:
             self.step_for_shared_targets(visible_targets)
 
@@ -108,17 +122,14 @@ class Simulation:
         # same view but masked version of the rewards
         # this should have the agents understand their actions better
         self.world_view.create_image(visible_targets)  # makes next image
-
+        self.individual_views = self.world_view.individual_radars()
         if self.world_view.last_tensor is not None:
             self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor, self.world_view.next_image, self.world_view.speed_layers)
-            individual_views = self.world_view.individual_radars()
+
             self.rewards = list(map(lambda x: self.reward_slice_cross_entropy(self.world_view.last_tensor,x,
                                                                               self.world_view.speed_layers),
-                                    individual_views))
+                                    self.individual_views))
         self.world_view.last_tensor = self.world_view.next_image
-
-   # def step_for partial_shared_world_view_diff_rewards(self,visible_targets):
-
 
     def step_for_shared_targets(self, visible_targets):
 
@@ -133,6 +144,7 @@ class Simulation:
         if self.world_view.last_tensor is not None:
             self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor, self.world_view.next_image, self.world_view.speed_layers)
         self.world_view.last_tensor = self.world_view.next_image
+        self.individual_views = [view.next_image in self.views]
 
     def step_for_single_view(self, visible_targets):
         self.world_view.create_image(visible_targets)  # makes next image

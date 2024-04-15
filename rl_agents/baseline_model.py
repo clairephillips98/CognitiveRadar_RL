@@ -11,6 +11,7 @@ from utils import action_unpack
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
+        self.args.type_of_MARL = 'single_agent'
         self.env_name = env_name
         if self.args.cdl > 0:
             self.env_name += '_common_destination_{}_odds'.format(self.args.cdl)
