@@ -34,14 +34,14 @@ class RadarEnv(gym.Env):
         self.game = Simulation(self.args)
         self.info = torch.empty(0, 5)
         self.size = size  # The size of the square grid
-        self.window_size = jnp.array(self.game.next_image.size()) * self.size  # The size of the PyGame window
+        self.window_size = jnp.array(self.game.world_view.next_image.size()) * self.size  # The size of the PyGame window
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.observation_space = gym.spaces.Dict(
             {
                 # "agent_angles": gym.spaces.Space(np.array([radar.viewing_angle for radar in self.game.radars])),
                 "observation": gym.spaces.Box(low=0.0, high=1.0,
-                                              shape=tuple(list(self.game.next_image.size())), dtype=jnp.float32),
+                                              shape=tuple(list(self.game.world_view.next_image.size())), dtype=jnp.float32),
             }
         )
 
@@ -71,18 +71,18 @@ class RadarEnv(gym.Env):
 
     def _get_obs(self):
         if self.args.speed_layer == 1:
-            expanded_image = self.game.next_image.unsqueeze(0)
-            joined_tensor = torch.cat((expanded_image, self.game.speed_layers.unsqueeze(0)), dim=0)
+            expanded_image = self.game.world_view.next_image.unsqueeze(0)
+            joined_tensor = torch.cat((expanded_image, self.game.world_view.speed_layers.unsqueeze(0)), dim=0)
             return joined_tensor.squeeze(0).squeeze(0)
             # [:,self.game.blur_radius:-self.game.blur_radius,self.game.blur_radius:-self.game.blur_radius]
         else:
-            return self.game.next_image.unsqueeze(0)
+            return self.game.world_view.next_image.unsqueeze(0)
             # [self.game.blur_radius:-self.game.blur_radius,self.game.blur_radius:-self.game.blur_radius]
 
     def info_analysis(self):
         info = torch.vstack([target.stats for target in self.game.targets]).to(device)
-        world_loss = self.game.measure_world_loss(input=self.game.next_image,
-                                                  target=self.game.create_hidden_target_tensor())
+        world_loss = self.game.measure_world_loss(input=self.game.world_view.next_image,
+                                                  target=self.game.world_view.create_hidden_target_tensor(self.game.targets))
         info[:, 2][info[:, 2] == -1] = self._max_episode_steps
         return {'time_til_first_view': info[:, 2], 'views_vel': info[:, [0, 1,4]],
                 'world_loss': torch.Tensor(world_loss).to(device),
@@ -144,7 +144,7 @@ class RadarEnv(gym.Env):
 
             canvas = pygame.display.set_mode(tuple(self.window_size))
             ret = jnp.empty((*self.window_size, 3), dtype=jnp.uint8)
-            plotted_arr = (self.game.next_image.numpy() * 255).astype(int)
+            plotted_arr = (self.game.world_view.next_image.numpy() * 255).astype(int)
             plotted_arr = jnp.repeat(plotted_arr, 5, axis=0)
             plotted_arr = jnp.repeat(plotted_arr, 5, axis=1)
             ret[:, :, 2] = ret[:, :, 1] = ret[:, :, 0] = plotted_arr

@@ -8,15 +8,22 @@ class stats:
     def add_stats(self, additional_stats,actions):
         if self.stats is None:
             self.stats = additional_stats
-            self.stats['actions'] = [len(set(actions))]
+            if type(actions[0])==list:
+
+                self.stats['actions'] = [len(set(map(tuple, actions)))]
+            else:
+                self.stats['actions'] = [len(set(actions))]
         else:
             self.stats['world_loss'] = torch.vstack((self.stats['world_loss'], additional_stats['world_loss']))
             self.stats['time_til_first_view'] = torch.hstack(
                 (self.stats['time_til_first_view'], additional_stats['time_til_first_view']))
             self.stats['views_vel'] = torch.vstack((self.stats['views_vel'], additional_stats['views_vel']))
             self.stats['seen'] = torch.hstack((self.stats['seen'], additional_stats['seen']))
-            self.stats['actions'].append(len(set(actions)))
+            if type(actions[0])==list:
+                self.stats['actions'].append(len(set(map(tuple, actions))))
 
+            else:
+                self.stats['actions'].append(len(set(actions)))
     def stats_analysis(self):
         # slope of line
         x_mean = torch.mean(self.stats['views_vel'].t()[0])
@@ -24,8 +31,6 @@ class stats:
         dev_x = self.stats['views_vel'].t()[0] - x_mean
         dev_y = self.stats['views_vel'].t()[1] - y_mean
         slope = torch.sum(dev_x * dev_y) / torch.sum(dev_x ** 2)
-        print('view rates')
-        print(self.stats['views_vel'][0])
         correlation = torch.corrcoef(self.stats['views_vel'].t())
         stats = {
             'avg_time_til_first_view': float(self.stats['time_til_first_view'].mean()),

@@ -60,7 +60,7 @@ class Runner:
         if type(prev_action) == list:
             action = [(x + 1) % self.env.action_size**(1/2) for x in prev_action]
         else:
-            action =1+prev_action
+            action = (1+prev_action) % self.env.action_size
         return action
 
     def variance_baseline(self,state, var_type='min'):
@@ -121,7 +121,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameter Setting for DQN")
     parser.add_argument("--max_train_steps", type=int, default=int(5e5), help=" Maximum number of training steps")
     parser.add_argument("--evaluate_freq", type=float, default=1e3, help="Evaluate the policy every 'evaluate_freq' steps")
-    parser.add_argument("--evaluate_times", type=float, default=3, help="Evaluate times")
+    parser.add_argument("--evaluate_times", type=float, default=1, help="Evaluate times")
     parser.add_argument("--buffer_capacity", type=int, default=int(1e5), help="The maximum replay-buffer capacity ")
     parser.add_argument("--batch_size", type=int, default=8, help="batch size")
     parser.add_argument("--hidden_dim", type=int, default=256, help="The number of neurons in hidden layers of the neural network")

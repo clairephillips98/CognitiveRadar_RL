@@ -8,20 +8,16 @@ Pulling together radar and target to create the environment, and define the rewa
 from radar_env.radar import Radar
 from radar_env.target import Target
 from utils import min_max_radar_breadth
-from PIL import Image, ImageDraw, ImageFilter
 from math import ceil, floor
-import numpy as np
 import torch
 from functools import reduce
-import math
 from math import pi
 import torchvision.transforms as T
 from rl_agents.config import GPU_NAME
 import argparse
-
+from radar_env.view import View
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
-
 
 def create_radars(seed=None):
     radar_1 = Radar(max_distance=184, duty_cycle=3,
@@ -59,6 +55,8 @@ class Simulation:
 
     def __init__(self, args, seed=None, game_type='single_agent'):
         self.args = args
+        self.args.game_type = 'single_agent'
+
         self.game_type = game_type
         self.reward = None
         self.t = 0
@@ -68,40 +66,13 @@ class Simulation:
         self.bounds = [bounds(radar) for radar in self.radars]
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
         self.targets = create_targets(15, self.overall_bounds, args, seed=seed)
-        self.scale = self.args.scale
-        self.blur_radius = self.args.blur_radius
-        self.shape = [self.blur_radius * 3 +
-                      ceil((self.overall_bounds['y_upper'] - self.overall_bounds['y_lower']) / self.scale),
-                      self.blur_radius * 3 +
-                      ceil((self.overall_bounds['x_upper'] - self.overall_bounds['x_lower']) / self.scale)]
-        self.next_image = (torch.ones((self.shape[0], self.shape[1])) * 0.5).to(device)
-        self.x = (torch.arange(self.shape[1], dtype=torch.float32).view(1, -1).repeat(self.shape[0], 1)).to(device)
-        self.y = (torch.arange(self.shape[0], dtype=torch.float32).view(-1, 1).repeat(1, self.shape[1])).to(device)
-        self.transform = T.GaussianBlur(kernel_size=(self.blur_radius * 2 + 1, self.blur_radius * 2 + 1),
-                                        sigma=(self.args.blur_sigma, self.args.blur_sigma)).to(device)
-        masks = [
-            self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, 0, 360, radar.max_distance) for
-            radar in self.radars]
-        self.mask_image = reduce(lambda x, y: torch.logical_or(x, y), masks)
-        self.last_tensor = None
-        self.speed_layers = (torch.zeros((self.shape[0], self.shape[1]))).to(device)
-        self.initial_scan()
-
-    def draw_shape(self, x, y, center, start_angle, end_angle, radius):
-        # Compute distances from the center
-        scaled_center = [(center[0] - self.overall_bounds['x_lower']) / self.scale + self.blur_radius,
-                         (center[1] - self.overall_bounds['y_lower']) / self.scale + self.blur_radius]
-        distances = torch.sqrt((x - scaled_center[0]) ** 2 + (y - scaled_center[1]) ** 2).to(device)
-        # Compute angles from the center
-        angles = torch.atan2(y - scaled_center[1], x - scaled_center[0]).to(device)
-        angles = (angles * 180 / torch.tensor(pi)).int() % 360  # Convert angles to degrees
-        # Create a binary mask for the pie slice
-        scaled_radius = radius / self.scale
-        if start_angle <= end_angle:
-            mask = (distances <= scaled_radius) & (angles >= start_angle) & (angles <= end_angle)
+        if self.args.game_type in ['single_agent', 'MARL_shared_everything']:
+            self.world_view = View(self.radars, self.overall_bounds, self.args, 0)
         else:
-            mask = (distances <= scaled_radius) & ((angles >= start_angle) | (angles <= end_angle))
-        return mask
+            self.views = [View(self.radars[x], self.bounds[x], self.args, x) for x in len(self.radars)]
+            self.world_view = View(self.radars, self.overall_bounds, self.args)
+            self.rewards = None
+        self.initial_scan()
 
     def to_action(self, i):
         # can only be up to 2 actions
@@ -128,27 +99,47 @@ class Simulation:
          enumerate(self.radars)]  # i think this is acutally pointless
         [tar.update_t(self.t) for tar in self.targets]
         visible_targets = self.get_visible_targets_and_update_stats(recording=recording)
-        if self.game_type == 'single_agent':
-            self.step_for_single_view(visible_targets)
-        elif self.game_type == 'MARL_shared_view':
+        if self.args.game_type in ['single_agent', 'MARL_shared_everything']:
             self.step_for_single_view(visible_targets)
         else:
             self.step_for_shared_targets(visible_targets)
 
-    def step_for_shared_targets(self, visible_targets, recording):
-        # create view for each radar
-        # 2 radars
-        # 2 seperate views
-        # reward for each radar
+    def step_for_shared_view_diff_reward(self, visible_targets):
+        # same view but masked version of the rewards
+        # this should have the agents understand their actions better
+        self.world_view.create_image(visible_targets)  # makes next image
 
-        return
+        if self.world_view.last_tensor is not None:
+            self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor, self.world_view.next_image, self.world_view.speed_layers)
+            individual_views = self.world_view.individual_radars()
+            self.rewards = list(map(lambda x: self.reward_slice_cross_entropy(self.world_view.last_tensor,x,
+                                                                              self.world_view.speed_layers),
+                                    individual_views))
+        self.world_view.last_tensor = self.world_view.next_image
+
+   # def step_for partial_shared_world_view_diff_rewards(self,visible_targets):
+
+
+    def step_for_shared_targets(self, visible_targets):
+
+        for i,view in enumerate(self.views):
+            view.create_image(visible_targets)
+            if view.last_tensor is not None:
+                self.rewards[i] = self.reward_slice_cross_entropy(view.last_tensor, view.next_image,
+                                                              view.speed_layers)
+                view.last_tensor = view.next_image
+        self.world_view.create_image(visible_targets)
+
+        if self.world_view.last_tensor is not None:
+            self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor, self.world_view.next_image, self.world_view.speed_layers)
+        self.world_view.last_tensor = self.world_view.next_image
 
     def step_for_single_view(self, visible_targets):
-        self.create_image(visible_targets)  # makes next image
+        self.world_view.create_image(visible_targets)  # makes next image
 
-        if self.last_tensor is not None:
-            self.reward = self.reward_slice_cross_entropy(self.last_tensor, self.next_image)
-        self.last_tensor = self.next_image
+        if self.world_view.last_tensor is not None:
+            self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor, self.world_view.next_image, self.world_view.speed_layers)
+        self.world_view.last_tensor = self.world_view.next_image
 
     def get_visible_targets_and_update_stats(self, radars=None, recording = True):
         radars = self.radars if radars is None else radars  # if radars isnt specified use all radars
@@ -157,59 +148,15 @@ class Simulation:
             visible_targets[radar.radar_num] = (radar.visible_targets(self.targets, recording))  # check which targets are visible
         return visible_targets
 
-    def create_image(self, visible_targets):
-        # create the tensor image of the world in black and white [0,1] where 1 is nothing and 0 is something
-        # blur the last image
-        # fill in the seen area as 1
-        # fill in the seen targets as 0
-        # anything that is outside of the area of view set to 0.5
-        self.next_image = self.transform(torch.stack([self.next_image] * 3, dim=0))[0, :, :]  # add blur
-        # Create a meshgrid of coordinates
-        for radar in self.radars:
-            start_angle = radar.viewing_angle % 360
-            end_angle = (radar.viewing_angle + radar.radians_of_view) % 360
-            mask = self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, start_angle, end_angle,
-                                   radar.max_distance)
-            # Convert mask to tensor and invert it
-            self.next_image[mask] = 1
-            if self.speed_layers is not None:
-                self.speed_layers[mask] = 0
-        for radar in visible_targets:
-            for target in visible_targets[radar]:
-                mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
-                                       max(self.scale / 2 + 1, target.radius))
-                self.next_image[mask] = 0
-                if self.speed_layers is not None:
-                    radial_vel = max(target.doppler_velocity.values())
-                    vel_mask = abs(radial_vel) > self.speed_layers.squeeze(0).abs()
-                    self.speed_layers[mask & vel_mask] = radial_vel
-
-        # add mask of original value to everything outside mask
-        self.next_image[~self.mask_image] = 0.5
-        return self.next_image
-
-    def create_hidden_target_tensor(self):
-        # create overall view of the world. this is like create image but everything is included
-        # this is for comparison purposes
-        # we don't need to set a mask for outside the radar view, if were setting everything to 0.5 outside the view the
-        # loss will be the same wheither there is a target(1) or no target(0).  given symmetry of loss
-        # either way there is lower threshold of loss.
-        world_view = torch.ones((self.shape[0], self.shape[1])).to(device)
-        for target in self.targets:
-            mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
-                                   max(self.scale / 2 + 1, target.radius))
-            world_view[mask] = 0
-        return world_view
-
     def measure_world_loss(self, input, target):
         # make it so there is no loss in the areas we cannot see
-        input[~self.mask_image] = 0
-        target[~self.mask_image] = 0
+        input[~self.world_view.mask_image] = 0
+        target[~self.world_view.mask_image] = 0
         loss = torch.nn.BCELoss(reduction='mean').to(device)
         world_loss = loss(input=input, target=target)
         return world_loss
 
-    def reward_slice_cross_entropy(self, last_tensor, next_image, add_mask=True, speed_scale=True):
+    def reward_slice_cross_entropy(self, last_tensor, next_image, speed_layers, add_mask=True, speed_scale=True, ):
         # Using BCE loss to find the binary cross entropy of the  changing images
         # The model is rewarded for a large change == high entropy
         loss = torch.nn.BCELoss(reduction='none').to(device)
@@ -223,7 +170,7 @@ class Simulation:
         loss_og = loss
         if speed_scale:
             # scale the rewards so something with an absolute
-            loss = torch.mul(self.speed_layers.abs() * self.speed_scale + 1, loss)
+            loss = torch.mul(speed_layers.abs() * self.speed_scale + 1, loss)
         reward = (torch.mean(loss))
         return reward
 
