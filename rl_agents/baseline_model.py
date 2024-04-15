@@ -57,8 +57,10 @@ class Runner:
             self.total_steps += 1
 
     def simple_baseline(self, prev_action):
-        action = list(map(lambda x: x + 1, action_unpack(prev_action, self.env.action_size)))
-        action = action[0]+action[1]* self.env.action_size**(1/2)
+        if type(prev_action) == list:
+            action = [(x + 1) % self.env.action_size**(1/2) for x in prev_action]
+        else:
+            action =1+prev_action
         return action
 
     def variance_baseline(self,state, var_type='min'):
@@ -78,7 +80,10 @@ class Runner:
         evaluate_reward = 0
         radar_stats = stats()
         for _ in range(self.args.evaluate_times):
-            action = random.randrange(self.args.action_dim)
+            if self.args.radars == 2:
+                action = [random.randrange(int(self.args.action_dim**(1/2))),random.randrange(int(self.args.action_dim**(1/2)))]
+            else:
+                action = random.randrange(self.args.action_dim)
             state = self.env_evaluate.reset()[0]
             done = False
             episode_reward = 0
@@ -92,8 +97,7 @@ class Runner:
                     action = self.variance_baseline(state, var_type='max')
                 elif self.args.baseline_model_type != 'no_movement':
                     raise Exception("Sorry, not a valid baseline model type")
-                action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) else action
-                next_state, reward, done, _, _ = self.env_evaluate.step(action_)
+                next_state, reward, done, _, _ = self.env_evaluate.step(action)
                 episode_reward += reward
                 state = next_state
                 actions.append(action)
