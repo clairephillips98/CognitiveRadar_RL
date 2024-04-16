@@ -63,16 +63,16 @@ class MARL_Double_RB:
             self.diff_states = True
         else:
             self.diff_states = False
-        if ['some_shared_info', 'shared_targets_only']:
+        if self.args.type_of_MARL in ['some_shared_info', 'shared_targets_only']:
             self.diff_rewards = True
         else:
             self.diff_rewards = False
-
     def store_transition(self, state, action, reward, next_state, terminal, done):
         if (self.diff_states == True) & (self.diff_rewards == True):
             map(lambda x: self.replay_buffer[x].store_transition(state[x], action, reward[x], next_state[x],
                                                                  terminal, done), range(self.args.agents))
         elif (self.diff_states == False) & (self.diff_rewards == True):
+
             map(lambda x: self.replay_buffer[x].store_transition(state, action, reward[x], next_state, terminal,
                                                                  done), range(self.args.agents))
         elif (self.diff_states == True) & (self.diff_rewards == False):

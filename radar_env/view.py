@@ -37,7 +37,7 @@ class View:
         self.y = (torch.arange(self.shape[0], dtype=torch.float32).view(-1, 1).repeat(1, self.shape[1])).to(device)
         self.transform = T.GaussianBlur(kernel_size=(self.blur_radius * 2 + 1, self.blur_radius * 2 + 1),
                                         sigma=(self.args.blur_sigma, self.args.blur_sigma)).to(device)
-        self.radars = radars
+        self.radars = radars if type(radars)==list else [radars]
         self.masks = [
             self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, 0, 360, radar.max_distance) for
             radar in self.radars]
@@ -116,3 +116,6 @@ class View:
         #individual_radar_masked_images = torch.empty((0,) + self.next_image.shape, dtype=self.next_image.dtype)
         individual_radar_masked_images = list(map(lambda mask: self.indiv_lambda(self.next_image,mask), self.masks))
         return individual_radar_masked_images
+
+    def set_last(self):
+        self.last_tensor = self.next_image

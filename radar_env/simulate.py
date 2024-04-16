@@ -26,7 +26,7 @@ def create_radars(seed=None):
                     radians_of_view=45, seed=seed, radar_num=0)
     radar_2 = Radar(max_distance=184, duty_cycle=3,
                     pulsewidth=4, bandwidth=1, frequency=3,
-                    pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(234, 0), wavelength=3,
+                    pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(180, 0), wavelength=3,
                     radians_of_view=45, seed=seed, radar_num=1)
     return [radar_1, radar_2]  # just 1 radar for now
 
@@ -61,28 +61,26 @@ class Simulation:
         self.t = 0
         self.speed_scale = self.args.speed_scale
         self.radars = create_radars(seed)
-        self.rewards=None
+        self.rewards = None
         if self.args.radars == 1: self.radars = [self.radars[0]]
         self.bounds = [bounds(radar) for radar in self.radars]
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
         self.targets = create_targets(15, self.overall_bounds, args, seed=seed)
+        self.world_view = View(self.radars, self.overall_bounds, self.args, 0)
         if self.args.type_of_MARL in ['single_agent', 'MARL_shared_everything']:
-            self.world_view = View(self.radars, self.overall_bounds, self.args, 0)
             self.diff_view = False
             self.diff_reward = False
         elif self.args.type_of_MARL in ['some_shared_info']:
-            self.world_view = View(self.radars, self.overall_bounds, self.args,0)
             self.diff_view = True
             self.diff_reward = True
         elif self.args.type_of_MARL in ['some_shared_info_shared_reward']:
-            self.world_view = View(self.radars, self.overall_bounds, self.args,0)
             self.diff_view = True
             self.diff_reward = False
-        else: # no shared info, only shared target location radars, bounds, args, num
-            self.views = [View(radars=self.radars[x], bounds=self.bounds[x], args=self.args, num=x) for x in len(self.radars)]
+        elif self.args.type_of_MARL in ['shared_targets_only']: # no shared info, only shared target location radars, bounds, args, num
+            self.views = [View(radars=self.radars[x], bounds=self.bounds[x], args=self.args, num=x) for x in range(len(self.radars))]
             self.diff_view = True
             self.diff_reward = True
-        self.individual_views=None
+        self.individual_views = None
         self.initial_scan()
 
     def to_action(self, i):
@@ -114,7 +112,7 @@ class Simulation:
             self.step_for_single_view(visible_targets)
         elif self.args.type_of_MARL in ['some_shared_info', 'some_shared_info_shared_reward']:
             self.step_for_shared_view_diff_reward(visible_targets)
-        else:
+        elif self.args.type_of_MARL in ['shared_targets_only']:
             self.step_for_shared_targets(visible_targets)
 
     def step_for_shared_view_diff_reward(self, visible_targets):
@@ -133,19 +131,18 @@ class Simulation:
         self.world_view.last_tensor = self.world_view.next_image
 
     def step_for_shared_targets(self, visible_targets):
-
-        for i,view in enumerate(self.views):
-            view.create_image(visible_targets)
-            if view.last_tensor is not None:
-                self.rewards[i] = self.reward_slice_cross_entropy(view.last_tensor, view.next_image,
-                                                              view.speed_layers)
-                view.last_tensor = view.next_image
         self.world_view.create_image(visible_targets)
-
+        list(map(lambda x: self.views[x].create_image(visible_targets), range(len(self.views))))
         if self.world_view.last_tensor is not None:
             self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor, self.world_view.next_image, self.world_view.speed_layers)
+            self.rewards = list(map(lambda x: self.reward_slice_cross_entropy(self.views[x].last_tensor, self.views[x].next_image,
+                                                              self.views[x].speed_layers), range(len(self.views))))
+        for view in self.views:
+            view.set_last()
+        list(map(lambda x: self.views[x].set_last(), range(len(self.views))))
         self.world_view.last_tensor = self.world_view.next_image
-        self.individual_views = [view.next_image in self.views]
+        self.individual_views = [view.next_image for view in self.views]
+
 
     def step_for_single_view(self, visible_targets):
         self.world_view.create_image(visible_targets)  # makes next image
@@ -202,15 +199,26 @@ def main():
                         help="how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--radars", type=int, default=2)
     parser.add_argument("--relative_change", type=int, default=0)
+    parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
+    parser.add_argument("--type_of_MARL", type=str, default="shared_targets_only", help="type of shared info in the MARL system")
+    args = parser.parse_args()
+
     args = parser.parse_args()
     transform = T.ToPILImage()
     test = Simulation(args)
     images = []
+    images_2 =[]
+    images_3=[]
     for t in range(20):
         test.update_t([t%8,((-t)%8)])
-        images.append(transform(torch.stack([test.next_image] * 3, dim=0)))
+        images.append(transform(torch.stack([test.world_view.next_image] * 3, dim=0)))
+        images_2.append(transform(torch.stack([test.individual_views[0]] * 3, dim=0)))
+        images_3.append(transform(torch.stack([test.individual_views[1]] * 3, dim=0)))
+
     # images = [Image.fromarray(jnp.repeat(im,repeats = 3,axis=0)) for im in test.images]
-    images[0].save("./images/cartesian.gif", save_all=True, append_images=images, duration=test.t, loop=0)
+    images[0].save("./images/cartesian1.gif", save_all=True, append_images=images, duration=test.t, loop=0)
+    images_2[0].save("./images/cartesian2.gif", save_all=True, append_images=images_2, duration=test.t, loop=0)
+    images_3[0].save("./images/cartesian3.gif", save_all=True, append_images=images_3, duration=test.t, loop=0)
     # images = [Image.fromarray(jnp.repeat(im,repeats = 3,axis=0)) for im in test.polar_images]
     # images[0].save("./images/polar.gif", save_all=True, append_images=images, duration=test.t, loop=0)
     print('done')
