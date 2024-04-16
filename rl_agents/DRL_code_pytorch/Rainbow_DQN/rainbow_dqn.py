@@ -60,7 +60,7 @@ class DQN(object):
                 q_target = batch['reward'].to(device) + self.gamma * (1 - batch['terminal'].to(device)) * self.target_net(batch['next_state'].to(device)).gather(-1, a_argmax).squeeze(-1)  # shape：(batch_size,)
             else:
                 q_target = batch['reward'].to(device) + self.gamma * (1 - batch['terminal'].to(device)) * self.target_net(batch['next_state'].to(device)).max(dim=-1)[0]  # shape：(batch_size,)
-        batch_action = batch['action'] if action is None else batch['action'][:,action].unsqueeze(1)
+        batch_action = batch['action'] if paction is None else batch['action'][:,action].unsqueeze(1)
         q_current = self.net(batch['state'].to(device)).gather(-1, batch_action).squeeze(-1)  # shape：(batch_size,)
         td_errors = q_current - q_target  # shape：(batch_size,)
         if self.use_per:

@@ -77,7 +77,7 @@ class Runner:
             while not done:
                 action = self.agent.choose_action(state, epsilon=self.epsilon)
                 action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) and (self.args.agents == 1) else action
-                next_state, reward, done, _,_ = self.env.step(action_)
+                next_state, reward, done, _,rewards = self.env.step(action_)
                 episode_steps += 1
                 self.total_steps += 1
 
@@ -131,7 +131,7 @@ class Runner:
             while not done:
                 action = self.agent.choose_action(state, epsilon=0)
                 action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) and (self.args.agents == 1) else action
-                next_state, reward, done, _,_ = self.env_evaluate.step(action_)
+                next_state, reward, done, _,rewards = self.env_evaluate.step(action_)
                 episode_reward += reward
                 state = next_state
                 if args.agents == 2:
@@ -195,8 +195,9 @@ if __name__ == '__main__':
     parser.add_argument("--radars", type=int, default =2, help="r: how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--relative_change", type=int, default =0, help="rc: if 0 then an action is a direction to look in, if 1 then an action is a change in direction to look in since the last action")
     parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
-    parser.add_argmunet("--type_of_MARL", type=str, default = "single_agent", help="type of shared info in the MARL system")
+    parser.add_argument("--type_of_MARL", type=str, default = "single_agent", help="type of shared info in the MARL system")
     args = parser.parse_args()
+
     env_index = 1
     set_gpu_name("cuda:" + str(args.gpu_number))
     runner = Runner(args=args, env_name=args.env_name, number=1, seed=0)
