@@ -12,6 +12,8 @@ from utils import action_unpack
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
+        if self.args.baseline == 1:
+            self.args.max_train_steps = -1
         self.env_name = env_name
         self.number = number
         self.seed = seed
@@ -130,7 +132,10 @@ class Runner:
     def evaluate_policy(self, ):
         evaluate_reward = 0
         radar_stats = stats()
-        self.agent.net_eval()
+        if self.args.baseline == 1:
+            action
+        else:
+            self.agent.net_eval()
         for _ in range(self.args.evaluate_times):
             state = self.env_evaluate.reset()[0]
             done = False
@@ -204,6 +209,8 @@ if __name__ == '__main__':
     parser.add_argument("--relative_change", type=int, default =0, help="rc: if 0 then an action is a direction to look in, if 1 then an action is a change in direction to look in since the last action")
     parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
     parser.add_argument("--type_of_MARL", type=str, default="single_agent", help="type of shared info in the MARL system")
+    parser.add_argument("--baseline", type=int, default=0, help="type of shared info in the MARL system")
+
     args = parser.parse_args()
 
     env_index = 1

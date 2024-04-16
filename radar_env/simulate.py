@@ -67,6 +67,7 @@ class Simulation:
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
         self.targets = create_targets(15, self.overall_bounds, args, seed=seed)
         self.world_view = View(self.radars, self.overall_bounds, self.args, 0)
+        print(self.args.type_of_MARL)
         if self.args.type_of_MARL in ['single_agent', 'MARL_shared_everything']:
             self.diff_view = False
             self.diff_reward = False
