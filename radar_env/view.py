@@ -107,9 +107,10 @@ class View:
 
 
     @staticmethod
-    def indiv_lambda(mask):
+    def indiv_lambda(next_image,mask):
         radar_im = next_image.clone()
         radar_im[~mask] = 0.5
+        return radar_im
     def individual_radars(self):
     # make a masked version of each indivual radar
         #individual_radar_masked_images = torch.empty((0,) + self.next_image.shape, dtype=self.next_image.dtype)

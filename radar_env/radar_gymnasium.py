@@ -37,7 +37,7 @@ class RadarEnv(gym.Env):
         self.window_size = jnp.array(
             self.game.world_view.next_image.size()) * self.size  # The size of the PyGame window
         if self.game.diff_view == 1:
-            obs_shape = tuple([x.size() for x in self.game.individual_views])
+            obs_shape = tuple(list(self.game.individual_views[0].size()))
         else:
             obs_shape = tuple(list(self.game.world_view.next_image.size()))
         self.observation_space = gym.spaces.Dict(
@@ -122,22 +122,21 @@ class RadarEnv(gym.Env):
         terminated = 1 if self.game.t == 500 else 0
         if terminated:
             [target.episode_end() for target in self.game.targets]
-        if self.game.diff_reward:
-            reward = self.game.rewards
+
+        rewards = self.game.rewards
+        if self.game.diff_reward & (self.last_action is not None):
             if self.args.penalize_no_movement == 1:
-                reward = list(
-                    map(lambda x: self.penalize_no_action(reward[x], self._agent_angle[x], self.last_action[x]),
-                        range(len(reward))))
-        else:
-            reward = self.game.reward
-            if self.args.penalize_no_movement == 1:
-                reward = self.penalize_no_action(reward, self._agent_angle, self.last_action)
+                rewards = map(lambda x: self.penalize_no_action(rewards[x], self._agent_angle[x], self.last_action[x]),
+                              range(len(rewards)))
+        reward = self.game.reward
+        if self.args.penalize_no_movement == 1:
+            reward = self.penalize_no_action(reward, self._agent_angle, self.last_action)
 
         observation = self._get_obs()
         if self.render_mode == "human":
             self._render_frame()
         self.last_action = self._agent_angle
-        return observation, reward, terminated, False, None
+        return observation, reward, terminated, False, rewards
 
     def render(self):
         if (self.render_mode == "rgb_array") & show:

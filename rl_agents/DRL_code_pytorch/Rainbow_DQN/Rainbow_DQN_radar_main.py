@@ -2,7 +2,7 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.replay_buffer import *
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.rainbow_dqn import DQN
-from rl_agents.DRL_code_pytorch.Rainbow_DQN.MARL_orchestrate import MARL_Double_Agent
+from rl_agents.DRL_code_pytorch.Rainbow_DQN.MARL_orchestrate import MARL_Double_Agent, MARL_Double_RB
 import argparse
 from radar_env.radar_gymnasium import RadarEnv
 from rl_agents.calculate_stats import stats
@@ -30,15 +30,22 @@ class Runner:
         print("action_dim={}".format(self.args.action_dim))
         print("episode_limit={}".format(self.args.episode_limit))
         print("scale={}".format(self.args.scale))
-        if args.use_per and args.use_n_steps:
-            self.replay_buffer = N_Steps_Prioritized_ReplayBuffer(args)
-        elif args.use_per:
-            self.replay_buffer = Prioritized_ReplayBuffer(args)
-        elif args.use_n_steps:
-            self.replay_buffer = N_Steps_ReplayBuffer(args)
+        print(self.args.type_of_MARL)
+        if self.args.type_of_MARL in ['some_shared_info_shared_reward', 'shared_targets_only']:
+            self.use_sep_rewards = True
         else:
-            self.replay_buffer = ReplayBuffer(args)
-
+            self.use_sep_rewards = False
+        if self.args.type_of_MARL in ['some_shared_info', 'some_shared_info_shared_reward', 'shared_targets_only']:
+            self.replay_buffer = MARL_Double_RB(args)
+        else:
+            if args.use_per and args.use_n_steps:
+                self.replay_buffer = N_Steps_Prioritized_ReplayBuffer(args)
+            elif args.use_per:
+                self.replay_buffer = Prioritized_ReplayBuffer(args)
+            elif args.use_n_steps:
+                self.replay_buffer = N_Steps_ReplayBuffer(args)
+            else:
+                self.replay_buffer = ReplayBuffer(args)
         self.agent = DQN(args) if self.args.agents == 1 else MARL_Double_Agent(args) #create 2 agents in case of MARL
         self.algorithm = 'DQN'
         if args.use_double and args.use_dueling and args.use_noisy and args.use_per and args.use_n_steps:
@@ -88,16 +95,17 @@ class Runner:
                 # terminal means dead or win,there is no next state s';
                 # but when reaching the max_episode_steps,there is a next state s' actually.
                 if done and episode_steps != self.args.episode_limit:
-                    if self.env_name == 'LunarLander-v2':
-                        if reward <= -100: reward = -1  # good for LunarLander
                     terminal = True
                 else:
                     terminal = False
+                if self.use_sep_rewards == True:
+                    self.replay_buffer.store_transition(state, np.array(action), rewards, next_state, terminal, done)  # Store the transition
 
-                self.replay_buffer.store_transition(state, np.array(action), reward, next_state, terminal, done)  # Store the transition
+                else:
+                    self.replay_buffer.store_transition(state, np.array(action), reward, next_state, terminal, done)  # Store the transition
                 state = next_state
 
-                if self.replay_buffer.current_size >= self.args.batch_size:
+                if self.replay_buffer.cs() >= self.args.batch_size:
                     self.agent.learn(self.replay_buffer, self.total_steps)
 
                 if self.total_steps % self.args.evaluate_freq == 0:
@@ -195,7 +203,7 @@ if __name__ == '__main__':
     parser.add_argument("--radars", type=int, default =2, help="r: how much the reward is scaled for seeing moving objects compared to not moving object")
     parser.add_argument("--relative_change", type=int, default =0, help="rc: if 0 then an action is a direction to look in, if 1 then an action is a change in direction to look in since the last action")
     parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
-    parser.add_argument("--type_of_MARL", type=str, default = "single_agent", help="type of shared info in the MARL system")
+    parser.add_argument("--type_of_MARL", type=str, default="single_agent", help="type of shared info in the MARL system")
     args = parser.parse_args()
 
     env_index = 1

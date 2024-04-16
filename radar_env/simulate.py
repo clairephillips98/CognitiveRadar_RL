@@ -51,7 +51,8 @@ def create_targets(n_ts, bounds, args, seed=None):
 
 
 class Simulation:
-    meta_data = {'game_types': ['single_agent', 'MARL_shared_view', 'MARL_shared_targets']}
+    meta_data = {'game_types': ['single_agent', 'MARL_shared_everything',
+                                'some_shared_info', 'some_shared_info_shared_reward', 'shared_targets_only']}
 
     def __init__(self, args, seed=None, game_type='single_agent'):
         self.args = args
@@ -60,6 +61,7 @@ class Simulation:
         self.t = 0
         self.speed_scale = self.args.speed_scale
         self.radars = create_radars(seed)
+        self.rewards=None
         if self.args.radars == 1: self.radars = [self.radars[0]]
         self.bounds = [bounds(radar) for radar in self.radars]
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
@@ -69,18 +71,15 @@ class Simulation:
             self.diff_view = False
             self.diff_reward = False
         elif self.args.type_of_MARL in ['some_shared_info']:
-            self.world_view = View(self.radars, self.overall_bounds, self.args)
-            self.rewards = None
+            self.world_view = View(self.radars, self.overall_bounds, self.args,0)
             self.diff_view = True
             self.diff_reward = True
         elif self.args.type_of_MARL in ['some_shared_info_shared_reward']:
-            self.world_view = View(self.radars, self.overall_bounds, self.args)
-            self.rewards = None
+            self.world_view = View(self.radars, self.overall_bounds, self.args,0)
             self.diff_view = True
-            self.diff_reward = True
-
-        else: # no shared info, only shared target location
-            self.views = [View(self.radars[x], self.bounds[x], self.args, x) for x in len(self.radars)]
+            self.diff_reward = False
+        else: # no shared info, only shared target location radars, bounds, args, num
+            self.views = [View(radars=self.radars[x], bounds=self.bounds[x], args=self.args, num=x) for x in len(self.radars)]
             self.diff_view = True
             self.diff_reward = True
         self.individual_views=None
@@ -124,7 +123,9 @@ class Simulation:
         self.world_view.create_image(visible_targets)  # makes next image
         self.individual_views = self.world_view.individual_radars()
         if self.world_view.last_tensor is not None:
-            self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor, self.world_view.next_image, self.world_view.speed_layers)
+            self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor,
+                                                          self.world_view.next_image,
+                                                          self.world_view.speed_layers)
 
             self.rewards = list(map(lambda x: self.reward_slice_cross_entropy(self.world_view.last_tensor,x,
                                                                               self.world_view.speed_layers),

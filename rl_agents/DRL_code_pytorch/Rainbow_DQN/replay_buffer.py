@@ -33,6 +33,9 @@ class ReplayBuffer(object):
         self.count = (self.count + 1) % self.buffer_capacity  # When the 'count' reaches buffer_capacity, it will be reset to 0.
         self.current_size = min(self.current_size + 1, self.buffer_capacity)
 
+    def cs(self):
+        return self.current_size
+
     def sample(self, total_steps):
         index = np.random.randint(0, self.current_size, size=self.batch_size)
         batch = {}
@@ -100,7 +103,8 @@ class N_Steps_ReplayBuffer(object):
                 batch[key] = torch.tensor(self.buffer[key][index], dtype=torch.float32).to(device)
 
         return batch, None, None
-
+    def cs(self):
+        return self.current_size
 
 class Prioritized_ReplayBuffer(object):
     def __init__(self, args):
@@ -152,6 +156,9 @@ class Prioritized_ReplayBuffer(object):
         priorities = (np.abs(td_errors) + 0.01) ** self.alpha
         for index, priority in zip(batch_index, priorities):
             self.sum_tree.update(data_index=index, priority=priority)
+
+    def cs(self):
+        return self.current_size
 
 
 class N_Steps_Prioritized_ReplayBuffer(object):
@@ -223,3 +230,6 @@ class N_Steps_Prioritized_ReplayBuffer(object):
         priorities = (np.abs(td_errors) + 0.01) ** self.alpha
         for index, priority in zip(batch_index, priorities):
             self.sum_tree.update(data_index=index, priority=priority)
+
+    def cs(self):
+        return self.current_size

@@ -37,7 +37,7 @@ class Runner:
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
         self.total_steps = 0  # Record the total steps during the training
-        if self.args.baseline_model_type != 'simple':
+        if self.args.baseline_model_type not in ['simple', 'no_movement']:
             self.masks = self.get_mask()
 
     def get_mask(self):
