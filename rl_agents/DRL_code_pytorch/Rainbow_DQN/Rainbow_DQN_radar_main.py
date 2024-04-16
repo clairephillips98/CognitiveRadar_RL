@@ -168,14 +168,14 @@ class Runner:
                         action=action_[0]
                 elif self.args.baseline == 2:
                     if self.args.radars==2:
-                        action = action_[0]+ action_[1]*(self.args.action_dim-1)
+                        action = action_[0]+action_[1]*(self.args.action_dim**(1/2)-1)
                     else:
                         action=action_[0]
                 next_state, reward, done, _,rewards = self.env_evaluate.step(action_)
                 episode_reward += reward
                 state = next_state
                 if args.agents == 2:
-                    action = action[0]+action[1]*self.args.action_dim
+                    action = action_[0]+action_[1]*self.args.action_dim
                 actions.append(action)
             radar_stats.add_stats(self.env_evaluate.info_analysis(),actions)
             evaluate_reward += episode_reward
