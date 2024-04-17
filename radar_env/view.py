@@ -90,7 +90,7 @@ class View:
                     self.speed_layers[mask & vel_mask] = radial_vel
 
         # add mask of original value to everything outside mask
-        self.next_image[~self.mask_image] = 0.1
+        self.next_image[~self.mask_image] = 0.9
         return self.next_image
 
     def create_hidden_target_tensor(self, targets):
