@@ -85,7 +85,6 @@ class Runner:
     def run(self, ):
         self.evaluate_policy()
         if self.args.baseline ==0:
-            print('here')
             while self.total_steps < self.args.max_train_steps:
                 state = self.env.reset()[0]
                 done = False
@@ -163,7 +162,6 @@ class Runner:
                     action = self.agent.choose_action(state, epsilon=self.epsilon)
                     action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) and (
                                 self.args.agents == 1) else action
-                    print(action)
                 elif self.args.baseline == 1:
                     action_ = self.simple_baseline(action_)
                     if self.args.radars == 2:
