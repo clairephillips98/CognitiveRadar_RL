@@ -31,7 +31,10 @@ class MARL_Double_Agent(DQN):
         list(map(lambda x: self.agents[x].net.train(), range(self.args.agents)))
 
     def learn(self, replay_buffer, total_steps):
-        list(map(lambda x: self.agents[x].learn(replay_buffer[x], total_steps, x), range(self.args.agents)))
+        if self.args.type_of_MARL in ['some_shared_info', 'some_shared_info_shared_reward', 'shared_targets_only']:
+            list(map(lambda x: self.agents[x].learn(replay_buffer.replay_buffer[x], total_steps, x), range(self.args.agents)))
+        else:
+            list(map(lambda x: self.agents[x].learn(replay_buffer[x], total_steps, x), range(self.args.agents)))
 
     def net_load_state_dict(self, path):
         list(map(lambda x: self.agents[x].net.load_state_dict(path), range(self.args.agents)))
@@ -72,7 +75,6 @@ class MARL_Double_RB:
             list(map(lambda x: self.replay_buffer[x].store_transition(state[x], action, reward[x], next_state[x],
                                                                  terminal, done), range(self.args.agents)))
         elif (self.diff_states == False) & (self.diff_rewards == True):
-
             list(map(lambda x: self.replay_buffer[x].store_transition(state, action, reward[x], next_state, terminal,
                                                                  done), range(self.args.agents)))
         elif (self.diff_states == True) & (self.diff_rewards == False):

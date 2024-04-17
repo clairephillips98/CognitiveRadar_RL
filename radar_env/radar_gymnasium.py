@@ -28,7 +28,7 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, args, seed=None, render_mode='human', size=5):
+    def __init__(self, args, seed=None, render_mode=None, size=5):
         self.seed = seed
         self.args = args
         self.game = Simulation(self.args)
@@ -126,8 +126,8 @@ class RadarEnv(gym.Env):
         rewards = self.game.rewards
         if self.game.diff_reward & (self.last_action is not None):
             if self.args.penalize_no_movement == 1:
-                rewards = map(lambda x: self.penalize_no_action(rewards[x], self._agent_angle[x], self.last_action[x]),
-                              range(len(rewards)))
+                rewards = list(map(lambda x: self.penalize_no_action(rewards[x], self._agent_angle[x], self.last_action[x]),
+                              range(len(rewards))))
         reward = self.game.reward
         if self.args.penalize_no_movement == 1:
             reward = self.penalize_no_action(reward, self._agent_angle, self.last_action)
