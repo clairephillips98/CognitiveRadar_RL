@@ -33,7 +33,7 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=5:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr16_4.txt
+#SBATCH --output=cphil_test_apr16_4_2.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
@@ -45,7 +45,7 @@ sbatch <<EOT &
 #SBATCH --gpus-per-node=1
 #SBATCH --time=5:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr16_5.txt
+#SBATCH --output=cphil_test_apr16_5_2.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
