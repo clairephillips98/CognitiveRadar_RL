@@ -119,6 +119,7 @@ class Runner:
                         None
         else:
             for x in range(int(floor(self.args.max_train_steps/self.args.evaluate_freq))):
+                self.total_steps = x*self.args.evaluate_freq
                 self.evaluate_policy()
         #self.save_models()
         # self.save_rewards()
