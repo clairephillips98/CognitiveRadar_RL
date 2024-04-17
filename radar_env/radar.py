@@ -51,7 +51,7 @@ class Radar:
 
     def object_detected(self, target_rho, target_distance):
         # calculate the likelihood of a target being seen and return a boolean of whether the target is detected
-        snr_target = ((self.max_distance/target_distance)**4)*((target_rho/self.rho_0))*self.SNR_0
+        snr_target = ((self.max_distance/(target_distance+0.00000001))**4)*((target_rho/self.rho_0))*self.SNR_0
         prob_detection = self.prob_f**(1/(1+snr_target))
         detected = random.random() < prob_detection
         return detected
@@ -59,7 +59,7 @@ class Radar:
     def visible_targets(self, targets, recording = True ):
         viewed_targets= []
         for target in targets:
-            in_circle, radius, angle = in_circle_cartesian(target.tensor_cart_coords(),
+            in_circle, radius, angle = in_circle_cartesian(target.tensor_cart_coords(),target.cartesian_coordinates,
                                    self.cartesian_coordinates,
                                    self.max_distance)
             if in_circle:

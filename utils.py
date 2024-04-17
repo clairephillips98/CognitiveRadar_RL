@@ -47,9 +47,10 @@ def is_angle_between(angle, start_angle, end_angle):
         return start_angle <= angle or angle <= end_angle
 
 
-def in_circle_cartesian(target, radar, radius):
+def in_circle_cartesian(target_scaled, target,radar, radius):
     # take in target location and radar location ad the wedge to look in
-    tar_radius, tar_angle = cartesian_to_polar(relative_location(target, radar))
+    _, tar_angle = cartesian_to_polar(relative_location(target_scaled, radar))
+    tar_radius, _ = cartesian_to_polar(relative_location(target, radar))
     if (tar_radius < radius):
         return True, tar_radius, tar_angle
     else:
