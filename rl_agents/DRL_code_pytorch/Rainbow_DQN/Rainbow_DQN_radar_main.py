@@ -10,6 +10,8 @@ from rl_agents.config import set_gpu_name
 import os
 from utils import action_unpack
 from random import randint
+from math import floor
+
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
@@ -32,7 +34,7 @@ class Runner:
         print("episode_limit={}".format(self.args.episode_limit))
         print("scale={}".format(self.args.scale))
         print(self.args.type_of_MARL)
-        if self.args.type_of_MARL in ['some_shared_info_shared_reward', 'shared_targets_only']:
+        if self.args.type_of_MARL in ['some_shared_info', 'shared_targets_only']:
             self.use_sep_rewards = True
         else:
             self.use_sep_rewards = False
@@ -82,8 +84,8 @@ class Runner:
             self.epsilon_decay = (self.args.epsilon_init - self.args.epsilon_min) / self.args.epsilon_decay_steps
     def run(self, ):
         self.evaluate_policy()
-        while self.total_steps < self.args.max_train_steps:
-            if self.args.baseline == 0:
+        if self.args.baseline ==0:
+            while self.total_steps < self.args.max_train_steps:
                 state = self.env.reset()[0]
                 done = False
                 episode_steps = 0
@@ -97,16 +99,12 @@ class Runner:
                     if not self.args.use_noisy:  # Decay epsilon
                         self.epsilon = self.epsilon - self.epsilon_decay if self.epsilon - self.epsilon_decay > self.epsilon_min else self.epsilon_min
 
-                    # When dead or win or reaching the max_episode_steps, done will be Ture, we need to distinguish them;
-                    # terminal means dead or win,there is no next state s';
-                    # but when reaching the max_episode_steps,there is a next state s' actually.
                     if done and episode_steps != self.args.episode_limit:
                         terminal = True
                     else:
                         terminal = False
-                    if self.use_sep_rewards == True:
+                    if self.use_sep_rewards:
                         self.replay_buffer.store_transition(state, np.array(action), rewards, next_state, terminal, done)  # Store the transition
-
                     else:
                         self.replay_buffer.store_transition(state, np.array(action), reward, next_state, terminal, done)  # Store the transition
                     state = next_state
@@ -114,11 +112,14 @@ class Runner:
                     if self.replay_buffer.cs() >= self.args.batch_size:
                         self.agent.learn(self.replay_buffer, self.total_steps)
 
-                if self.total_steps % self.args.evaluate_freq == 0:
-                    self.evaluate_policy()
-                if (self.total_steps/10) % self.args.evaluate_freq == 0:
-                    #self.save_models()
-                    None
+                    if self.total_steps % self.args.evaluate_freq == 0:
+                        self.evaluate_policy()
+                    if (self.total_steps/10) % self.args.evaluate_freq == 0:
+                        #self.save_models()
+                        None
+        else:
+            for x in range(int(floor(self.args.max_train_steps/self.args.evaluate_freq))):
+                self.evaluate_policy()
         #self.save_models()
         # self.save_rewards()
 
@@ -134,10 +135,10 @@ class Runner:
         torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
 
     def simple_baseline(self, prev_action):
-        if type(prev_action) == list:
+        if len(prev_action)==2:
             action = [(x + 1) % self.env.action_size**(1/2) for x in prev_action]
         else:
-            action = (1+prev_action) % self.env.action_size
+            action = [(1+prev_action[0]) % self.env.action_size]
         return action
 
     def evaluate_policy(self, ):
@@ -157,21 +158,21 @@ class Runner:
             actions = []
             while not done:
                 if self.args.baseline == 0:
-                    action = self.agent.choose_action(state, epsilon=0)
+                    action = self.agent.choose_action(state, epsilon=self.epsilon)
                     action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) and (
                                 self.args.agents == 1) else action
                 elif self.args.baseline == 1:
                     action_ = self.simple_baseline(action_)
-                    if self.args.radars==2:
-                        action = action_[0]+ action_[1]*(self.args.action_dim-1)
+                    if self.args.radars == 2:
+                        action = action_[0] + action_[1]*(self.args.action_dim-1)
                     else:
                         action=action_[0]
                 elif self.args.baseline == 2:
-                    if self.args.radars==2:
+                    if self.args.radars == 2:
                         action = action_[0]+action_[1]*(self.args.action_dim**(1/2)-1)
                     else:
                         action=action_[0]
-                next_state, reward, done, _,rewards = self.env_evaluate.step(action_)
+                next_state, reward, done, _, rewards = self.env_evaluate.step(action_)
                 episode_reward += reward
                 state = next_state
                 if args.agents == 2:

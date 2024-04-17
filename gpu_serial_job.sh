@@ -1,5 +1,5 @@
 #!/bin/bash
-name='a16_2_penalty_airport_cond_a8_t30_e0.5'
+name='a17_penalty_airport_cond_a8_t30'
 radars=2
 
 sbatch <<EOT &

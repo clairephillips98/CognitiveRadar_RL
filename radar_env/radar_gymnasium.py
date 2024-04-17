@@ -119,7 +119,7 @@ class RadarEnv(gym.Env):
         self._agent_angle = action if type(action) == list else [action]  # same format for 1 vs 2 radars
 
         self.game.update_t(self._agent_angle)
-        terminated = 1 if self.game.t == 500 else 0
+        terminated = 1 if self.game.t == self._max_episode_steps else 0
         if terminated:
             [target.episode_end() for target in self.game.targets]
 
