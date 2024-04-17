@@ -59,7 +59,7 @@ class Radar:
     def visible_targets(self, targets, recording = True ):
         viewed_targets= []
         for target in targets:
-            in_circle, radius, angle = in_circle_cartesian(target.cartesian_coordinates,
+            in_circle, radius, angle = in_circle_cartesian(target.tensor_cart_coords(),
                                    self.cartesian_coordinates,
                                    self.max_distance)
             if in_circle:

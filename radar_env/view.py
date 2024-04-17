@@ -59,9 +59,9 @@ class View:
         # Create a binary mask for the pie slice
         scaled_radius = radius / self.scale
         if start_angle <= end_angle:
-            mask = (distances <= scaled_radius) & (angles >= start_angle) & (angles <= end_angle)
+            mask = (distances <= scaled_radius) & (angles >= start_angle) & (angles < end_angle)
         else:
-            mask = (distances <= scaled_radius) & ((angles >= start_angle) | (angles <= end_angle))
+            mask = (distances <= scaled_radius) & ((angles > start_angle) | (angles <= end_angle))
         return mask
 
     def create_image(self, visible_targets):

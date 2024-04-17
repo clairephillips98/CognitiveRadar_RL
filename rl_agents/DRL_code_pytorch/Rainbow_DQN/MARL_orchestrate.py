@@ -11,7 +11,7 @@ class MARL_Double_Agent(DQN):
             self.diff_states = True
         else:
             self.diff_states = False
-        if ['some_shared_info', 'shared_targets_only']:
+        if self.args.type_of_MARL in ['some_shared_info', 'shared_targets_only']:
             self.diff_rewards = True
         else:
             self.diff_rewards = False
@@ -25,19 +25,19 @@ class MARL_Double_Agent(DQN):
         return action
 
     def net_eval(self):
-        map(lambda x: self.agents[x].net.eval(), range(self.args.agents))
+        list(map(lambda x: self.agents[x].net.eval(), range(self.args.agents)))
 
     def net_train(self):
-        map(lambda x: self.agents[x].net.train(), range(self.args.agents))
+        list(map(lambda x: self.agents[x].net.train(), range(self.args.agents)))
 
     def learn(self, replay_buffer, total_steps):
-        map(lambda x: self.agents[x].learn(replay_buffer[x], total_steps, x), range(self.args.agents))
+        list(map(lambda x: self.agents[x].learn(replay_buffer[x], total_steps, x), range(self.args.agents)))
 
     def net_load_state_dict(self, path):
-        map(lambda x: self.agents[x].net.load_state_dict(path), range(self.args.agents))
+        list(map(lambda x: self.agents[x].net.load_state_dict(path), range(self.args.agents)))
 
     def target_net_load_state_dict(self, path):
-        map(lambda x: self.agents[x].target_net.load_state_dict(path), range(self.args.agents))
+        list(map(lambda x: self.agents[x].target_net.load_state_dict(path), range(self.args.agents)))
 
     def net_state_dict(self):
 
@@ -69,19 +69,19 @@ class MARL_Double_RB:
             self.diff_rewards = False
     def store_transition(self, state, action, reward, next_state, terminal, done):
         if (self.diff_states == True) & (self.diff_rewards == True):
-            map(lambda x: self.replay_buffer[x].store_transition(state[x], action, reward[x], next_state[x],
-                                                                 terminal, done), range(self.args.agents))
+            list(map(lambda x: self.replay_buffer[x].store_transition(state[x], action, reward[x], next_state[x],
+                                                                 terminal, done), range(self.args.agents)))
         elif (self.diff_states == False) & (self.diff_rewards == True):
 
-            map(lambda x: self.replay_buffer[x].store_transition(state, action, reward[x], next_state, terminal,
-                                                                 done), range(self.args.agents))
+            list(map(lambda x: self.replay_buffer[x].store_transition(state, action, reward[x], next_state, terminal,
+                                                                 done), range(self.args.agents)))
         elif (self.diff_states == True) & (self.diff_rewards == False):
-            map(lambda x: self.replay_buffer[x].store_transition(state[x], action, reward, next_state[x], terminal,
-                                                                 done), range(self.args.agents))
+            list(map(lambda x: self.replay_buffer[x].store_transition(state[x], action, reward, next_state[x], terminal,
+                                                                 done), range(self.args.agents)))
         else:
-            map(lambda x: self.replay_buffer[x].store_transition(state, action, reward, next_state, terminal,
+            list(map(lambda x: self.replay_buffer[x].store_transition(state, action, reward, next_state, terminal,
 
-                                                                 done), range(self.args.agents))
+                                                                 done), range(self.args.agents)))
 
     def cs(self):
         return self.replay_buffer[0].current_size

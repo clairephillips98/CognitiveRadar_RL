@@ -22,6 +22,7 @@ time = 0.012
 class Target:
 
     def __init__(self, bounds, args, name=None, seed=None, id = None):
+        self.scale = args.scale
         self.bounds = self.bounds_expanded(bounds, 0.2)
         self.common_destination = self.point_in_square(args.common_destination)
         self.common_destination_likelihood = args.cdl
@@ -54,6 +55,10 @@ class Target:
         x = random.random()
         rho = -log(1-x)*self.avg_rho
         return rho
+
+    def tensor_cart_coords(self):
+        scaled_coords = (self.scale*int(self.cartesian_coordinates[0]/self.scale),self.scale*int(self.cartesian_coordinates[1]/self.scale))
+        return scaled_coords
 
     def x_y_start(self):
         if self.chance < (self.common_destination_likelihood / 2):
