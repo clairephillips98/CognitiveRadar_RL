@@ -81,6 +81,7 @@ class Simulation:
             self.diff_view = True
             self.diff_reward = True
         self.individual_views = None
+        self.individual_states = None
         self.initial_scan()
 
     def to_action(self, i):
@@ -129,6 +130,7 @@ class Simulation:
                                                                               self.world_view.speed_layers),
                                     self.individual_views))
         self.world_view.last_tensor = self.world_view.next_image
+        self.individual_states = self.world_view.indiv_radar_as_state()
 
     def step_for_shared_targets(self, visible_targets):
         self.world_view.create_image(visible_targets)
@@ -142,6 +144,7 @@ class Simulation:
         list(map(lambda x: self.views[x].set_last(), range(len(self.views))))
         self.world_view.last_tensor = self.world_view.next_image
         self.individual_views = [view.next_image for view in self.views]
+        self.individual_states = self.individual_views
 
 
     def step_for_single_view(self, visible_targets):
@@ -212,8 +215,8 @@ def main():
     for t in range(20):
         test.update_t([t%8,((-t)%8)])
         images.append(transform(torch.stack([test.world_view.next_image] * 3, dim=0)))
-        images_2.append(transform(torch.stack([test.individual_views[0]] * 3, dim=0)))
-        images_3.append(transform(torch.stack([test.individual_views[1]] * 3, dim=0)))
+        images_2.append(transform(torch.stack([test.individual_states[0]] * 3, dim=0)))
+        images_3.append(transform(torch.stack([test.individual_states[1]] * 3, dim=0)))
 
     # images = [Image.fromarray(jnp.repeat(im,repeats = 3,axis=0)) for im in test.images]
     images[0].save("./images/cartesian1.gif", save_all=True, append_images=images, duration=test.t, loop=0)

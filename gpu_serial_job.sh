@@ -6,7 +6,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=5:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_0.txt
 module load anaconda3
@@ -18,7 +18,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=5:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_1.txt
 module load anaconda3
@@ -31,7 +31,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_2.txt
 module load anaconda3
@@ -43,7 +43,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_3.txt
 module load anaconda3
@@ -55,7 +55,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=5:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_4.txt
 module load anaconda3
@@ -67,7 +67,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=5:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_5.txt
 module load anaconda3
@@ -79,7 +79,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_6.txt
 module load anaconda3
@@ -91,7 +91,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_7.txt
 module load anaconda3
@@ -103,7 +103,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_8.txt
 module load anaconda3
@@ -115,7 +115,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_9.txt
 module load anaconda3
@@ -127,7 +127,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_10.txt
 module load anaconda3
@@ -139,7 +139,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_11.txt
 module load anaconda3
@@ -151,7 +151,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_12.txt
 module load anaconda3
@@ -163,7 +163,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_13.txt
 module load anaconda3
@@ -175,7 +175,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_14.txt
 module load anaconda3
@@ -187,7 +187,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=9:00:0
+#SBATCH --time=12:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_15.txt
 module load anaconda3

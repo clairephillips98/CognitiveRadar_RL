@@ -24,6 +24,7 @@ class Runner:
         self.env = RadarEnv(seed=seed, args=self.args)
         self.env_evaluate = RadarEnv(seed=seed, args=self.args)
         self.args.state_dim = self.env.observation_space['observation'].shape
+        print(self.args.state_dim)
         if type(self.args.state_dim) == int:
             self.args.state_dim = [self.args.state_dim]
         self.args.action_dim = self.env.action_space.n if args.agents == 1 else int(self.env.action_space.n**(1/2)) # action dim is square root possible action space if 2 agents
@@ -34,11 +35,11 @@ class Runner:
         print("episode_limit={}".format(self.args.episode_limit))
         print("scale={}".format(self.args.scale))
         print(self.args.type_of_MARL)
-        if self.args.type_of_MARL in ['some_shared_info', 'shared_targets_only']:
+        if self.args.type_of_MARL in ['some_shared_info', 'shared_targets_only']: # seperate rewards
             self.use_sep_rewards = True
         else:
             self.use_sep_rewards = False
-        if self.args.type_of_MARL in ['some_shared_info', 'some_shared_info_shared_reward', 'shared_targets_only']:
+        if self.args.type_of_MARL in ['some_shared_info', 'some_shared_info_shared_reward', 'shared_targets_only']: #s eperate state spaces
             self.replay_buffer = MARL_Double_RB(args)
         else:
             if args.use_per and args.use_n_steps:

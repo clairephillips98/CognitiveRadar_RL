@@ -37,7 +37,7 @@ class RadarEnv(gym.Env):
         self.window_size = jnp.array(
             self.game.world_view.next_image.size()) * self.size  # The size of the PyGame window
         if self.game.diff_view == 1:
-            obs_shape = tuple(list(self.game.individual_views[0].size()))
+            obs_shape = tuple(list(self.game.individual_states[0].size()))
         else:
             obs_shape = tuple(list(self.game.world_view.next_image.size()))
         self.observation_space = gym.spaces.Dict(
