@@ -203,7 +203,7 @@ def main():
     parser.add_argument("--radars", type=int, default=2)
     parser.add_argument("--relative_change", type=int, default=0)
     parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
-    parser.add_argument("--type_of_MARL", type=str, default="shared_targets_only", help="type of shared info in the MARL system")
+    parser.add_argument("--type_of_MARL", type=str, default="some_shared_info", help="type of shared info in the MARL system")
     args = parser.parse_args()
 
     args = parser.parse_args()

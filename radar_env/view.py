@@ -22,6 +22,7 @@ print(device)
 class View:
 
     def __init__(self, radars, bounds, args, num):
+        self.mask_val = 0.9
         self.args = args
         self.num = num
         self.scale = self.args.scale
@@ -32,7 +33,7 @@ class View:
                       ceil((self.bounds['y_upper'] - self.bounds['y_lower']) / self.scale),
                       self.blur_radius * 3 +
                       ceil((self.bounds['x_upper'] - self.bounds['x_lower']) / self.scale)]
-        self.next_image = (torch.ones((self.shape[0], self.shape[1])) * 0.5).to(device)
+        self.next_image = (torch.ones((self.shape[0], self.shape[1])) * self.mask_val).to(device)
         self.x = (torch.arange(self.shape[1], dtype=torch.float32).view(1, -1).repeat(self.shape[0], 1)).to(device)
         self.y = (torch.arange(self.shape[0], dtype=torch.float32).view(-1, 1).repeat(1, self.shape[1])).to(device)
         self.transform = T.GaussianBlur(kernel_size=(self.blur_radius * 2 + 1, self.blur_radius * 2 + 1),
@@ -45,6 +46,7 @@ class View:
         self.last_tensor = None
         self.speed_layers = (torch.zeros((self.shape[0], self.shape[1]))).to(device)
         self.indiv_images = None
+
 
     def draw_shape(self, x, y, center, start_angle, end_angle, radius):
         # Compute distances from the center
@@ -90,7 +92,7 @@ class View:
                     self.speed_layers[mask & vel_mask] = radial_vel
 
         # add mask of original value to everything outside mask
-        self.next_image[~self.mask_image] = 0.9
+        self.next_image[~self.mask_image] = self.mask_val
         return self.next_image
 
     def create_hidden_target_tensor(self, targets):
@@ -106,10 +108,10 @@ class View:
             world_view[mask] = 0
         return world_view
 
-    @staticmethod
-    def indiv_lambda(next_image, mask):
+
+    def indiv_lambda(self,next_image, mask):
         radar_im = next_image.clone()
-        radar_im[~mask] = 0.5
+        radar_im[~mask] = self.mask_val
         return radar_im
 
     def individual_radars(self):
