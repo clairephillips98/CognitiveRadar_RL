@@ -73,7 +73,7 @@ class RadarEnv(gym.Env):
 
     def _get_obs(self):
         if self.game.diff_view == 1:
-            return [arr.unsqueeze(0) for arr in self.game.individual_views]
+            return [arr.unsqueeze(0) for arr in self.game.individual_states]
         else:
             return self.game.world_view.next_image.unsqueeze(0)
 

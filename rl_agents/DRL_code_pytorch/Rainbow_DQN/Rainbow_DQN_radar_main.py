@@ -24,7 +24,6 @@ class Runner:
         self.env = RadarEnv(seed=seed, args=self.args)
         self.env_evaluate = RadarEnv(seed=seed, args=self.args)
         self.args.state_dim = self.env.observation_space['observation'].shape
-        print(self.args.state_dim)
         if type(self.args.state_dim) == int:
             self.args.state_dim = [self.args.state_dim]
         self.args.action_dim = self.env.action_space.n if args.agents == 1 else int(self.env.action_space.n**(1/2)) # action dim is square root possible action space if 2 agents
