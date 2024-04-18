@@ -34,7 +34,7 @@ class MARL_Double_Agent(DQN):
         if self.args.type_of_MARL in ['some_shared_info', 'some_shared_info_shared_reward', 'shared_targets_only']:
             list(map(lambda x: self.agents[x].learn(replay_buffer.replay_buffer[x], total_steps, x), range(self.args.agents)))
         else:
-            list(map(lambda x: self.agents[x].learn(replay_buffer[x], total_steps, x), range(self.args.agents)))
+            list(map(lambda x: self.agents[x].learn(replay_buffer, total_steps, x), range(self.args.agents)))
 
     def net_load_state_dict(self, path):
         list(map(lambda x: self.agents[x].net.load_state_dict(path), range(self.args.agents)))
