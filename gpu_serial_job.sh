@@ -5,9 +5,9 @@ end=1.0
 step=0.1
 
 # Iterate over the sequence of floating-point numbers
-for b in "0.1 0.3 0.5"
-  for l in "0.01 0.1 0.5"; do
-    name='a17_3_penalty_airport_cond_a8_t30_unmask_$l'
+for b in "0.1 0.3 0.5" do
+  for l in "0.01 0.1 0.5" do
+    name='a18_penalty_airport_cond_a8_t30_unmask_$l'
     for j in {0..1} do
       for i in {0..1} do
         sbatch <<EOT &
