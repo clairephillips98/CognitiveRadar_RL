@@ -16,3 +16,8 @@ from math import pi
 # Ie just write about what I have so far?
 # implement real world stuff and then train
 # can I keep the implementing speed into the layers more simple - easier to implement possibly just as good
+
+
+# set n step to 1
+# make episodes so much longer
+# increase the weight for seeing a target

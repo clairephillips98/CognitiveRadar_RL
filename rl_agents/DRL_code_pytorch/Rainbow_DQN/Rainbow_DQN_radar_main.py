@@ -185,6 +185,8 @@ class Runner:
         analysis = radar_stats.stats_analysis()
         evaluate_reward /= self.args.evaluate_times
         self.evaluate_rewards.append(evaluate_reward)
+        if (self.total_steps > 200000) & (analysis['unique_actions'] < 3) & (self.args.baseline == 0):
+            exit
         print("total_steps:{} \t evaluate_reward:{} \t epsilon：{}".format(self.total_steps, evaluate_reward, self.epsilon))
         self.writer.add_scalar('step_rewards', evaluate_reward, global_step=self.total_steps)
         self.writer.add_scalar('step_time_to_first_view', analysis['avg_time_til_first_view'], global_step=self.total_steps)
@@ -239,7 +241,7 @@ if __name__ == '__main__':
     parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
     parser.add_argument("--type_of_MARL", type=str, default="single_agent", help="type of shared info in the MARL system")
     parser.add_argument("--baseline", type=int, default=0, help="type of shared info in the MARL system")
-    parser.add_argument("--outside_radar_value", type=float, default=0.1, help="value outside of radar observation area")
+    parser.add_argument("--outside_radar_value", type=float, default=0.9, help="value outside of radar observation area")
     args = parser.parse_args()
 
     env_index = 1

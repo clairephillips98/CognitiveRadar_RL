@@ -22,7 +22,7 @@ print(device)
 class View:
 
     def __init__(self, radars, bounds, args, num):
-        self.mask_val = 0.9
+        self.mask_val = args.outside_radar_value
         self.args = args
         self.num = num
         self.scale = self.args.scale
