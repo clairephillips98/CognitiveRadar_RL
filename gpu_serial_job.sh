@@ -6,6 +6,7 @@ for m in 0 1 5; do #speed scale
     echo $name
     for k in 1 3 5; do # n steps
           for j in 0 1; do #step types
+    name='a19_penalty_airport_cond_a8_t30_unmask_0.1_nstep${k}_hd${l}_'
 sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
