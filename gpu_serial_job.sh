@@ -1,36 +1,22 @@
 #!/bin/bash
 # Iterate over the sequence of floating-point numbers
-for b in 0.3 0.5 0.7; do # blur sigma
-  for l in 0.9 0.8 0.5; do # area outside of mask
-    name='a19_penalty_airport_cond_a8_t30_unmask_'$l''
+for m in 0 1 5; do #speed scale
+  for l in 64 128 256; do #hidden dim size
+    name='a19_penalty_airport_cond_a8_t30_unmask_0.1'
     echo $name
-    for i in {1}; do # radars
-          for j in {0..1}; do #step types
+    for k in 1 3 5; do # n steps
+          for j in 0 1; do #step types
 sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=5:00:0
+#SBATCH --time=6:00:0
 #SBATCH --export=ALL
 #SBATCH --output=cphil_test_apr16_${i}.txt
 module load anaconda3
 echo 1
 source activate pytorch_env
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --blur_radius=1 --cdl=1 --epsilon_init=0.5 --load_model=0 --speed_scale=1 --env_name="$name" --penalize_no_movement=1 --radars=$i --agents=1 --baseline=0 --outside_radar_value=$l --blur_sigma=$b --relative_change=$j
-EOT
-      done
-      for j in {1..2}; do #baselines
-sbatch <<EOT &
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --gpus-per-node=1
-#SBATCH --time=1:00:0
-#SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr16_${i}.txt
-module load anaconda3
-echo 1
-source activate pytorch_env
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --blur_radius=1 --cdl=1 --epsilon_init=0.5 --load_model=0 --speed_scale=1 --env_name="$name" --penalize_no_movement=1 --radars=$i --agents=1 --baseline=$j --outside_radar_value=$l --blur_sigma=$b
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --blur_radius=1 --cdl=1 --epsilon_init=0.5 --load_model=0 --speed_scale=1 --env_name="$name" --penalize_no_movement=1 --radars=2 --agents=2 --baseline=0 --outside_radar_value=0.9 --blur_sigma=0.5 --relative_change=$j --n_steps=$k --hidden_dim=$l --speed_scale=$m
 EOT
       done
     done
