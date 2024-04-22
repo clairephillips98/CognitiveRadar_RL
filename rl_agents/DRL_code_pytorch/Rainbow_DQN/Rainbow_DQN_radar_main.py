@@ -185,8 +185,8 @@ class Runner:
         analysis = radar_stats.stats_analysis()
         evaluate_reward /= self.args.evaluate_times
         self.evaluate_rewards.append(evaluate_reward)
-        if (self.total_steps > 200000) & (analysis['unique_actions'] < 3) & (self.args.baseline == 0):
-            exit
+        if (self.total_steps > 200000) & (analysis['unique_actions'] <= 2) & (self.args.baseline == 0):
+            exit()
         print("total_steps:{} \t evaluate_reward:{} \t epsilon：{}".format(self.total_steps, evaluate_reward, self.epsilon))
         self.writer.add_scalar('step_rewards', evaluate_reward, global_step=self.total_steps)
         self.writer.add_scalar('step_time_to_first_view', analysis['avg_time_til_first_view'], global_step=self.total_steps)
