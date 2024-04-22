@@ -16,7 +16,7 @@ sbatch <<EOT &
 module load anaconda3
 echo 1
 source activate pytorch_env
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --blur_radius=1 --cdl=1 --epsilon_init=0.5 --load_model=0 --speed_scale=1 --env_name="$name" --penalize_no_movement=1 --radars=2 --agents=2 --baseline=0 --outside_radar_value=0.9 --blur_sigma=0.5 --relative_change=$j --n_steps=$k --hidden_dim=$l --speed_scale=$m
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --blur_radius=1 --cdl=1 --epsilon_init=0.5 --load_model=0 --speed_scale=1 --env_name="$name" --penalize_no_movement=1 --radars=2 --agents=2 --baseline=0 --outside_radar_value=0.9 --blur_sigma=0.5 --relative_change=$j --n_steps=$k --hidden_dim=$l --speed_scale=$m --type_of_MARL='some_shared_info_shared_reward'
 EOT
       done
     done
