@@ -2,11 +2,10 @@
 # Iterate over the sequence of floating-point numbers
 for m in 0 1 5; do #speed scale
   for l in 64 128 256; do #hidden dim size
-    name='a19_penalty_airport_cond_a8_t30_unmask_0.1'
-    echo $name
     for k in 1 3 5; do # n steps
           for j in 0 1; do #step types
-    name='a19_penalty_airport_cond_a8_t30_unmask_0.1_nstep${k}_hd${l}_'
+            name='a19_penalty_airport_cond_a8_t30_unmask_0.1_nstep'$k'_hd'$l'_'
+            echo $name
 sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
