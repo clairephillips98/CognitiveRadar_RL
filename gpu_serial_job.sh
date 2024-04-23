@@ -26,13 +26,13 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --speed_scale=1 \
     --env_name="$full_name" \
     --penalize_no_movement=1 \
-    --radars=$((r)) \
+    --radars=$r \
     --agents=1 \
-    --baseline=$((bl)) \
+    --baseline=$bl \
     --outside_radar_value=0.9 \
     --blur_sigma=0.5 \
     --relative_change=0 \
-    --speed_scale=$((i))
+    --speed_scale=$i
 EOT
         done
     done

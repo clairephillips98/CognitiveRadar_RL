@@ -110,3 +110,8 @@ def action_unpack(action, num_states):
     factor = int(num_states**(1/2))
     actions = [action % factor, math.floor(action / factor)]
     return actions
+
+def action_repack(actions, num_states):
+    factor = int(num_states**(1/2))
+    action = actions[0]+ actions[1]*factor
+    return action
