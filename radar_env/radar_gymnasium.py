@@ -129,6 +129,7 @@ class RadarEnv(gym.Env):
                 rewards = list(map(lambda x: self.penalize_no_action(rewards[x], self._agent_angle[x], self.last_action[x]),
                               range(len(rewards))))
         reward = self.game.reward
+        unpenalized_reward = reward.clone()
         if self.args.penalize_no_movement == 1:
             reward = self.penalize_no_action(reward, self._agent_angle, self.last_action)
 
@@ -136,7 +137,7 @@ class RadarEnv(gym.Env):
         if self.render_mode == "human":
             self._render_frame()
         self.last_action = self._agent_angle
-        return observation, reward, terminated, False, rewards
+        return observation, reward, terminated, False, rewards, unpenalized_reward
 
     def render(self):
         if (self.render_mode == "rgb_array") & show:

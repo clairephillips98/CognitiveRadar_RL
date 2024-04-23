@@ -2,7 +2,6 @@ import torch
 from functools import reduce
 import random
 from utils import action_unpack, action_repack
-import torchvision.transforms as T
 
 
 def simple_baseline(agent_setup, prev_action):

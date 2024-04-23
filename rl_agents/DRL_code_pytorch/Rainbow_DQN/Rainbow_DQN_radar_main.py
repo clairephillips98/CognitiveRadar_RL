@@ -105,7 +105,7 @@ class Runner:
                 while not done:
                     action = self.agent.choose_action(state, epsilon=self.epsilon)
                     action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) and (self.args.agents == 1) else action
-                    next_state, reward, done, _,rewards = self.env.step(action_)
+                    next_state, reward, done, _,rewards, _ = self.env.step(action_)
                     episode_steps += 1
                     self.total_steps += 1
 
@@ -149,6 +149,7 @@ class Runner:
         torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
     def evaluate_policy(self, ):
         evaluate_reward = 0
+        unpenalized_evaluate_reward = 0
         radar_stats = stats()
         if self.args.baseline >= 1:
             if args.radars > 1:
@@ -161,6 +162,7 @@ class Runner:
             state = self.env_evaluate.reset()[0]
             done = False
             episode_reward = 0
+            episode_unpenalized_reward = 0
             actions = []
             action_ = None
             # images = []
@@ -172,21 +174,24 @@ class Runner:
                                 self.args.agents == 1) else action
                 else:
                     action_, action = baselines_next_step(self, action_,state)
-                next_state, reward, done, _, rewards = self.env_evaluate.step(action_)
+                next_state, reward, done, _, rewards,unpenalized_reward = self.env_evaluate.step(action_)
                 # if len(images)<20:
                 #     images.append(transform(torch.stack([state.squeeze(0)] * 3, dim=0)))
                 # if len(images)==20:
                 #     images[0].save("./images/xx.gif", save_all=True, append_images=images,loop=0)
                 episode_reward += reward
+                episode_unpenalized_reward += unpenalized_reward
                 state = next_state
                 actions.append(action)
             radar_stats.add_stats(self.env_evaluate.info_analysis(),actions)
             evaluate_reward += episode_reward
+            unpenalized_evaluate_reward += episode_unpenalized_reward
         self.agent.net_train()
         analysis = radar_stats.stats_analysis()
         evaluate_reward /= self.args.evaluate_times
+        unpenalized_evaluate_reward /= self.args.evaluate_times
         self.evaluate_rewards.append(evaluate_reward)
-        if (self.total_steps > 200000) & (analysis['unique_actions'] <= 2) & (self.args.baseline == 0):
+        if (self.total_steps > 200000) & (analysis['unique_actions'] == 1) & (self.args.baseline == 0):
             exit()
         print("total_steps:{} \t evaluate_reward:{} \t epsilon：{}".format(self.total_steps, evaluate_reward, self.epsilon))
         self.writer.add_scalar('step_rewards', evaluate_reward, global_step=self.total_steps)
@@ -198,6 +203,7 @@ class Runner:
         self.writer.add_scalar('target_view_rate_to_velocity_slope', analysis['veiws_vel_slope'], global_step=self.total_steps)
         self.writer.add_scalar('target_view_rate_to_doppler_velocity_corr', analysis['views_doppler_corr'], global_step=self.total_steps)
         self.writer.add_scalar('average_view_rate', analysis['average_view_rate'], global_step=self.total_steps)
+        self.writer.add_scalar('unpenalized_step_reward', unpenalized_evaluate_reward, global_step=self.total_steps)
 
 
 if __name__ == '__main__':
