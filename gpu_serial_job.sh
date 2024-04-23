@@ -3,7 +3,7 @@
 for r in 1 2; do #speed scale
     for bl in 1 2 3 4 5; do #bl
         for m in 1 3 5; do #ss
-       name='a19_penalty_airport_cond_a8_t30_unmask_0.1_
+       name='a19_penalty_airport_cond_a8_t30_unmask_0.1_'
        echo $name
 sbatch <<EOT &
 #!/bin/bash
