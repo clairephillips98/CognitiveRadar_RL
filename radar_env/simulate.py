@@ -84,15 +84,6 @@ class Simulation:
         self.individual_states = None
         self.initial_scan()
 
-    def to_action(self, i):
-        # can only be up to 2 actions
-        if len(self.radars) == 1:
-            return [i]
-        elif len(self.radars) == 2:
-            return [i % self.radars[0].num_states, floor(i / self.radars[0].num_states)]
-        else:
-            raise 'error with number of radars.  we cant handle more than 2 yet'
-
     def initial_scan(self):
         # initial scan - just look in every direction for the max number of looks required
         steps = max([radar.num_states for radar in self.radars])
@@ -200,7 +191,7 @@ def main():
     parser.add_argument("--speed_layer", type=int, default=0, help="if speed is included in state space")
     parser.add_argument("--speed_scale", type=int, default=1,
                         help="how much the reward is scaled for seeing moving objects compared to not moving object")
-    parser.add_argument("--radars", type=int, default=1)
+    parser.add_argument("--radars", type=int, default=2)
     parser.add_argument("--relative_change", type=int, default=0)
     parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
     parser.add_argument("--type_of_MARL", type=str, default="shared_targets_only", help="type of shared info in the MARL system")
@@ -221,12 +212,9 @@ def main():
         images_2.append(transform(torch.stack([test.individual_states[0]] * 3, dim=0)))
         images_3.append(transform(torch.stack([test.individual_states[1]] * 3, dim=0)))
 
-    images = [Image.fromarray(jnp.repeat(im,repeats = 3,axis=0)) for im in test.images]
     images[0].save("./images/cartesian1.gif", save_all=True, append_images=images, duration=test.t, loop=0)
     images_2[0].save("./images/cartesian2.gif", save_all=True, append_images=images_2, duration=test.t, loop=0)
     images_3[0].save("./images/cartesian3.gif", save_all=True, append_images=images_3, duration=test.t, loop=0)
-    images = [Image.fromarray(jnp.repeat(im,repeats = 3,axis=0)) for im in test.polar_images]
-    images[0].save("./images/polar.gif", save_all=True, append_images=images, duration=test.t, loop=0)
     print('done')
 
 

@@ -3,6 +3,9 @@ from torch.utils.tensorboard import SummaryWriter
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.replay_buffer import *
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.rainbow_dqn import DQN
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.MARL_orchestrate import MARL_Double_Agent, MARL_Double_RB
+from rl_agents.DRL_code_pytorch.Rainbow_DQN.baselines import *
+import torchvision.transforms as T
+
 import argparse
 from radar_env.radar_gymnasium import RadarEnv
 from rl_agents.calculate_stats import stats
@@ -11,6 +14,7 @@ import os
 from utils import action_unpack
 from random import randint
 from math import floor
+from functools import reduce
 
 class Runner:
     def __init__(self, args, env_name, number,seed):
@@ -66,8 +70,17 @@ class Runner:
                 self.algorithm += "_N_steps"
         if self.args.baseline == 1:
             self.algorithm = "baseline"
-        if self.args.baseline == 2:
+        elif self.args.baseline == 2:
             self.algorithm = "no_movement"
+        elif self.args.baseline == 3:
+            self.algorithm = 'max_variance'
+            self.masks = get_mask(self)
+        elif self.args.baseline == 4:
+            self.algorithm = 'min_variance'
+            self.masks = get_mask(self)
+        elif self.args.baseline == 5:
+            self.algorithm = 'highest_blur'
+            self.masks = get_mask(self)
         self.writer = SummaryWriter(log_dir='runs/DQN/{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer, self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
         if args.load_model:
             if os.path.isfile('models/DQN/net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents)):
@@ -134,14 +147,6 @@ class Runner:
     def save_models(self):
         torch.save(self.agent.net_state_dict(),'models/DQN/net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
         torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
-
-    def simple_baseline(self, prev_action):
-        if len(prev_action)==2:
-            action = [(x + 1) % self.env.action_size**(1/2) for x in prev_action]
-        else:
-            action = [(1+prev_action[0]) % self.env.action_size]
-        return action
-
     def evaluate_policy(self, ):
         evaluate_reward = 0
         radar_stats = stats()
@@ -157,27 +162,23 @@ class Runner:
             done = False
             episode_reward = 0
             actions = []
+            action_ = None
+            # images = []
+            # transform = T.ToPILImage()
             while not done:
                 if self.args.baseline == 0:
                     action = self.agent.choose_action(state, epsilon=self.epsilon)
                     action_ = action_unpack(action, self.args.action_dim) if (self.args.radars == 2) and (
                                 self.args.agents == 1) else action
-                elif self.args.baseline == 1:
-                    action_ = self.simple_baseline(action_)
-                    if self.args.radars == 2:
-                        action = action_[0] + action_[1]*(self.args.action_dim-1)
-                    else:
-                        action=action_[0]
-                elif self.args.baseline == 2:
-                    if self.args.radars == 2:
-                        action = action_[0]+action_[1]*(self.args.action_dim**(1/2)-1)
-                    else:
-                        action=action_[0]
+                else:
+                    action_, action = baselines_next_step(self, action_,state)
                 next_state, reward, done, _, rewards = self.env_evaluate.step(action_)
+                # if len(images)<20:
+                #     images.append(transform(torch.stack([state.squeeze(0)] * 3, dim=0)))
+                # if len(images)==20:
+                #     images[0].save("./images/xx.gif", save_all=True, append_images=images,loop=0)
                 episode_reward += reward
                 state = next_state
-                if args.agents == 2:
-                    action = action_[0]+action_[1]*self.args.action_dim
                 actions.append(action)
             radar_stats.add_stats(self.env_evaluate.info_analysis(),actions)
             evaluate_reward += episode_reward
@@ -240,7 +241,7 @@ if __name__ == '__main__':
     parser.add_argument("--relative_change", type=int, default =0, help="rc: if 0 then an action is a direction to look in, if 1 then an action is a change in direction to look in since the last action")
     parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
     parser.add_argument("--type_of_MARL", type=str, default="single_agent", help="type of shared info in the MARL system")
-    parser.add_argument("--baseline", type=int, default=0, help="type of shared info in the MARL system")
+    parser.add_argument("--baseline", type=int, default=0, help="type of shared info in the MARL system, if its 1 then its move in a circle, if its 2 then no movement, 3 is max variance, 4 is min variance")
     parser.add_argument("--outside_radar_value", type=float, default=0.9, help="value outside of radar observation area")
     args = parser.parse_args()
 
