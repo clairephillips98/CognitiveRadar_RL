@@ -5,7 +5,7 @@ for r in 0 1; do #relative
   for i in 0 1 5; do #ss
     for m in 64 128 256; do #hidden dim
       for n in 1 3 5; do #nstep
-        name='a19_penalty_airport_cond_a8_t30_unmask_0.1_'
+        name=a19_penalty_airport_cond_a8_t30_unmask_0.1_nstep_${n}_hd_${m}
         echo $name
         sbatch <<EOT
 #!/bin/bash
