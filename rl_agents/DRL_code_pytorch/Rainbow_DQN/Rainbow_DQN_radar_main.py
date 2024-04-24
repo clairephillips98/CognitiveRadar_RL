@@ -164,7 +164,6 @@ class Runner:
             episode_reward = 0
             episode_unpenalized_reward = 0
             actions = []
-            action_ = None
             # images = []
             # transform = T.ToPILImage()
             while not done:
@@ -208,7 +207,7 @@ class Runner:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameter Setting for DQN")
-    parser.add_argument("--max_train_steps", type=int, default=int(1e6), help=" Maximum number of training steps")
+    parser.add_argument("--max_train_steps", type=int, default=int(1.5e6), help=" Maximum number of training steps")
     parser.add_argument("--evaluate_freq", type=float, default=1e3, help="Evaluate the policy every 'evaluate_freq' steps")
     parser.add_argument("--evaluate_times", type=float, default=3, help="Evaluate times")
     parser.add_argument("--buffer_capacity", type=int, default=int(1e5), help="The maximum replay-buffer capacity ")
