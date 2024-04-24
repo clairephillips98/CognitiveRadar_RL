@@ -64,6 +64,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --n_steps=1 \
     --type_of_MARL=$t
 EOT
+      done
     done
   done
 done
