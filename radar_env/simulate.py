@@ -175,7 +175,7 @@ class Simulation:
         if speed_scale:
             # scale the rewards so something with an absolute
             loss = torch.mul(speed_layers.abs() * self.speed_scale + 1, loss)
-        reward = (torch.mean(loss))
+        reward = (torch.sum(loss))
         return reward
 
 
