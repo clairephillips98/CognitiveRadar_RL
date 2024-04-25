@@ -81,6 +81,7 @@ EOT
       --speed_scale=1 \
       --hidden_dim=$m \
       --n_steps=$n
+      --max_train_steps=2000000
 EOT
         done
       done
@@ -118,6 +119,7 @@ EOT
       --speed_scale=1 \
       --hidden_dim=$m \
       --n_steps=$n
+      --max_train_steps=2000000
 EOT
         for t in 'some_shared_info' 'some_shared_info_shared_reward' 'shared_targets_only' 'single_agent'; do
           echo "$full_name"
@@ -148,6 +150,7 @@ EOT
       --hidden_dim=$m \
       --n_steps=$n \
       --type_of_MARL=$t
+      --max_train_steps=2000000
 EOT
         done
       done
