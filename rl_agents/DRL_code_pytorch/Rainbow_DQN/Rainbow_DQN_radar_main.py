@@ -74,13 +74,13 @@ class Runner:
             self.algorithm = "no_movement"
         elif self.args.baseline == 3:
             self.algorithm = 'max_variance'
-            self.masks = get_mask(self)
+            self.masks = self.env.game.world_view.action_masks
         elif self.args.baseline == 4:
             self.algorithm = 'min_variance'
-            self.masks = get_mask(self)
+            self.masks = self.env.game.world_view.action_masks
         elif self.args.baseline == 5:
             self.algorithm = 'highest_blur'
-            self.masks = get_mask(self)
+            self.masks = self.env.game.world_view.action_masks
         self.writer = SummaryWriter(log_dir='runs/DQN/{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer, self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
         if args.load_model:
             if os.path.isfile('models/DQN/net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents)):
@@ -190,7 +190,7 @@ class Runner:
         evaluate_reward /= self.args.evaluate_times
         unpenalized_evaluate_reward /= self.args.evaluate_times
         self.evaluate_rewards.append(evaluate_reward)
-        if (self.total_steps > 200000) & (analysis['unique_actions'] == 1) & (self.args.baseline == 0):
+        if (self.total_steps > 200000) & (analysis['unique_actions'] <= 1.3) & (self.args.baseline == 0):
             exit()
         print("total_steps:{} \t evaluate_reward:{} \t epsilon：{}".format(self.total_steps, evaluate_reward, self.epsilon))
         self.writer.add_scalar('step_rewards', evaluate_reward, global_step=self.total_steps)

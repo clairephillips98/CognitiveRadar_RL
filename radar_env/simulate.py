@@ -19,6 +19,11 @@ from radar_env.view import View
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
 
+transform = T.ToPILImage()
+images = []
+masks = []
+states=[]
+lasts = []
 def create_radars(seed=None):
     radar_1 = Radar(max_distance=184, duty_cycle=3,
                     pulsewidth=4, bandwidth=1, frequency=3,
@@ -26,7 +31,7 @@ def create_radars(seed=None):
                     radians_of_view=45, seed=seed, radar_num=0)
     radar_2 = Radar(max_distance=184, duty_cycle=3,
                     pulsewidth=4, bandwidth=1, frequency=3,
-                    pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(180, 0), wavelength=3,
+                    pulse_repetition_rate=3, antenna_size=4, cartesian_coordinates=(161, 0), wavelength=3,
                     radians_of_view=45, seed=seed, radar_num=1)
     return [radar_1, radar_2]  # just 1 radar for now
 
@@ -64,6 +69,7 @@ class Simulation:
         self.rewards = None
         if self.args.radars == 1: self.radars = [self.radars[0]]
         self.bounds = [bounds(radar) for radar in self.radars]
+        self.args.action_size = int(reduce(lambda x, y: x * y, [radar.num_states for radar in self.radars]))
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
         self.targets = create_targets(15, self.overall_bounds, args, seed=seed)
         self.world_view = View(self.radars, self.overall_bounds, self.args, 0)
@@ -115,11 +121,13 @@ class Simulation:
         if self.world_view.last_tensor is not None:
             self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor,
                                                           self.world_view.next_image,
-                                                          self.world_view.speed_layers)
+                                                          self.world_view.speed_layers,
+                                                          self.world_view.current_mask)
 
-            self.rewards = list(map(lambda x: self.reward_slice_cross_entropy(self.world_view.last_tensor,x,
-                                                                              self.world_view.speed_layers),
-                                    self.individual_views))
+            self.rewards = list(map(lambda i,x: self.reward_slice_cross_entropy(self.world_view.last_tensor,x,
+                                                                              self.world_view.speed_layers,
+                                                                                self.views[i].current_mask),
+                                    enumerate(self.individual_views)))
         self.world_view.last_tensor = self.world_view.next_image
         self.individual_states = self.world_view.indiv_radar_as_state()
 
@@ -127,9 +135,13 @@ class Simulation:
         self.world_view.create_image(visible_targets)
         list(map(lambda x: self.views[x].create_image(visible_targets), range(len(self.views))))
         if self.world_view.last_tensor is not None:
-            self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor, self.world_view.next_image, self.world_view.speed_layers)
-            self.rewards = list(map(lambda x: self.reward_slice_cross_entropy(self.views[x].last_tensor, self.views[x].next_image,
-                                                              self.views[x].speed_layers), range(len(self.views))))
+            self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor, self.world_view.next_image,
+                                                          self.world_view.speed_layers, self.world_view.current_mask)
+            self.rewards = list(map(lambda x: self.reward_slice_cross_entropy(self.views[x].last_tensor,
+                                                                              self.views[x].next_image,
+                                                              self.views[x].speed_layers,
+                                                                              self.views[x].current_mask),
+                                    range(len(self.views))))
         for view in self.views:
             view.set_last()
         list(map(lambda x: self.views[x].set_last(), range(len(self.views))))
@@ -142,7 +154,8 @@ class Simulation:
         self.world_view.create_image(visible_targets)  # makes next image
 
         if self.world_view.last_tensor is not None:
-            self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor, self.world_view.next_image, self.world_view.speed_layers)
+            self.reward = self.reward_slice_cross_entropy(self.world_view.last_tensor, self.world_view.next_image,
+                                                          self.world_view.speed_layers, self.world_view.current_mask)
         self.world_view.last_tensor = self.world_view.next_image
 
     def get_visible_targets_and_update_stats(self, radars=None, recording = True):
@@ -160,22 +173,31 @@ class Simulation:
         world_loss = loss(input=input, target=target)
         return world_loss
 
-    def reward_slice_cross_entropy(self, last_tensor, next_image, speed_layers, add_mask=True, speed_scale=True, ):
+    def reward_slice_cross_entropy(self, last_tensor, next_image, speed_layers, action_mask = None, add_mask=True, speed_scale=True):
         # Using BCE loss to find the binary cross entropy of the  changing images
         # The model is rewarded for a large change == high entropy
         loss = torch.nn.BCELoss(reduction='none').to(device)
         loss = loss(input=last_tensor, target=torch.floor(next_image))
+        # lasts.append(transform(torch.stack([last_tensor] * 3, dim=0)))
+        # states.append(transform(torch.stack([torch.floor(next_image)] * 3, dim=0)))
         if add_mask:
-            mask = ((next_image != 1) & (next_image != 0))
+            mask = action_mask
             # this works because if the last pixel was white, and it stayed white (or white), loss is 0
             # if the last pixel was grey, it will only now be white/black if the pixel has been viewed
             # so we only need to mask the grey cells
-            loss[mask] = 0
-        loss_og = loss
+            loss[~mask] = 0
+            # masks.append(transform(torch.stack([mask.float()] * 3, dim=0)))
         if speed_scale:
             # scale the rewards so something with an absolute
             loss = torch.mul(speed_layers.abs() * self.speed_scale + 1, loss)
-        reward = (torch.sum(loss))
+        # images.append(transform(torch.stack([loss.float()] * 3, dim=0)))
+        # if self.t == 20:
+        #     lasts[0].save("./images/lasts.gif", save_all=True, append_images=lasts)
+        #     states[0].save("./images/states.gif", save_all=True, append_images=states)
+        #     masks[0].save("./images/mask.gif", save_all=True, append_images=masks)
+        #     images[0].save("./images/losses.gif", save_all=True, append_images=images)
+        #     exit()
+        reward = (torch.mean(loss))
         return reward
 
 
@@ -206,7 +228,7 @@ def main():
     images_3=[]
 
 
-    for t in range(20):
+    for t in range(50):
         test.update_t([t%8,((-t)%8)])
         images.append(transform(torch.stack([test.world_view.last_tensor] * 3, dim=0)))
         images_2.append(transform(torch.stack([test.individual_states[0]] * 3, dim=0)))

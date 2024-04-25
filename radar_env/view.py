@@ -14,6 +14,7 @@ from math import pi
 import torchvision.transforms as T
 from rl_agents.config import GPU_NAME
 import argparse
+from utils import action_unpack, action_repack
 
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
@@ -46,7 +47,8 @@ class View:
         self.last_tensor = None
         self.speed_layers = (torch.zeros((self.shape[0], self.shape[1]))).to(device)
         self.indiv_images = None
-
+        self.action_masks = self.get_mask()
+        self.current_mask=None
 
     def draw_shape(self, x, y, center, start_angle, end_angle, radius):
         # Compute distances from the center
@@ -64,6 +66,32 @@ class View:
             mask = (distances <= scaled_radius) & ((angles > start_angle) | (angles <= end_angle))
         return mask
 
+    def get_mask_function(self, a):
+        if len(self.radars) == 2:
+            a = action_unpack(a, self.args.action_size)
+        else:
+            a = [a]
+        for i, a in enumerate(a):
+            self.radars[i].update_t(0, a, False)
+
+        masks = [self.draw_shape(self.x, self.y, radar.cartesian_coordinates,
+                                                            radar.viewing_angle,
+                                                            radar.viewing_angle +
+                                                            radar.radians_of_view,
+                                                            radar.max_distance)
+                 for radar in self.radars]
+        mask = reduce(lambda x, y: torch.logical_or(x, y), masks)
+        return mask
+
+    def get_mask(self):
+        # transform = T.ToPILImage()
+        # images = []
+        total_masks = list(map(lambda a: self.get_mask_function(a), range(self.args.action_size)))
+        # for mask in total_masks:
+        #    images.append(transform(torch.stack([mask.squeeze(0).float()] * 3, dim=0)))
+        # images[0].save("./images/mask.gif", save_all=True, append_images=images)
+        return total_masks
+
     def create_image(self, visible_targets):
         # create the tensor image of the world in black and white [0,1] where 1 is nothing and 0 is something
         # blur the last image
@@ -72,15 +100,14 @@ class View:
         # anything that is outside of the area of view set to 0.5
         self.next_image = self.transform(torch.stack([self.next_image] * 3, dim=0))[0, :, :]  # add blur
         # Create a meshgrid of coordinates
-        for radar in self.radars:
-            start_angle = radar.viewing_angle % 360
-            end_angle = (radar.viewing_angle + radar.radians_of_view) % 360
-            mask = self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, start_angle, end_angle,
-                                   radar.max_distance)
-            # Convert mask to tensor and invert it
-            self.next_image[mask] = 1
-            if self.speed_layers is not None:
-                self.speed_layers[mask] = 0
+        if len(self.radars)==2:
+            action = action_repack([radar.given_dir for radar in self.radars], self.args.action_size)
+        else:
+            action = self.radars[0].given_dir
+        self.current_mask = self.action_masks[action]
+        self.next_image[self.current_mask] = 1
+        if self.speed_layers is not None:
+            self.speed_layers[self.current_mask] = 0
         for radar in visible_targets:
             for target in visible_targets[radar]:
                 mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,

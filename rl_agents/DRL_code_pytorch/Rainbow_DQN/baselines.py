@@ -3,37 +3,13 @@ from functools import reduce
 import random
 from utils import action_unpack, action_repack
 import torchvision.transforms as T
-
+from math import inf
 def simple_baseline(agent_setup, prev_action):
     if len(prev_action) == 2:
         action = [(x + 1) % int(agent_setup.env.action_size ** (1 / 2)) for x in prev_action]
     else:
         action = [(1 + prev_action[0]) % agent_setup.env.action_size]
     return action
-
-
-def get_mask_function(agent_setup, a):
-    x=agent_setup.env.game.world_view.x
-    y=agent_setup.env.game.world_view.y
-    if agent_setup.args.radars == 2:
-        a=action_unpack(a, agent_setup.args.action_dim)
-    else:
-        a = [a]
-    for i,a in enumerate(a):
-        agent_setup.env.game.radars[i].update_t(0, a, False)
-
-    masks = [agent_setup.env.game.world_view.draw_shape(x, y, agent_setup.env.game.radars[i].cartesian_coordinates,
-                                                        agent_setup.env.game.radars[i].viewing_angle,
-                                                        agent_setup.env.game.radars[i].viewing_angle+agent_setup.env.game.radars[i].radians_of_view,
-                                                        agent_setup.env.game.radars[i].max_distance)
-             for i in range(agent_setup.args.radars)]
-    mask = reduce(lambda x, y: torch.logical_or(x,y), masks)
-    return mask
-
-
-def get_mask(agent_setup):
-    total_masks = list(map(lambda a: get_mask_function(agent_setup,a), range(agent_setup.env.action_size)))
-    return total_masks
 
 def get_sum_blur(state, mask):
     state_t = state.clone()
@@ -50,14 +26,14 @@ def get_variance(state, mask):
     return val
 def variance_blur_baseline(agent_setup, state, var_type, past_action):
     if agent_setup.args.radars ==2:
-        la = action_repack(past_action)
+        la = action_repack(past_action, agent_setup.env.action_size)
     else: la = past_action[0]
     if random.choice([0, 1]) == 1:
         if var_type == 'min_var':
-            rels = [get_variance(state,mask.unsqueeze(0)) for mask in agent_setup.masks]
+            rels = [get_variance(state,mask.unsqueeze(0)) if i != la else inf for i, mask in enumerate(agent_setup.masks)]
             best = min(rels)
         elif var_type == 'max_var':
-            rels = [get_variance(state,mask.unsqueeze(0)) for mask in agent_setup.masks]
+            rels = [get_variance(state,mask.unsqueeze(0)) if i != la else 0 for i, mask in enumerate(agent_setup.masks)]
             best = max(rels)
         elif var_type == 'sum_blur':
             rels = [get_sum_blur(state,mask.unsqueeze(0)) if i != la else 0 for i, mask in enumerate(agent_setup.masks)]
@@ -67,7 +43,7 @@ def variance_blur_baseline(agent_setup, state, var_type, past_action):
             indexes)  # if there are multiple views which have the same best variance then select that one
     else:
         action = random.choice(range(agent_setup.env.action_size-1))+1
-        action=(action+action_repack(past_action, agent_setup.env.action_size)) % agent_setup.env.action_size
+        action = (action+action_repack(past_action, agent_setup.env.action_size)) % agent_setup.env.action_size
     if agent_setup.args.radars == 2:
         action_ = action_unpack(action, agent_setup.env.action_size)
     else:

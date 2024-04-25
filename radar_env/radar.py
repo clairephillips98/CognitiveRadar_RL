@@ -23,7 +23,7 @@ class Radar:
         self.antenna_size = antenna_size
         self.cartesian_coordinates = cartesian_coordinates  # (x,y)
         self.wavelength = wavelength
-        self.viewing_angle = look_new_direction()
+        self.viewing_angle = 0
         self.radians_of_view = radians_of_view
         self.max_distance = max_distance
         self.t=0
@@ -32,6 +32,7 @@ class Radar:
         self.rho_0 = 0.005158 # rho_0 such that an object with a rho of 0.01km is seen 75 percent of the time at furtherest distance
         self.prob_f = 10e-4
         self.SNR_0 = 16
+        self.given_dir = 0
 
     def update_viewing_angle(self, new_angle):
         self.viewing_angle = new_angle
@@ -42,8 +43,10 @@ class Radar:
         self.t=t
         if given_dir != None:
             if relative_change is True:
+                self.given_dir = int((self.given_dir+given_dir)% self.num_states)
                 self.viewing_angle = (self.viewing_angle +(given_dir*360)/self.num_states)%360
             else:
+                self.given_dir = given_dir
                 self.viewing_angle = (given_dir * 360) / self.num_states
         else:
             self.viewing_angle = look_new_direction()
