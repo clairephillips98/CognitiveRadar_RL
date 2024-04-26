@@ -30,13 +30,13 @@ def variance_blur_baseline(agent_setup, state, var_type, past_action):
     else: la = past_action[0]
     if random.choice([0, 1]) == 1:
         if var_type == 'min_var':
-            rels = [get_variance(state,mask.unsqueeze(0)) for i, mask in enumerate(agent_setup.masks)]
+            rels = [get_variance(state,mask.unsqueeze(0)) if i != la else inf for i, mask in enumerate(agent_setup.masks)]
             best = min(rels)
         elif var_type == 'max_var':
-            rels = [get_variance(state,mask.unsqueeze(0)) for i, mask in enumerate(agent_setup.masks)]
+            rels = [get_variance(state,mask.unsqueeze(0)) if i != la else 0 for i, mask in enumerate(agent_setup.masks)]
             best = max(rels)
         elif var_type == 'sum_blur':
-            rels = [get_sum_blur(state,mask.unsqueeze(0)) for i, mask in enumerate(agent_setup.masks)]
+            rels = [get_sum_blur(state,mask.unsqueeze(0)) if i != la else 0 for i, mask in enumerate(agent_setup.masks)]
             best = max(rels)
         indexes = [i for i, value in enumerate(rels) if value == best]
         action = random.choice(
