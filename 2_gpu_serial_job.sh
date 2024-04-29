@@ -1,22 +1,76 @@
 #!/bin/bash
 
+# different OS experiment
 
-for b in 0.1 0.3 0.5; do # blur sigma
-  for l in 0.05 0.1; do # area outside of mask
-    name='a18_penalty_airport_cond_a8_t30_unmask_'$l''
-    for i in {1..2}; do # radars
-sbatch <<EOT &
+for os in 0.0 0.2 0.4 0.6 0.8 1.0 ; do # blur sigma
+  full_name='os_experiments_a29'
+  sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
 #SBATCH --time=1:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr16_${i}.txt
 module load anaconda3
-echo 1
 source activate pytorch_env
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main --blur_radius=1 --cdl=1 --epsilon_init=0.5 --load_model=0 --speed_scale=1 --env_name="$name" --penalize_no_movement=1 --radars=$i --agents=1 --baseline=1 --outside_radar_value=$l --blur_sigma=$b
+module load anaconda3
+source activate pytorch_env
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}"\
+    --penalize_no_movement=1 \
+    --radars=1 \
+    --agents=1 \
+    --baseline=1 \
+    --outside_radar_value=$os \
+    --blur_sigma=0.5 \
+    --relative_change=0 \
+    --speed_scale=1 \
+    --max_train_steps=200000
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}"\
+    --penalize_no_movement=1 \
+    --radars=1 \
+    --agents=1 \
+    --baseline=3\
+    --outside_radar_value=$os \
+    --blur_sigma=0.5 \
+    --relative_change=0 \
+    --speed_scale=1 \
+    --max_train_steps=200000
 EOT
-    done
-  done
+  sbatch <<EOT &
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=1
+#SBATCH --time=1:00:0
+#SBATCH --export=ALL
+module load anaconda3
+source activate pytorch_env
+module load anaconda3
+source activate pytorch_env
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}" \
+    --penalize_no_movement=1 \
+    --radars=1 \
+    --agents=1 \
+    --baseline=0 \
+    --outside_radar_value=$os \
+    --blur_sigma=0.5 \
+    --relative_change=0 \
+    --speed_scale=1 \
+    --hidden_dim=128 \
+    --n_steps=1 \
+    --max_train_steps=2000000
+EOT
 done

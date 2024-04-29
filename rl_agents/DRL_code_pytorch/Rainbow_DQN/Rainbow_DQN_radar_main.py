@@ -81,15 +81,20 @@ class Runner:
         elif self.args.baseline == 5:
             self.algorithm = 'highest_blur'
             self.masks = self.env.game.world_view.action_masks
-        self.writer = SummaryWriter(log_dir='runs/DQN/{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer, self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
+        self.path_name = '{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_pnm{}_os{}_r{}_rc{}_a{}'.format(
+            self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,
+            self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,
+            self.args.penalize_no_movement,self.args.outside_radar_value, self.args.relative_change,
+            self.args.radars, self.args.agents)
+        self.writer = SummaryWriter(log_dir='runs/DQN/{}'.format(self.path_name))
         if args.load_model:
-            if os.path.isfile('models/DQN/net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents)):
-                self.agent.net_load_state_dict(torch.load('models/DQN/net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents),map_location=torch.device('cpu')))
-                self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents),map_location=torch.device('cpu')))
+            if os.path.isfile('models/DQN/net_{}'.format(self.path_name)):
+                self.agent.net_load_state_dict(torch.load('models/DQN/net_{}'.format(self.path_name)))
+                self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}'.format(self.path_name)))
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
         self.total_steps = 0  # Record the total steps during the training
-        if args.use_noisy:  # 如果使用Noisy net，就不需要epsilon贪心策略了
+        if args.use_noisy:  # Noisy net
             self.epsilon = 0
         else:
             self.epsilon = self.args.epsilon_init
@@ -145,8 +150,8 @@ class Runner:
         np.save('data_train/DQN/{}_{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.args.type_of_MARL, self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(er))
 
     def save_models(self):
-        torch.save(self.agent.net_state_dict(),'models/DQN/net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
-        torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_a{}_pnm{}_rc{}_r{}_a{}'.format(self.args.type_of_MARL, self.algorithm, self.env_name, self.number, self.blur_radius,self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,self.args.agents,self.args.penalize_no_movement, self.args.relative_change,self.args.radars, self.args.agents))
+        torch.save(self.agent.net_state_dict(),'models/DQN/net_{}'.format(self.path_name))
+        torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}'.format(self.path_name))
     def evaluate_policy(self, ):
         evaluate_reward = 0
         unpenalized_evaluate_reward = 0
