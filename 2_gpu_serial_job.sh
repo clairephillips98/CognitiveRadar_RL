@@ -10,6 +10,7 @@ for os in 0.0 0.2 0.4 0.6 0.8 1.0 ; do # blur sigma
 #SBATCH --gpus-per-node=1
 #SBATCH --time=1:00:0
 #SBATCH --export=ALL
+#SBATCH --output=experiment${os}.txt
 module load anaconda3
 source activate pytorch_env
 python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
@@ -49,6 +50,7 @@ EOT
 #SBATCH --gpus-per-node=1
 #SBATCH --time=9:00:0
 #SBATCH --export=ALL
+#SBATCH --output=experiment${os}_2.txt
 module load anaconda3
 source activate pytorch_env
 python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
