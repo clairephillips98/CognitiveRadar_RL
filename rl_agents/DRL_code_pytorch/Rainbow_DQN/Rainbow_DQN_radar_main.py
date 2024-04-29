@@ -190,8 +190,6 @@ class Runner:
         evaluate_reward /= self.args.evaluate_times
         unpenalized_evaluate_reward /= self.args.evaluate_times
         self.evaluate_rewards.append(evaluate_reward)
-        if (self.total_steps > 200000) & (analysis['unique_actions'] <= 1.3) & (self.args.baseline == 0) & (self.args.relative_change==1):
-            exit()
         print("total_steps:{} \t evaluate_reward:{} \t epsilon：{}".format(self.total_steps, evaluate_reward, self.epsilon))
         self.writer.add_scalar('step_rewards', evaluate_reward, global_step=self.total_steps)
         self.writer.add_scalar('step_time_to_first_view', analysis['avg_time_til_first_view'], global_step=self.total_steps)

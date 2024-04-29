@@ -4,7 +4,7 @@
 # Iterate over the sequence of floating-point numbers
 
 for bl in 1 2 3 4 5; do #bl
-        full_name="a26_reward_os_0.7"
+        full_name="a26_reward_os_0.6"
         echo "$full_name"
         sbatch <<EOT
 #!/bin/bash
@@ -26,7 +26,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --radars=1 \
     --agents=1 \
     --baseline=$bl \
-    --outside_radar_value=0.7 \
+    --outside_radar_value=0.6 \
     --blur_sigma=0.5 \
     --relative_change=0 \
     --speed_scale=1 \
@@ -41,7 +41,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --radars=2 \
     --agents=1 \
     --baseline=$bl \
-    --outside_radar_value=0.7 \
+    --outside_radar_value=0.6 \
     --blur_sigma=0.5 \
     --relative_change=0 \
     --speed_scale=1 \
@@ -51,7 +51,7 @@ done
 for m in 64 128; do
     for n in 1 7; do
       for rc in 0 1; do
-        name='a26_reward_os_0.7'
+        name='a26_reward_os_0.6'
         full_name="${name}_nstep_${n}_hd_${m}"
         echo "$full_name"
         sbatch <<EOT
@@ -60,7 +60,7 @@ for m in 64 128; do
 #SBATCH --gpus-per-node=1
 #SBATCH --time=8:00:0
 #SBATCH --export=ALL
-#SBATCH --output=cphil_test_apr16_0.7${m}${n}.txt
+#SBATCH --output=cphil_test_apr16_0.6${m}${n}.txt
 
 module load anaconda3
 source activate pytorch_env
@@ -74,7 +74,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --radars=1 \
     --agents=1 \
     --baseline=0 \
-    --outside_radar_value=0.7 \
+    --outside_radar_value=0.6 \
     --blur_sigma=0.5 \
     --relative_change=$rc \
     --speed_scale=1 \
@@ -85,11 +85,11 @@ EOT
       done
     done
   done
-os=0.7
+os=0.6
 for n in 1 7; do
   for m in 64 128; do
     for rc in 0 1; do
-      name='a26_reward_os_0.7'
+      name='a26_reward_os_0.6'
       full_name="${name}_nstep_${n}_hd_${m}"
       sbatch <<EOT
 #!/bin/bash
@@ -111,7 +111,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --radars=2 \
     --agents=1 \
     --baseline=0 \
-    --outside_radar_value=0.7 \
+    --outside_radar_value=0.6 \
     --blur_sigma=0.5 \
     --relative_change=$rc \
     --speed_scale=1 \
@@ -141,7 +141,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --radars=2 \
     --agents=2 \
     --baseline=0 \
-    --outside_radar_value=0.7 \
+    --outside_radar_value=0.6 \
     --blur_sigma=0.5 \
     --relative_change=$rc \
     --speed_scale=1 \
