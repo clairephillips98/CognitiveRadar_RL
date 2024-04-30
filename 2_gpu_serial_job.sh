@@ -1,15 +1,178 @@
 #!/bin/bash
 
-# rerun best for longer?
+# different bs experiment
 
-full_name='a26_v2s'
 sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=12:00:0
+#SBATCH --time=3:00:0
 #SBATCH --export=ALL
-#SBATCH --output=experiment${bs}_2.txt
+#SBATCH --output=bl_2.txt
+module load anaconda3
+source activate pytorch_env
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}" \
+    --penalize_no_movement=1 \
+    --radars=1 \
+    --agents=1 \
+    --baseline=1 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=0.3 \
+    --relative_change=0\
+    --speed_scale=1 \
+    --max_train_steps=200000
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}" \
+    --penalize_no_movement=1 \
+    --radars=1 \
+    --agents=1 \
+    --baseline=3 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=0.3 \
+    --relative_change=0\
+    --speed_scale=1 \
+    --max_train_steps=200000
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}" \
+    --penalize_no_movement=1 \
+    --radars=1 \
+    --agents=1 \
+    --baseline=5 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=0.3 \
+    --relative_change=0\
+    --speed_scale=1 \
+    --max_train_steps=200000
+
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}" \
+    --penalize_no_movement=1 \
+    --radars=2 \
+    --agents=1 \
+    --baseline=1 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=0.3 \
+    --relative_change=0\
+    --speed_scale=1 \
+    --max_train_steps=200000
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}" \
+    --penalize_no_movement=1 \
+    --radars=2 \
+    --agents=1 \
+    --baseline=3 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=0.3 \
+    --relative_change=0\
+    --speed_scale=1 \
+    --max_train_steps=200000
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}" \
+    --penalize_no_movement=1 \
+    --radars=2 \
+    --agents=1 \
+    --baseline=5 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=0.3 \
+    --relative_change=0\
+    --speed_scale=1 \
+    --max_train_steps=200000
+EOT
+
+sbatch <<EOT &
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=1
+#SBATCH --time=3:00:0
+#SBATCH --export=ALL
+#SBATCH --output=bl_2.txt
+module load anaconda3
+source activate pytorch_env
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}" \
+    --penalize_no_movement=1 \
+    --radars=2 \
+    --agents=1 \
+    --baseline=1 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=0.5 \
+    --relative_change=0\
+    --speed_scale=1 \
+    --max_train_steps=200000
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}" \
+    --penalize_no_movement=1 \
+    --radars=2 \
+    --agents=1 \
+    --baseline=3 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=0.5 \
+    --relative_change=0\
+    --speed_scale=1 \
+    --max_train_steps=200000
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+    --blur_radius=1 \
+    --cdl=1 \
+    --epsilon_init=0.5 \
+    --load_model=0 \
+    --env_name="${full_name}" \
+    --penalize_no_movement=1 \
+    --radars=2 \
+    --agents=1 \
+    --baseline=5 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=0.5 \
+    --relative_change=0\
+    --speed_scale=1 \
+    --max_train_steps=200000
+EOT
+
+
+for bs in 0.3 0.5 ; do #bs
+  for hl in 64 128 ; do #hidden layer
+    for nstep in 1 3 5 7 ; do # nstep
+      for st in 0 1 ; do # step type
+        full_name='nstep_experiments_a29_ns${nstep}_hd${hl}'
+        sbatch <<EOT &
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=1
+#SBATCH --time=9:00:0
+#SBATCH --export=ALL
+#SBATCH --output=run.txt
 module load anaconda3
 source activate pytorch_env
 python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
@@ -22,22 +185,24 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --radars=1 \
     --agents=1 \
     --baseline=0 \
-    --outside_radar_value=0.6 \
-    --blur_sigma=0.5 \
-    --relative_change=1 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=$bs \
+    --relative_change=$st \
     --speed_scale=1 \
-    --hidden_dim=64 \
-    --n_steps=1 \
-    --max_train_steps=2000000
+    --hidden_dim=$hl \
+    --n_steps=$nstep \
+    --max_train_steps=2500000
 EOT
-
-sbatch <<EOT &
+      done
+    done
+    full_name='nstep_experiments_a29_ns1_hd${hl}'
+    sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=12:00:0
+#SBATCH --time=15:00:0
 #SBATCH --export=ALL
-#SBATCH --output=experiment${bs}_2.txt
+#SBATCH --output=run.txt
 module load anaconda3
 source activate pytorch_env
 python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
@@ -50,23 +215,22 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --radars=2 \
     --agents=1 \
     --baseline=0 \
-    --outside_radar_value=0.6 \
-    --blur_sigma=0.5 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=$bs \
     --relative_change=0 \
     --speed_scale=1 \
-    --hidden_dim=128 \
+    --hidden_dim=$hl \
     --n_steps=1 \
-    --max_train_steps=2000000
+    --max_train_steps=2500000
 EOT
-
-
-sbatch <<EOT &
+    for marl in 'some_shared_info' 'some_shared_info_shared_reward' 'shared_targets_only' 'single_agent'; do
+      sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=12:00:0
+#SBATCH --time=15:00:0
 #SBATCH --export=ALL
-#SBATCH --output=experiment${bs}_2.txt
+#SBATCH --output=run.txt
 module load anaconda3
 source activate pytorch_env
 python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
@@ -79,39 +243,15 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --radars=2 \
     --agents=1 \
     --baseline=0 \
-    --outside_radar_value=0.6 \
-    --blur_sigma=0.5 \
+    --outside_radar_value=0.2 \
+    --blur_sigma=$bs \
     --relative_change=0 \
     --speed_scale=1 \
-    --hidden_dim=64 \
+    --hidden_dim=$hl \
     --n_steps=1 \
+    --type_of_MARL=$marl\
     --max_train_steps=2500000
 EOT
-
-sbatch <<EOT &
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --gpus-per-node=1
-#SBATCH --time=12:00:0
-#SBATCH --export=ALL
-#SBATCH --output=experiment${bs}_2.txt
-module load anaconda3
-source activate pytorch_env
-python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
-    --blur_radius=1 \
-    --cdl=1 \
-    --epsilon_init=0.5 \
-    --load_model=0 \
-    --env_name="${full_name}" \
-    --penalize_no_movement=1 \
-    --radars=2 \
-    --agents=2 \
-    --baseline=0 \
-    --outside_radar_value=0.6 \
-    --blur_sigma=0.5 \
-    --relative_change=0 \
-    --speed_scale=1 \
-    --hidden_dim=64 \
-    --n_steps=1 \
-    --max_train_steps=2500000
-EOT
+    done
+  done
+done

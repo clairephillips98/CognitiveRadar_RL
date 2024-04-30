@@ -84,8 +84,8 @@ class Runner:
         self.path_name = '{}_{}_env_{}_n{}_br{}_se{}_bs{}_ss{}_sl{}_pnm{}_os{}_r{}_rc{}_a{}'.format(
             self.args.type_of_MARL, self.algorithm, self.env_name, number, self.blur_radius,
             self.args.scale,self.args.blur_sigma,self.args.speed_scale,self.args.speed_layer,
-            self.args.penalize_no_movement,self.args.outside_radar_value, self.args.relative_change,
-            self.args.radars, self.args.agents)
+            self.args.penalize_no_movement,self.args.outside_radar_value,
+            self.args.radars, self.args.relative_change, self.args.agents)
         self.writer = SummaryWriter(log_dir='runs/DQN/{}'.format(self.path_name))
         if args.load_model:
             if os.path.isfile('models/DQN/net_{}'.format(self.path_name)):
