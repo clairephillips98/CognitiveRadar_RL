@@ -11,7 +11,7 @@ from radar_env.radar_gymnasium import RadarEnv
 from rl_agents.calculate_stats import stats
 from rl_agents.config import set_gpu_name
 import os
-from utils import action_unpack
+from utils import action_unpack, action_repack
 from random import randint
 from math import floor
 from functools import reduce
@@ -186,7 +186,8 @@ class Runner:
                 episode_reward += reward
                 episode_unpenalized_reward += unpenalized_reward
                 state = next_state
-                actions.append(action)
+                actions.append(action_repack([radar.given_dir for radar in self.env_evaluate.game.radars],self.env.action_size))
+                print(actions)
             radar_stats.add_stats(self.env_evaluate.info_analysis(),actions)
             evaluate_reward += episode_reward
             unpenalized_evaluate_reward += episode_unpenalized_reward

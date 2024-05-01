@@ -112,6 +112,9 @@ def action_unpack(action, num_states):
     return actions
 
 def action_repack(actions, num_states):
-    factor = int(num_states**(1/2))
-    action = actions[0]+ actions[1]*factor if len(actions)==2 else actions[0]
+    if len(actions)==2:
+        factor = int(num_states**(1/2))
+        action = actions[0]+ actions[1]*factor if len(actions)==2 else actions[0]
+    else:
+        action= actions[0]
     return action
