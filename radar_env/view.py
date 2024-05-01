@@ -47,8 +47,10 @@ class View:
         self.last_tensor = None
         self.speed_layers = (torch.zeros((self.shape[0], self.shape[1]))).to(device)
         self.indiv_images = None
-        self.action_masks = self.get_mask()
+        self.pair_masks = None # action mask for pair of radars
+        self.action_masks,self.pair_masks = self.get_mask()
         self.current_mask=None
+        self.current_pair_mask = None
 
     def draw_shape(self, x, y, center, start_angle, end_angle, radius):
         # Compute distances from the center
@@ -81,16 +83,17 @@ class View:
                                                             radar.max_distance)
                  for radar in self.radars]
         mask = reduce(lambda x, y: torch.logical_or(x, y), masks)
-        return mask
+        return mask, masks
 
     def get_mask(self):
         # transform = T.ToPILImage()
         # images = []
-        total_masks = list(map(lambda a: self.get_mask_function(a), range(self.args.action_size)))
+        total_masks = list(map(lambda a: self.get_mask_function(a)[0], range(self.args.action_size)))
+        pair_masks = list(map(lambda a: self.get_mask_function(a)[1], range(self.args.action_size)))
         # for mask in total_masks:
         #    images.append(transform(torch.stack([mask.squeeze(0).float()] * 3, dim=0)))
         # images[0].save("./images/mask.gif", save_all=True, append_images=images)
-        return total_masks
+        return total_masks,pair_masks
 
     def create_image(self, visible_targets):
         # create the tensor image of the world in black and white [0,1] where 1 is nothing and 0 is something
@@ -105,6 +108,7 @@ class View:
         else:
             action = self.radars[0].given_dir
         self.current_mask = self.action_masks[action]
+        self.current_pair_mask = self.pair_masks[action]
         self.next_image[self.current_mask] = 1
         if self.speed_layers is not None:
             self.speed_layers[self.current_mask] = 0
@@ -146,6 +150,9 @@ class View:
         # individual_radar_masked_images = torch.empty((0,) + self.next_image.shape, dtype=self.next_image.dtype)
         self.indiv_images = list(map(lambda mask: self.indiv_lambda(self.next_image, mask), self.masks))
         return self.indiv_images
+
+    def indiv_action_masks(self, action):
+        return self.pair_masks[action]
 
     def indiv_radar_as_state(self):
         resize = self.masks[0].size()[0]

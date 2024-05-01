@@ -77,6 +77,7 @@ class Simulation:
             self.diff_view = False
             self.diff_reward = False
         elif self.args.type_of_MARL in ['some_shared_info']:
+            self.views = [View(radars=self.radars[x], bounds=self.bounds[x], args=self.args, num=x) for x in range(len(self.radars))]
             self.diff_view = True
             self.diff_reward = True
         elif self.args.type_of_MARL in ['some_shared_info_shared_reward']:
@@ -109,11 +110,11 @@ class Simulation:
         if self.args.type_of_MARL in ['single_agent', 'MARL_shared_everything']:
             self.step_for_single_view(visible_targets)
         elif self.args.type_of_MARL in ['some_shared_info', 'some_shared_info_shared_reward']:
-            self.step_for_shared_view_diff_reward(visible_targets)
+            self.step_for_diff_world_view(visible_targets)
         elif self.args.type_of_MARL in ['shared_targets_only']:
             self.step_for_shared_targets(visible_targets)
 
-    def step_for_shared_view_diff_reward(self, visible_targets):
+    def step_for_diff_world_view(self, visible_targets):
         # same view but masked version of the rewards
         # this should have the agents understand their actions better
         self.world_view.create_image(visible_targets)  # makes next image
@@ -123,11 +124,15 @@ class Simulation:
                                                           self.world_view.next_image,
                                                           self.world_view.speed_layers,
                                                           self.world_view.current_mask)
-
-            self.rewards = list(map(lambda i,x: self.reward_slice_cross_entropy(self.world_view.last_tensor,x,
-                                                                              self.world_view.speed_layers,
-                                                                                self.views[i].current_mask),
-                                    enumerate(self.individual_views)))
+            if self.diff_reward:
+                self.rewards = list(map(lambda i: self.reward_slice_cross_entropy(self.world_view.last_tensor,
+                                                                                  self.individual_views[i],
+                                                                                  self.world_view.speed_layers,
+                                                                                  self.world_view.current_pair_mask[i]
+                                                                                  ),
+                                    range(len(self.individual_views))))
+            else:
+                self.rewards = None
         self.world_view.last_tensor = self.world_view.next_image
         self.individual_states = self.world_view.indiv_radar_as_state()
 

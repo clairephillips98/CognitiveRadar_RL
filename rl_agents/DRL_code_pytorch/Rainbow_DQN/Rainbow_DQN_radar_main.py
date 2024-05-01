@@ -187,7 +187,6 @@ class Runner:
                 episode_unpenalized_reward += unpenalized_reward
                 state = next_state
                 actions.append(action_repack([radar.given_dir for radar in self.env_evaluate.game.radars],self.env.action_size))
-                print(actions)
             radar_stats.add_stats(self.env_evaluate.info_analysis(),actions)
             evaluate_reward += episode_reward
             unpenalized_evaluate_reward += episode_unpenalized_reward
