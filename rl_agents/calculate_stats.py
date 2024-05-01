@@ -19,6 +19,8 @@ class stats:
                 (self.stats['time_til_first_view'], additional_stats['time_til_first_view']))
             self.stats['views_vel'] = torch.vstack((self.stats['views_vel'], additional_stats['views_vel']))
             self.stats['seen'] = torch.hstack((self.stats['seen'], additional_stats['seen']))
+            self.stats['both_viewed'] = torch.hstack((self.stats['both_viewed'], additional_stats['both_viewed']))
+
             if type(actions[0])==list:
                 self.stats['actions'].append(len(set(map(tuple, actions))))
 
@@ -40,6 +42,8 @@ class stats:
             'avg_world_loss': self.stats['world_loss'].mean(),
             'percent_targets_seen': self.stats['seen'].mean() * 100,
             'unique_actions': mean(self.stats['actions']),
-            'average_view_rate': self.stats['views_vel'].t()[0].mean()
+            'average_view_rate': self.stats['views_vel'].t()[0].mean(),
+            'average_rate_of_viewed_by_both_radars': self.stats['both_viewed'].t()[0].mean()
+
         }
         return stats

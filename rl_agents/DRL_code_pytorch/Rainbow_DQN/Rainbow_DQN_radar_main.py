@@ -206,6 +206,7 @@ class Runner:
         self.writer.add_scalar('target_view_rate_to_doppler_velocity_corr', analysis['views_doppler_corr'], global_step=self.total_steps)
         self.writer.add_scalar('average_view_rate', analysis['average_view_rate'], global_step=self.total_steps)
         self.writer.add_scalar('unpenalized_step_reward', unpenalized_evaluate_reward, global_step=self.total_steps)
+        self.writer.add_scalar('freq_of_double_radar_viewing', analysis['average_rate_of_viewed_by_both_radars'], global_step=self.total_steps)
 
 
 if __name__ == '__main__':
@@ -236,7 +237,7 @@ if __name__ == '__main__':
     parser.add_argument("--use_per", type=int, default=1, help="Whether to use PER")
     parser.add_argument("--use_n_steps", type=int, default=1, help="Whether to use n_steps Q-learning")
     parser.add_argument("--blur_radius", type=int, default=1, help="br: size of the radius of the gaussian filter applied to previous views")
-    parser.add_argument("--scale", type=int, default=23, help="s: factor by which the space is scaled down")
+    parser.add_argument("--scale", type=int, default=10, help="s: factor by which the space is scaled down")
     parser.add_argument("--blur_sigma", type=float, default=0.5, help="bs: guassian blur sigma")
     parser.add_argument("--common_destination", type=list, default=[-200,-200], help="cd: a common location for targets come from and go to")
     parser.add_argument("--cdl", type=float, default=0.0, help="common destination likelihood : how many targets go to location")

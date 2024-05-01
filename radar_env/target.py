@@ -23,7 +23,7 @@ class Target:
 
     def __init__(self, bounds, args, name=None, seed=None, id = None):
         self.scale = args.scale
-        self.bounds = self.bounds_expanded(bounds, 0.2)
+        self.bounds = self.bounds_expanded(bounds, 0.05)
         self.common_destination = self.point_in_square(args.common_destination)
         self.common_destination_likelihood = args.cdl
         self.t = 0
@@ -32,8 +32,7 @@ class Target:
         self.x_start, self.y_start = self.x_y_start()
         self.vel = self.x_y_vel()
         self.acc = 0, 0
-        self.bounds = bounds
-        self.stats = torch.empty(0, 5).to(device)
+        self.stats = torch.empty(0, 6).to(device)
         self.first_in_view = None
         self.first_viewed = None
         self.time_in_view = 0
@@ -47,6 +46,12 @@ class Target:
         self.avg_rho = random.random()/50 # average radar cross section (this is 10m)
         self.radius = self.avg_rho
         self.doppler_velocity={}
+        self.viewed_twice=[None]
+        self.views_r1=[None]
+        self.views_r2=[None]
+        self.time_in_view_both_indc = None
+        self.both_in_view = 0
+
     def calculating_rho(self):
         # swerling I
         # pdf(rho) = (1/avg_rho)*e^(rho/avg_rho)
@@ -64,9 +69,9 @@ class Target:
         if self.chance < (self.common_destination_likelihood / 2):
             return self.common_destination
         else:
-            x = randint(
+            x = random.uniform(
                 self.bounds['x_lower'] * 50, self.bounds['x_upper'] * 50) / 50
-            y = randint(
+            y = random.uniform(
                 self.bounds['y_lower'] * 50, self.bounds['y_upper'] * 50) / 50
             return x, y
 
@@ -155,11 +160,20 @@ class Target:
             self.time_in_view = 0
             self.target_angle = {}
             self.doppler_velocity = {}
+            self.viewed_twice = [None]
+            self.views_r1 = [None]
+            self.views_r2 = [None]
+            self.time_in_view_both_indc = None
+            self.both_in_view = 0
 
     def calc_doppler_vel(self, radar_num):
         abs_vel, vel_angle = cartesian_to_polar(self.vel)
         self.doppler_velocity[radar_num] = abs_vel * cos(pi * (vel_angle - self.target_angle[radar_num]) / 180)
-
+        if (0 in self.doppler_velocity.keys()) & (1 in self.doppler_velocity.keys()):
+            if (self.doppler_velocity[0] !=0 )& (self.doppler_velocity[1]!=0):
+                self.doppler_velocity['overall_vel'] = (self.vel[0]**2 + self.vel[1]**2)**(1/2)
+            else:
+                self.doppler_velocity['overall_vel'] = 0
     def update_t(self, t):
         self.t = t
         self.cartesian_coordinates = (
@@ -173,19 +187,30 @@ class Target:
 
         return self.cartesian_coordinates
 
-    def collect_stats(self, t, viewed):
+
+    def collect_stats(self, t, viewed, r =0 ):
         # collect stats on the target after each step
         if self.first_in_view is None:
             self.first_in_view = t
         self.time_in_view += 1
+        if self.time_in_view_both_indc == t:
+            self.both_in_view += 1
+        self.time_in_veiw_both_indc = t
         if viewed is True:
             if (self.first_viewed is None):
                 self.first_viewed = t
+            if self.views[-1]==t:
+                self.viewed_twice.append(t)
             self.views.append(t)
+            # if r == 0 :
+            #     self.views_r1.append(t)
+            # else:
+            #     self.views_r2.append(t)
         self.sum_velocity += sum(map(lambda v: v ** 2, self.vel)) ** (1 / 2)
         self.sum_doppler_velocity += max(self.doppler_velocity.values())  # observed doppler_velocity
 
     def final_stats(self, reinit=False):
+        self.viewed_twice=[]
         average_velocity = self.sum_velocity / self.time_in_view
         average_doppler_velocity = self.sum_doppler_velocity/ self.time_in_view
         if self.first_viewed is None:
@@ -195,7 +220,8 @@ class Target:
             time_til_first_view = (self.first_viewed - self.first_in_view)
             seen = 1
         view_rate = (len(self.views)-1) / self.time_in_view
-        return view_rate, average_velocity, time_til_first_view, seen, average_doppler_velocity
+        twice_view_rate = (len(self.viewed_twice) - 1) / self.both_in_view
+        return view_rate, average_velocity, time_til_first_view, seen, average_doppler_velocity,twice_view_rate
 
     def episode_end(self):
         if self.first_in_view is not None:

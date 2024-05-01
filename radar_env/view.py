@@ -41,7 +41,7 @@ class View:
                                         sigma=(self.args.blur_sigma, self.args.blur_sigma)).to(device)
         self.radars = radars if type(radars) == list else [radars]
         self.masks = [
-            self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, 0, 360, radar.max_distance) for
+            self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, radar.start_angle, radar.end_angle, radar.max_distance) for
             radar in self.radars]
         self.mask_image = reduce(lambda x, y: torch.logical_or(x, y), self.masks)
         self.last_tensor = None
@@ -65,7 +65,7 @@ class View:
         if start_angle <= end_angle:
             mask = (distances <= scaled_radius) & (angles >= start_angle) & (angles < end_angle)
         else:
-            mask = (distances <= scaled_radius) & ((angles > start_angle) | (angles <= end_angle))
+            mask = (distances <= scaled_radius) & ((angles >= start_angle) | (angles < end_angle))
         return mask
 
     def get_mask_function(self, a):
@@ -78,8 +78,8 @@ class View:
 
         masks = [self.draw_shape(self.x, self.y, radar.cartesian_coordinates,
                                                             radar.viewing_angle,
-                                                            radar.viewing_angle +
-                                                            radar.radians_of_view,
+                                                            (radar.viewing_angle +
+                                                            radar.radians_of_view) % 360,
                                                             radar.max_distance)
                  for radar in self.radars]
         mask = reduce(lambda x, y: torch.logical_or(x, y), masks)

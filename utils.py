@@ -40,7 +40,7 @@ def is_angle_between(angle, start_angle, end_angle):
     end_angle = end_angle % 360
 
     # Check if angle is between start_angle and end_angle
-    if start_angle <= end_angle:
+    if start_angle < end_angle:
         return start_angle <= angle <= end_angle
     else:
         # Handle the case where the range spans across 0
@@ -67,10 +67,22 @@ def in_wedge_cartesian(target, radar, radius, angle_start, angle_end):
 
 
 def min_max_radar_breadth(radar):
-    x_lower = radar.cartesian_coordinates[0] - radar.max_distance
-    x_upper = radar.cartesian_coordinates[0] + radar.max_distance
-    y_lower = radar.cartesian_coordinates[1] - radar.max_distance
-    y_upper = radar.cartesian_coordinates[1] + radar.max_distance
+    add = radar.cartesian_coordinates[0] - radar.max_distance if is_angle_between(180, radar.start_angle, radar.end_angle) else radar.cartesian_coordinates[0]
+    x_lower = min([add, radar.cartesian_coordinates[0] + radar.max_distance*math.cos(radar.start_angle*(2*math.pi)/360),radar.cartesian_coordinates[0] + radar.max_distance*math.cos(radar.end_angle*(2*math.pi)/360)])
+
+    add = radar.cartesian_coordinates[0] + radar.max_distance if is_angle_between(0, radar.start_angle, radar.end_angle) else radar.cartesian_coordinates[0]
+    x_upper = max([add, radar.cartesian_coordinates[0] + radar.max_distance * math.cos(radar.start_angle*(2*math.pi)/360),
+                   radar.cartesian_coordinates[0] + radar.max_distance * math.cos(radar.end_angle*(2*math.pi)/360)])
+
+    add = radar.cartesian_coordinates[1] - radar.max_distance if is_angle_between(270, radar.start_angle, radar.end_angle) else radar.cartesian_coordinates[1]
+
+    y_lower = min([add, radar.cartesian_coordinates[1]+radar.max_distance*math.sin(radar.start_angle*(2*math.pi)/360),radar.cartesian_coordinates[1]+radar.max_distance*math.sin(radar.end_angle*(2*math.pi)/360)])
+
+    add = radar.cartesian_coordinates[1] + radar.max_distance if is_angle_between(90, radar.start_angle, radar.end_angle) else radar.cartesian_coordinates[1]
+
+    y_upper = max([add, radar.cartesian_coordinates[1]+ radar.max_distance * math.sin(radar.start_angle*(2*math.pi)/360),
+                   radar.cartesian_coordinates[1]+ radar.max_distance * math.sin(radar.end_angle*(2*math.pi)/360)])
+
     return x_lower, y_lower, x_upper, y_upper
 
 

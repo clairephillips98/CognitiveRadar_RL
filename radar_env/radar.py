@@ -12,9 +12,11 @@ class Radar:
 
     def __init__(self, max_distance, duty_cycle,
                  pulsewidth, bandwidth, frequency,
-                 pulse_repetition_rate, antenna_size, cartesian_coordinates, wavelength, radians_of_view,seed=None, radar_num=0):
+                 pulse_repetition_rate, antenna_size, cartesian_coordinates, wavelength, radians_of_view,seed=None, radar_num=0, start_angle = 0, end_angle = 360):
         random.seed(seed)
-        self.radar_num=radar_num
+        self.start_angle = start_angle
+        self.end_angle = end_angle
+        self.radar_num = radar_num
         self.duty_cycle = duty_cycle
         self.pulsewidth = pulsewidth
         self.bandwidth = bandwidth
@@ -28,7 +30,8 @@ class Radar:
         self.max_distance = max_distance
         self.t=0
         self.seen_list = {}
-        self.num_states = 360/self.radians_of_view
+        self.range = (self.end_angle-self.start_angle)%360
+        self.num_states = int(self.range/self.radians_of_view)
         self.rho_0 = 0.005158 # rho_0 such that an object with a rho of 0.01km is seen 75 percent of the time at furtherest distance
         self.prob_f = 10e-4
         self.SNR_0 = 16
@@ -44,12 +47,12 @@ class Radar:
         if given_dir != None:
             if relative_change is True:
                 self.given_dir = int((self.given_dir+given_dir)% self.num_states)
-                self.viewing_angle = (self.viewing_angle +(given_dir*360)/self.num_states)%360
+                self.viewing_angle = (self.viewing_angle +(given_dir*self.range)/self.num_states)%self.range
             else:
                 self.given_dir = given_dir
-                self.viewing_angle = (given_dir * 360) / self.num_states
+                self.viewing_angle = (((given_dir * self.range) / self.num_states)+self.start_angle)%360
         else:
-            self.viewing_angle = look_new_direction()
+            self.viewing_angle = self.look_new_direction()
         return
 
     def object_detected(self, target_rho, target_distance):
@@ -62,9 +65,9 @@ class Radar:
     def visible_targets(self, targets, recording = True ):
         viewed_targets= []
         for target in targets:
-            in_circle, radius, angle = in_circle_cartesian(target.tensor_cart_coords(),target.cartesian_coordinates,
+            in_circle, radius, angle = in_wedge_cartesian(target.tensor_cart_coords(),
                                    self.cartesian_coordinates,
-                                   self.max_distance)
+                                   self.max_distance, self.start_angle, self.end_angle) # if the target is in viewable area
             if in_circle:
                 target.target_angle[self.radar_num] = angle
                 target.calc_doppler_vel(self.radar_num)
@@ -72,16 +75,16 @@ class Radar:
                     in_wedge = is_angle_between(angle, self.viewing_angle, self.viewing_angle+self.radians_of_view)
                     target_rho = target.calculating_rho()
                     if in_wedge & self.object_detected(target_rho,radius):
-                        if recording: target.collect_stats(self.t, True)
+                        if recording: target.collect_stats(self.t, True, self.radar_num)
                         viewed_targets.append(target)
                     else:
-                        if recording: target.collect_stats(self.t, False)
+                        if recording: target.collect_stats(self.t, False, self.radar_num)
                 else:
                     target.doppler_velocity[self.radar_num] = 0
         return viewed_targets
 
-def look_new_direction(degrees = None):
-    if degrees is None:
-        degrees = random.uniform(0, 360)
-    return degrees
+    def look_new_direction(self, degrees = None):
+        if degrees is None:
+            degrees = random.uniform(0, self.range)
+        return degrees
 
