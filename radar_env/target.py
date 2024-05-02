@@ -220,7 +220,7 @@ class Target:
             time_til_first_view = (self.first_viewed - self.first_in_view)
             seen = 1
         view_rate = (len(self.views)-1) / self.time_in_view
-        twice_view_rate = (len(self.viewed_twice) - 1) / self.both_in_view
+        twice_view_rate = (len(self.viewed_twice) - 1) / self.both_in_view if self.both_in_view else 0
         return view_rate, average_velocity, time_til_first_view, seen, average_doppler_velocity,twice_view_rate
 
     def episode_end(self):
