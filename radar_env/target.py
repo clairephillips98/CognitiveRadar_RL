@@ -25,7 +25,7 @@ class Target:
 
     def __init__(self, bounds, args, name=None, seed=None, id=None):
         self.scale = args.scale
-        self.bounds = self.bounds_expanded(bounds, 0.05)
+        self.bounds = self.bounds_expanded(bounds,0)
         self.common_destination = self.point_in_square(args.common_destination)
         self.common_destination_likelihood = args.cdl
         self.t = 0

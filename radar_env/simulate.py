@@ -71,7 +71,7 @@ class Simulation:
         self.bounds = [bounds(radar) for radar in self.radars]
         self.args.action_size = int(reduce(lambda x, y: x * y, [radar.num_states for radar in self.radars]))
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
-        self.targets = create_targets(30, self.overall_bounds, args, seed=seed)
+        self.targets = create_targets(15, self.overall_bounds, args, seed=seed)
         self.world_view = View(self.radars, self.overall_bounds, self.args, 0)
         if self.args.type_of_MARL in ['single_agent', 'MARL_shared_everything']:
             self.diff_view = False
@@ -221,7 +221,7 @@ def main():
     parser.add_argument("--radars", type=int, default=1)
     parser.add_argument("--relative_change", type=int, default=0)
     parser.add_argument("--penalize_no_movement", type=int, default =1, help="pnm: if no change in action is taken, and the reward is 0, this action is  penalized with a reward of -1")
-    parser.add_argument("--type_of_MARL", type=str, default="shared_targets_only", help="type of shared info in the MARL system")
+    parser.add_argument("--type_of_MARL", type=str, default="single_agent", help="type of shared info in the MARL system")
     parser.add_argument("--outside_radar_value", type=float, default=0.5, help="value outside of radar observation area")
     args = parser.parse_args()
 
@@ -234,13 +234,13 @@ def main():
 
 
     for t in range(70):
-        test.update_t([t%15,((-t)%15)])
+        test.update_t([(t*47)%15,((-t)%15)])
         images.append(transform(torch.stack([test.world_view.last_tensor] * 3, dim=0)))
-        images_2.append(transform(torch.stack([test.individual_states[0]] * 3, dim=0)))
+        #images_2.append(transform(torch.stack([test.individual_states[0]] * 3, dim=0)))
         #images_3.append(transform(torch.stack([test.individual_states[1]] * 3, dim=0)))
 
     images[0].save("./images/cartesian1.gif", save_all=True, append_images=images, duration=test.t, loop=0)
-    images_2[0].save("./images/cartesian2.gif", save_all=True, append_images=images_2, duration=test.t, loop=0)
+    #images_2[0].save("./images/cartesian2.gif", save_all=True, append_images=images_2, duration=test.t, loop=0)
     #images_3[0].save("./images/cartesian3.gif", save_all=True, append_images=images_3, duration=test.t, loop=0)
     print('done')
 

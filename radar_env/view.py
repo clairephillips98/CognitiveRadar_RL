@@ -114,7 +114,7 @@ class View:
             self.speed_layers[self.current_mask] = 0
         for radar in visible_targets:
             for target in visible_targets[radar]:
-                mask = self.draw_shape(self.x.clone(), self.y.clone(), target.cartesian_coordinates, 0, 360,
+                mask = self.draw_shape(self.x.clone(), self.y.clone(), target.tensor_cart_coords(), 0, 360,
                                        max(self.scale / 2 + 1, target.radius))
                 self.next_image[mask] = 0
                 if self.speed_layers is not None:
