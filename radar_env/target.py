@@ -11,17 +11,19 @@ import torch
 from random import randint, randrange
 from rl_agents.config import GPU_NAME
 from utils import cartesian_to_polar
-from math import cos, pi,sqrt,acos, log
+from math import cos, pi, sqrt, acos, log
 
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
 
-time = 0.012
+dwell_time = 0.1  # seconds
+speed = 100  # km /hour
+speed_in_dt = speed / (360 / dwell_time)
 
 
 class Target:
 
-    def __init__(self, bounds, args, name=None, seed=None, id = None):
+    def __init__(self, bounds, args, name=None, seed=None, id=None):
         self.scale = args.scale
         self.bounds = self.bounds_expanded(bounds, 0.05)
         self.common_destination = self.point_in_square(args.common_destination)
@@ -38,17 +40,17 @@ class Target:
         self.time_in_view = 0
         self.views = [None]
         self.sum_velocity = 0
-        self.sum_doppler_velocity=0
+        self.sum_doppler_velocity = 0
         self.cartesian_coordinates = None
         self.update_t(0)
         self.name = name
         self.target_angle = {}
-        self.avg_rho = random.random()/50 # average radar cross section (this is 10m)
+        self.avg_rho = random.random() / 50  # average radar cross section (this is 10m)
         self.radius = self.avg_rho
-        self.doppler_velocity={}
-        self.viewed_twice=[None]
-        self.views_r1=[None]
-        self.views_r2=[None]
+        self.doppler_velocity = {}
+        self.viewed_twice = [None]
+        self.views_r1 = [None]
+        self.views_r2 = [None]
         self.time_in_view_both_indc = None
         self.both_in_view = 0
 
@@ -58,11 +60,12 @@ class Target:
         # cdf(rho) =[integral(pdf(x)) from 0 to x ] = 1-e^(-rho/avg_rho)
         # rho = inverse_cdf(x) = -ln(1-x)*avg_rho (x is num between 0 and 1)
         x = random.random()
-        rho = -log(1-x)*self.avg_rho
+        rho = -log(1 - x) * self.avg_rho
         return rho
 
     def tensor_cart_coords(self):
-        scaled_coords = (self.scale*int(self.cartesian_coordinates[0]/self.scale),self.scale*int(self.cartesian_coordinates[1]/self.scale))
+        scaled_coords = (self.scale * int(self.cartesian_coordinates[0] / self.scale),
+                         self.scale * int(self.cartesian_coordinates[1] / self.scale))
         return scaled_coords
 
     def x_y_start(self):
@@ -87,23 +90,23 @@ class Target:
             y_vel = randint(-10, 10)
         scale = (x_vel ** 2 + y_vel ** 2) ** (1 / 2)
         scale = scale if scale != 0 else 1
-        vary = randint(1, 10)
-        x_vel = vary * (x_vel / scale) * time
-        y_vel = vary * (y_vel / scale) * time
+        vary = randint(3, 10)  # speed is between 300 km/hr to 1000 km/hr
+        x_vel = vary * (x_vel / scale) * speed_in_dt
+        y_vel = vary * (y_vel / scale) * speed_in_dt
         return x_vel, y_vel
 
     def x_y_acc(self):
         # this is depreciated
         if (self.common_destination_likelihood / 2) < self.chance < (self.common_destination_likelihood):
-            t = randint(100 / time, 300 / time)  # time to get to location
+            t = randint(100 / speed_in_dt, 300 / speed_in_dt)  # time to get to location
             x_displacement = self.common_destination[0] - (self.x_start + self.x_vel * t)
             y_displacement = self.common_destination[1] - (self.y_start + self.y_vel * t)
-            abs_max = time * 25 / 400
-            x_acc = max(-abs_max, min(2 * x_displacement / (t ** 2), time * 25 / 400))
-            y_acc = max(-abs_max, min(2 * y_displacement / (t ** 2), time * 25 / 400))
+            abs_max = speed_in_dt * 25 / 400
+            x_acc = max(-abs_max, min(2 * x_displacement / (t ** 2), speed_in_dt * 25 / 400))
+            y_acc = max(-abs_max, min(2 * y_displacement / (t ** 2), speed_in_dt * 25 / 400))
         else:
-            x_acc = (randint(-25, 25) / 400) * (time ** 2)
-            y_acc = (randint(-25, 25) / 400) * (time ** 2)
+            x_acc = (randint(-25, 25) / 400) * (speed_in_dt ** 2)
+            y_acc = (randint(-25, 25) / 400) * (speed_in_dt ** 2)
         return x_acc, y_acc
 
     def point_in_square(self, point):
@@ -155,8 +158,8 @@ class Target:
             self.time_in_view = 0
             self.views = [None]
             self.sum_velocity = 0
-            self.sum_doppler_velocity=0
-            self.sum_doppler_velocity=0
+            self.sum_doppler_velocity = 0
+            self.sum_doppler_velocity = 0
             self.time_in_view = 0
             self.target_angle = {}
             self.doppler_velocity = {}
@@ -170,10 +173,11 @@ class Target:
         abs_vel, vel_angle = cartesian_to_polar(self.vel)
         self.doppler_velocity[radar_num] = abs_vel * cos(pi * (vel_angle - self.target_angle[radar_num]) / 180)
         if (0 in self.doppler_velocity.keys()) & (1 in self.doppler_velocity.keys()):
-            if (self.doppler_velocity[0] !=0 )& (self.doppler_velocity[1]!=0):
-                self.doppler_velocity['overall_vel'] = (self.vel[0]**2 + self.vel[1]**2)**(1/2)
+            if (self.doppler_velocity[0] != 0) & (self.doppler_velocity[1] != 0):
+                self.doppler_velocity['overall_vel'] = (self.vel[0] ** 2 + self.vel[1] ** 2) ** (1 / 2)
             else:
                 self.doppler_velocity['overall_vel'] = 0
+
     def update_t(self, t):
         self.t = t
         self.cartesian_coordinates = (
@@ -187,19 +191,18 @@ class Target:
 
         return self.cartesian_coordinates
 
-
-    def collect_stats(self, t, viewed, r =0 ):
+    def collect_stats(self, t, viewed, r=0):
         # collect stats on the target after each step
         if self.first_in_view is None:
             self.first_in_view = t
         self.time_in_view += 1
         if self.time_in_view_both_indc == t:
             self.both_in_view += 1
-        self.time_in_veiw_both_indc = t
+        self.time_in_view_both_indc = t
         if viewed is True:
             if (self.first_viewed is None):
                 self.first_viewed = t
-            if self.views[-1]==t:
+            if self.views[-1] == t:
                 self.viewed_twice.append(t)
             self.views.append(t)
             # if r == 0 :
@@ -210,18 +213,18 @@ class Target:
         self.sum_doppler_velocity += max(self.doppler_velocity.values())  # observed doppler_velocity
 
     def final_stats(self, reinit=False):
-        self.viewed_twice=[]
+        self.viewed_twice = []
         average_velocity = self.sum_velocity / self.time_in_view
-        average_doppler_velocity = self.sum_doppler_velocity/ self.time_in_view
+        average_doppler_velocity = self.sum_doppler_velocity / self.time_in_view
         if self.first_viewed is None:
             time_til_first_view = -1
             seen = 0
         else:
             time_til_first_view = (self.first_viewed - self.first_in_view)
             seen = 1
-        view_rate = (len(self.views)-1) / self.time_in_view
+        view_rate = (len(self.views) - 1) / self.time_in_view
         twice_view_rate = (len(self.viewed_twice) - 1) / self.both_in_view if self.both_in_view else 0
-        return view_rate, average_velocity, time_til_first_view, seen, average_doppler_velocity,twice_view_rate
+        return view_rate, average_velocity, time_til_first_view, seen, average_doppler_velocity, twice_view_rate
 
     def episode_end(self):
         if self.first_in_view is not None:

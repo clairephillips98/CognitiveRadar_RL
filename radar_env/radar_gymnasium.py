@@ -28,7 +28,7 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, args, seed=None, render_mode=None, size=5):
+    def __init__(self, args, seed=None, render_mode='human', size=5):
         self.seed = seed
         self.args = args
         self.game = Simulation(self.args)
@@ -85,7 +85,7 @@ class RadarEnv(gym.Env):
         info[:, 2][info[:, 2] == -1] = self._max_episode_steps
         return {'time_til_first_view': info[:, 2], 'views_vel': info[:, [0, 1, 4]],
                 'world_loss': torch.Tensor(world_loss).to(device),
-                'seen': info[:, 3], 'both_viewed': info[: 5]}
+                'seen': info[:, 3], 'both_viewed': info[:,5]}
 
     def reset(self, seed=None, options=None):
         # We need the following line to seed self.np_random

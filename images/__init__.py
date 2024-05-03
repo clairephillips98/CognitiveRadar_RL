@@ -43,3 +43,18 @@
 # conclusion
 # these are the results, future work
 
+# recuriion bought cyclica and valence
+# whats teh work flow like
+# how closely do the ML teams work with the science teams
+# we both worked at banks as a data scientists
+# would guess that recursion is really differnet than a bnak, what the biggest differences
+# i saw that recrusion works closely with the Mila institute, how closely do you guys work?
+# collaboration wiht othe firms like Phenomic? how do you guys differentiate?
+# the website mentions wetlab where experiments are comducted to reinforce learning.
+# Is this an automated process with RL driving experiements?
+# You mentioned backing by Nvidia, and having a really huge super computer.
+# I would imagine that your team is still concious about the compute you guys use.
+# What does that look like, where are you trying to slim models or experiments down
+
+
+# internship is 6-8 months
