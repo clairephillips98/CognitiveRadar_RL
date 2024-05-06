@@ -75,7 +75,7 @@ sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=3:00:0
+#SBATCH --time=24:00:0
 #SBATCH --export=ALL
 #SBATCH --output=bl_2.txt
 module load anaconda3
@@ -137,7 +137,7 @@ for bs in 0.3 0.5 ; do #bs
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=12:00:0
+#SBATCH --time=24:00:0
 #SBATCH --export=ALL
 #SBATCH --output=run.txt
 module load anaconda3
@@ -167,7 +167,7 @@ EOT
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=12:00:0
+#SBATCH --time=24:00:0
 #SBATCH --export=ALL
 #SBATCH --output=run.txt
 module load anaconda3
@@ -195,7 +195,7 @@ EOT
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=12:00:0
+#SBATCH --time=24:00:0
 #SBATCH --export=ALL
 #SBATCH --output=run.txt
 module load anaconda3
