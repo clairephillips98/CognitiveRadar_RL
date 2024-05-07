@@ -139,7 +139,7 @@ class Runner:
             for x in range(int(floor(self.args.max_train_steps/self.args.evaluate_freq))):
                 self.total_steps = x*self.args.evaluate_freq
                 self.evaluate_policy()
-        #self.save_models()
+        self.save_models()
         # self.save_rewards()
 
     def save_rewards(self):
@@ -150,8 +150,17 @@ class Runner:
         np.save('data_train/DQN/{}_{}_env_{}_number_{}_seed_{}_blur_radius_{}.npy'.format(self.args.type_of_MARL, self.algorithm, self.env_name, self.number, self.seed, self.blur_radius), np.array(er))
 
     def save_models(self):
-        torch.save(self.agent.net_state_dict(),'models/DQN/net_{}'.format(self.path_name))
-        torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}'.format(self.path_name))
+        if args.agents == 1:
+            torch.save(self.agent.net_state_dict(),'models/DQN/net_{}'.format(self.path_name))
+            torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}'.format(self.path_name))
+        else:
+            nsd_0, nsd_1 = self.agent.net_state_dict()
+            tnsd_0, tsnd_1 = self.agnet.target_net_state_dict()
+            torch.save(nsd_0,'models/DQN/net_0_{}'.format(self.path_name))
+            torch.save(nsd_1,'models/DQN/net_1_{}'.format(self.path_name))
+            torch.save(tnsd_0, 'models/DQN/target_net_0_{}'.format(self.path_name))
+            torch.save(tsnd_1, 'models/DQN/target_net_1_{}'.format(self.path_name))
+
     def evaluate_policy(self, ):
         evaluate_reward = 0
         unpenalized_evaluate_reward = 0

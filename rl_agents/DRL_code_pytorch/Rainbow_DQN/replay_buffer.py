@@ -192,7 +192,6 @@ class N_Steps_Prioritized_ReplayBuffer(object):
         self.n_steps_deque.append(transition)
         if len(self.n_steps_deque) == self.n_steps:
             state, action, n_steps_reward, next_state, terminal = self.get_n_steps_transition()
-            print(state.size())
             self.buffer['state'][self.count] = state.cpu()
             self.buffer['action'][self.count] = action
             self.buffer['reward'][self.count] = n_steps_reward
