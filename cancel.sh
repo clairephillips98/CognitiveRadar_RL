@@ -1,5 +1,5 @@
 #!/bin/bash
 
-for i in {491190..491231}; do
+for i in {497006..497040}; do
   scancel $i
 done
