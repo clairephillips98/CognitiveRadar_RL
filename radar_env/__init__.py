@@ -29,7 +29,5 @@ from math import pi
 # what issue I am addressing
 # explanation of what other people have done
 # more into why's - 2 radar MARL
-# we want to make it so there is more reward for viewing target with both radar
-# dont need to over reference the paper - just say the work in 3
 # more written about more cognative radar systems:  christian bell, sunila,
 # say how im improving how previous work - rainbow dqn, why dqn?

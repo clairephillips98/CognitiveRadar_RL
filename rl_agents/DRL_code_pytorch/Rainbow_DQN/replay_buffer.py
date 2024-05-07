@@ -177,6 +177,7 @@ class N_Steps_Prioritized_ReplayBuffer(object):
             state_size = (2,*args.state_dim)
         else:
             state_size = (1,*args.state_dim)
+
         self.buffer = {'state': np.zeros((self.buffer_capacity, *state_size)),
                        'action': np.zeros((self.buffer_capacity, args.agents)),
                        'reward': np.zeros(self.buffer_capacity),
@@ -191,6 +192,7 @@ class N_Steps_Prioritized_ReplayBuffer(object):
         self.n_steps_deque.append(transition)
         if len(self.n_steps_deque) == self.n_steps:
             state, action, n_steps_reward, next_state, terminal = self.get_n_steps_transition()
+            print(state.size())
             self.buffer['state'][self.count] = state.cpu()
             self.buffer['action'][self.count] = action
             self.buffer['reward'][self.count] = n_steps_reward

@@ -49,18 +49,22 @@ class MARL_Double_Agent(DQN):
     def target_net_state_dict(self):
         return self.agents[0].target_net.state_dict(), self.agents[1].target_net.state_dict()
 
-
+import copy
 class MARL_Double_RB:
     def __init__(self, args):
         self.args = args
+        args_0 = copy.copy(args)
+        args_1 = copy.copy(args)
+        if args.type_of_MARL == "shared_targets_only":
+            args_1.state_dim = [args_1.state_dim[1], args_1.state_dim[0]]
         if args.use_per and args.use_n_steps:
-            self.replay_buffer = {0: N_Steps_Prioritized_ReplayBuffer(args), 1: N_Steps_Prioritized_ReplayBuffer(args)}
+            self.replay_buffer = {0: N_Steps_Prioritized_ReplayBuffer(args_0), 1: N_Steps_Prioritized_ReplayBuffer(args_1)}
         elif args.use_per:
-            self.replay_buffer = {0: Prioritized_ReplayBuffer(args), 1: Prioritized_ReplayBuffer(args)}
+            self.replay_buffer = {0: Prioritized_ReplayBuffer(args_0), 1: Prioritized_ReplayBuffer(args_1)}
         elif args.use_n_steps:
-            self.replay_buffer = {0: N_Steps_ReplayBuffer(args), 1: N_Steps_ReplayBuffer(args)}
+            self.replay_buffer = {0: N_Steps_ReplayBuffer(args_0), 1: N_Steps_ReplayBuffer(args_1)}
         else:
-            self.replay_buffer = {0: ReplayBuffer(args), 1: ReplayBuffer(args)}
+            self.replay_buffer = {0: ReplayBuffer(args_0), 1: ReplayBuffer(args_1)}
 
         if self.args.type_of_MARL in ['some_shared_info', 'some_shared_info_shared_reward', 'shared_targets_only']:
             self.diff_states = True
