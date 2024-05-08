@@ -1,6 +1,6 @@
 #!/bin/bash
 # different experiment
-full_name="5_targets_a15"
+full_name="double_SCALING_T5_a15"
 
 for bl in 1 2 3 4 5; do
   sbatch <<EOT &
@@ -25,7 +25,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --outside_radar_value=0.2 \
     --blur_sigma=0.5 \
     --relative_change=0\
-    --speed_scale=1 \
+    --speed_scale=2 \
     --max_train_steps=400000
 
 python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
@@ -41,7 +41,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --outside_radar_value=0.2 \
     --blur_sigma=0.5 \
     --relative_change=0\
-    --speed_scale=1 \
+    --speed_scale=2 \
     --max_train_steps=400000
 EOT
 done
@@ -71,7 +71,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --outside_radar_value=0.2 \
     --blur_sigma=0.5 \
     --relative_change=0\
-    --speed_scale=1 \
+    --speed_scale=2 \
     --use_noisy=$noisy \
     --hidden_dim=$hl \
     --n_steps=$nstep \
@@ -101,7 +101,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --blur_sigma=$bs \
     --relative_change=0 \
     --use_noisy=0 \
-    --speed_scale=1 \
+    --speed_scale=2 \
     --hidden_dim=$hl \
     --n_steps=1 \
     --max_train_steps=3000000
@@ -132,7 +132,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --relative_change=0 \
     --speed_scale=1 \
     --hidden_dim=$hl \
-    --n_steps=1 \
+    --n_steps=2 \
     --type_of_MARL=$marl\
     --max_train_steps=3000000
 EOT
