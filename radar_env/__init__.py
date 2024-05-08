@@ -31,3 +31,11 @@ from math import pi
 # more into why's - 2 radar MARL
 # more written about more cognative radar systems:  christian bell, sunila,
 # say how im improving how previous work - rainbow dqn, why dqn?
+
+
+# abstract
+# introduction
+# system model
+# proposed methods
+# simulated results
+# conclusion
