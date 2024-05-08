@@ -5,15 +5,15 @@ for bs in 0.3 0.5; do
   for ss in 1 2; do
     for bl in 1 2 3 4 5; do
       sbatch <<EOT &
-  #!/bin/bash
-  #SBATCH --nodes=1
-  #SBATCH --gpus-per-node=1
-  #SBATCH --time=4:00:0
-  #SBATCH --export=ALL
-  #SBATCH --output=run.txt
-  module load anaconda3
-  source activate pytorch_env
-  python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=1
+#SBATCH --time=4:00:0
+#SBATCH --export=ALL
+#SBATCH --output=run.txt
+module load anaconda3
+source activate pytorch_env
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
         --blur_radius=1 \
         --cdl=0 \
         --epsilon_init=0.5 \
@@ -29,7 +29,7 @@ for bs in 0.3 0.5; do
         --speed_scale=$ss \
         --max_train_steps=400000
 
-  python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
         --blur_radius=1 \
         --cdl=0 \
         --epsilon_init=0.5 \
@@ -44,22 +44,22 @@ for bs in 0.3 0.5; do
         --relative_change=0\
         --speed_scale=$ss \
         --max_train_steps=400000
-  EOT
+EOT
     done
 
     for noisy in 0 1; do #bs
       for hl in 128 264 ; do #hidden layer
         full_name=full_name="T5_a15_ns1_hd${hl}"
         sbatch <<EOT &
-  #!/bin/bash
-  #SBATCH --nodes=1
-  #SBATCH --gpus-per-node=1
-  #SBATCH --time=18:00:0
-  #SBATCH --export=ALL
-  #SBATCH --output=run.txt
-  module load anaconda3
-  source activate pytorch_env
-  python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=1
+#SBATCH --time=18:00:0
+#SBATCH --export=ALL
+#SBATCH --output=run.txt
+module load anaconda3
+source activate pytorch_env
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --blur_radius=1 \
       --cdl=0 \
       --epsilon_init=0.5 \
@@ -77,17 +77,17 @@ for bs in 0.3 0.5; do
       --hidden_dim=$hl \
       --n_steps=1 \
       --max_train_steps=3000000
-  EOT
+EOT
         sbatch <<EOT &
-  #!/bin/bash
-  #SBATCH --nodes=1
-  #SBATCH --gpus-per-node=1
-  #SBATCH --time=24:00:0
-  #SBATCH --export=ALL
-  #SBATCH --output=run.txt
-  module load anaconda3
-  source activate pytorch_env
-  python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=1
+#SBATCH --time=24:00:0
+#SBATCH --export=ALL
+#SBATCH --output=run.txt
+module load anaconda3
+source activate pytorch_env
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --blur_radius=1 \
       --cdl=0 \
       --epsilon_init=0.5 \
@@ -105,18 +105,18 @@ for bs in 0.3 0.5; do
       --hidden_dim=$hl \
       --n_steps=1 \
       --max_train_steps=3000000
-  EOT
+EOT
         for marl in "some_shared_info" "some_shared_info_shared_reward" "shared_targets_only" "single_agent"; do
           sbatch <<EOT &
-  #!/bin/bash
-  #SBATCH --nodes=1
-  #SBATCH --gpus-per-node=1
-  #SBATCH --time=24:00:0
-  #SBATCH --export=ALL
-  #SBATCH --output=run.txt
-  module load anaconda3
-  source activate pytorch_env
-  python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=1
+#SBATCH --time=24:00:0
+#SBATCH --export=ALL
+#SBATCH --output=run.txt
+module load anaconda3
+source activate pytorch_env
+python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --blur_radius=1 \
       --cdl=0 \
       --epsilon_init=0.5 \
@@ -135,7 +135,7 @@ for bs in 0.3 0.5; do
       --n_steps=1 \
       --type_of_MARL=$marl\
       --max_train_steps=3000000
-  EOT
+EOT
         done
       done
     done
