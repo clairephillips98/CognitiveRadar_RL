@@ -23,7 +23,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --agents=1 \
       --baseline=$bl \
       --outside_radar_value=0.2 \
-      --blur_sigma=0.3 \
+      --blur_sigma=0.5 \
       --relative_change=0\
       --speed_scale=$ss \
       --max_train_steps=400000
@@ -69,7 +69,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
     --agents=1 \
     --baseline=0 \
     --outside_radar_value=0.2 \
-    --blur_sigma=0.3 \
+    --blur_sigma=0.5 \
     --relative_change=0 \
     --use_noisy=0 \
     --speed_scale=$ss \
