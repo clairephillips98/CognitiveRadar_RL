@@ -2,6 +2,7 @@ for bs in 0.3 0.5; do
   for ss in 1 2; do
       for hl in 128 264 ; do #hidden layer
         full_name="T5_a15_ns1_hd${hl}"
+        sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
@@ -29,7 +30,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --n_steps=1 \
       --max_train_steps=3000000
 EOT
-    sbatch <<EOT &
+        sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
