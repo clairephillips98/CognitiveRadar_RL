@@ -3,7 +3,7 @@
 for bs in 0.3 0.5; do
   for ss in 1 2; do
       full_name="T5_a15_ns1_hd"
-      batch <<EOT &
+      sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
