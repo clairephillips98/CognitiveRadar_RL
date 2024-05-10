@@ -7,7 +7,7 @@ for bl in 1 2 3 4 5; do
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=8:00:0
+#SBATCH --time=24:00:0
 #SBATCH --export=ALL
 #SBATCH --output=run.txt
 module load anaconda3
@@ -31,7 +31,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --blur_sigma=0.3 \
       --relative_change=0 \
       --speed_scale=2 \
-      --max_train_steps=200000 & python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
+      --max_train_steps=1000000 & python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --blur_radius=1 \
       --cdl=0 \
       --epsilon_init=0.5 \
@@ -45,7 +45,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --blur_sigma=0.5 \
       --relative_change=0 \
       --speed_scale=2 \
-      --max_train_steps=200000
+      --max_train_steps=1000000
 EOT
   done
 done
