@@ -118,9 +118,9 @@ class View:
                                        max(self.scale / 2 + 1, target.radius))
                 self.next_image[mask] = 0
                 if self.speed_layers is not None:
-                    radial_vel = max(target.doppler_velocity.values())
-                    vel_mask = abs(radial_vel) > self.speed_layers.squeeze(0).abs()
-                    self.speed_layers[mask & vel_mask] = radial_vel
+                    observed_vel = abs(max(target.doppler_velocity.values(), key=abs))if min(target.doppler_velocity.values(), key=abs) == 0 else target.abs_vel
+                    vel_mask = abs(observed_vel) > self.speed_layers.squeeze(0).abs()
+                    self.speed_layers[mask & vel_mask] = observed_vel
 
         # add mask of original value to everything outside mask
         self.next_image[~self.mask_image] = self.mask_val

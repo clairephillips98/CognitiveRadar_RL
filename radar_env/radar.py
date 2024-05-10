@@ -63,7 +63,7 @@ class Radar:
         return detected
 
     def visible_targets(self, targets, recording = True ):
-        viewed_targets= []
+        viewed_targets = []
         for target in targets:
             in_circle, radius, angle = in_wedge_cartesian(target.tensor_cart_coords(),
                                    self.cartesian_coordinates,
@@ -71,15 +71,13 @@ class Radar:
             if in_circle:
                 target.target_angle[self.radar_num] = angle
                 target.calc_doppler_vel(self.radar_num)
-                if target.views[-1] != self.t:
-                    in_wedge = is_angle_between(angle, self.viewing_angle, self.viewing_angle+self.radians_of_view)
-                    target_rho = target.calculating_rho()
-                    if in_wedge & self.object_detected(target_rho,radius):
-                        if recording: target.collect_stats(self.t, True, self.radar_num)
-                        viewed_targets.append(target)
-                    else:
-                        if recording: target.collect_stats(self.t, False, self.radar_num)
+                in_wedge = is_angle_between(angle, self.viewing_angle, self.viewing_angle+self.radians_of_view)
+                target_rho = target.calculating_rho()
+                if in_wedge & self.object_detected(target_rho,radius):
+                    if recording: target.collect_stats(self.t, True, self.radar_num)
+                    viewed_targets.append(target)
                 else:
+                    if recording: target.collect_stats(self.t, False, self.radar_num)
                     target.doppler_velocity[self.radar_num] = 0
         return viewed_targets
 

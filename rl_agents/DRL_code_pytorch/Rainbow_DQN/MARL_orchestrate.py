@@ -1,6 +1,34 @@
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.rainbow_dqn import DQN
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.replay_buffer import *
+import threading
 
+class ThreadWithResult(threading.Thread):
+    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None):
+        def function():
+            self.result = target(*args, **kwargs)
+        super().__init__(group=group, target=function, name=name, daemon=daemon)
+
+def thread_result(fuct_lst, args_list):
+    threads = {}
+    for i, x in enumerate(fuct_lst):
+        threads[i] = ThreadWithResult(target=x, args=args_list[i])
+    for i in range(len(fuct_lst)):
+        threads[i].start()
+    for i in range(len(fuct_lst)):
+        threads[i].join()
+    items = []
+    for i in range(len(fuct_lst)):
+        items.append(threads[i].result)
+    return items
+
+def thread(fuct_lst, args_list):
+    threads = {}
+    for i, x in enumerate(fuct_lst):
+        threads[i] = threading.Thread(target=x, args=args_list[i])
+    for i in range(len(fuct_lst)):
+        threads[i].start()
+    for i in range(len(fuct_lst)):
+        threads[i].join()
 
 class MARL_Double_Agent(DQN):
 
@@ -19,13 +47,16 @@ class MARL_Double_Agent(DQN):
 
     def choose_action(self, state, epsilon):
         if self.diff_states:
-            return list(map(lambda x: self.agents[x].choose_action(state[x], epsilon), range(self.args.agents)))
+            return thread_result(
+                list(map(lambda x: self.agents[x].choose_action, range(self.args.agents))),
+                list(map(lambda x:(state[x], epsilon), range(self.args.agents))))
         else:
-            return list(map(lambda x: self.agents[x].choose_action(state, epsilon), range(self.args.agents)))
-        return action
+            return thread_result(list(map(lambda x: self.agents[x].choose_action, range(self.args.agents))),
+                list(map(lambda x:(state, epsilon), range(self.args.agents))))
 
     def net_eval(self):
-        list(map(lambda x: self.agents[x].net.eval(), range(self.args.agents)))
+        list(map(lambda x: self.agents[x].net.eval(), range(self.args.agents))),
+
 
     def net_train(self):
         list(map(lambda x: self.agents[x].net.train(), range(self.args.agents)))
@@ -76,18 +107,25 @@ class MARL_Double_RB:
             self.diff_rewards = False
     def store_transition(self, state, action, reward, next_state, terminal, done):
         if (self.diff_states == True) & (self.diff_rewards == True):
-            list(map(lambda x: self.replay_buffer[x].store_transition(state[x], action, reward[x], next_state[x],
-                                                                 terminal, done), range(self.args.agents)))
+            thread(
+                list(map(lambda x: self.replay_buffer[x].store_transition, range(self.args.agents))),
+                list(map(lambda x: (state[x], action, reward[x], next_state[x], terminal, done), range(self.args.agents)))
+            )
         elif (self.diff_states == False) & (self.diff_rewards == True):
-            list(map(lambda x: self.replay_buffer[x].store_transition(state, action, reward[x], next_state, terminal,
-                                                                 done), range(self.args.agents)))
+            thread(
+                list(map(lambda x: self.replay_buffer[x].store_transition, range(self.args.agents))),
+                list(map(lambda x: (state, action, reward[x], next_state, terminal, done), range(self.args.agents)))
+            )
         elif (self.diff_states == True) & (self.diff_rewards == False):
-            list(map(lambda x: self.replay_buffer[x].store_transition(state[x], action, reward, next_state[x], terminal,
+            thread(
+                list(map(lambda x: self.replay_buffer[x].store_transition, range(self.args.agents))),
+                list(map(lambda x: (state[x], action, reward, next_state[x], terminal,
                                                                  done), range(self.args.agents)))
+            )
         else:
-            list(map(lambda x: self.replay_buffer[x].store_transition(state, action, reward, next_state, terminal,
-
-                                                                 done), range(self.args.agents)))
-
+            thread(
+                list(map(lambda x: self.replay_buffer[x].store_transition, range(self.args.agents))),
+                list(map(lambda x: (state, action, reward, next_state, terminal,done), range(self.args.agents)))
+            )
     def cs(self):
         return self.replay_buffer[0].current_size

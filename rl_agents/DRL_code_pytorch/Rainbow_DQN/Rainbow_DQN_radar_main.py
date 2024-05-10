@@ -160,14 +160,14 @@ class Runner:
             torch.save(nsd_1,'models/DQN/net_1_{}'.format(self.path_name))
             torch.save(tnsd_0, 'models/DQN/target_net_0_{}'.format(self.path_name))
             torch.save(tsnd_1, 'models/DQN/target_net_1_{}'.format(self.path_name))
-
+            
     def evaluate_policy(self, ):
         evaluate_reward = 0
         unpenalized_evaluate_reward = 0
         radar_stats = stats()
         if self.args.baseline >= 1:
             if args.radars > 1:
-                action_ = list(map(lambda x: randint(0,self.args.action_dim-1), range(args.radars)))
+                action_ = list(map(lambda x: randint(0,int(self.args.action_dim**(1/2))-1), range(args.radars)))
             else:
                 action_ = [randint(0,self.args.action_dim-1)]
         else:

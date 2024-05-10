@@ -33,12 +33,14 @@ class Target:
         self.chance = randrange(0, 100) / 100  # chance take off or land location is random
         self.x_start, self.y_start = self.x_y_start()
         self.vel = self.x_y_vel()
+        self.abs_vel = sum(map(lambda v: v ** 2, self.vel)) ** (1 / 2)
         self.acc = 0, 0
         self.stats = torch.empty(0, 6).to(device)
         self.first_in_view = None
         self.first_viewed = None
-        self.time_in_view = 0
-        self.views = [None]
+        self.time_observable = 0
+        self.views = 0
+        self.last_viewed = None
         self.sum_velocity = 0
         self.sum_doppler_velocity = 0
         self.cartesian_coordinates = None
@@ -48,11 +50,11 @@ class Target:
         self.avg_rho = random.random() / 50  # average radar cross section (this is 10m)
         self.radius = self.avg_rho
         self.doppler_velocity = {}
-        self.viewed_twice = [None]
+        self.viewed_twice = 0
         self.views_r1 = [None]
         self.views_r2 = [None]
-        self.time_in_view_both_indc = None
-        self.both_in_view = 0
+        self.observable_both_indc = None
+        self.time_observable_both = 0
 
     def calculating_rho(self):
         # swerling I
@@ -95,20 +97,6 @@ class Target:
         y_vel = vary * (y_vel / scale) * speed_in_dt
         return x_vel, y_vel
 
-    def x_y_acc(self):
-        # this is depreciated
-        if (self.common_destination_likelihood / 2) < self.chance < (self.common_destination_likelihood):
-            t = randint(100 / speed_in_dt, 300 / speed_in_dt)  # time to get to location
-            x_displacement = self.common_destination[0] - (self.x_start + self.x_vel * t)
-            y_displacement = self.common_destination[1] - (self.y_start + self.y_vel * t)
-            abs_max = speed_in_dt * 25 / 400
-            x_acc = max(-abs_max, min(2 * x_displacement / (t ** 2), speed_in_dt * 25 / 400))
-            y_acc = max(-abs_max, min(2 * y_displacement / (t ** 2), speed_in_dt * 25 / 400))
-        else:
-            x_acc = (randint(-25, 25) / 400) * (speed_in_dt ** 2)
-            y_acc = (randint(-25, 25) / 400) * (speed_in_dt ** 2)
-        return x_acc, y_acc
-
     def point_in_square(self, point):
         x, y = point
         # Check if point is inside the square
@@ -148,6 +136,7 @@ class Target:
             self.shift = t
             self.x_start, self.y_start = self.x_y_start()
             self.vel = self.x_y_vel()
+            self.abs_vel = sum(map(lambda v: v ** 2, self.vel)) ** (1 / 2)
             self.acc = 0, 0
             if self.first_in_view is not None:
                 stats = self.final_stats(True)
@@ -155,28 +144,24 @@ class Target:
                     device)))  # view_rate, average_velocity, time_til_first_view, seen
             self.first_in_view = None
             self.first_viewed = None
-            self.time_in_view = 0
-            self.views = [None]
+            self.time_observable = 0
+            self.views = 0
+            self.last_viewed = None
             self.sum_velocity = 0
             self.sum_doppler_velocity = 0
             self.sum_doppler_velocity = 0
-            self.time_in_view = 0
+            self.time_observable = 0
             self.target_angle = {}
             self.doppler_velocity = {}
-            self.viewed_twice = [None]
+            self.viewed_twice = 0
             self.views_r1 = [None]
             self.views_r2 = [None]
-            self.time_in_view_both_indc = None
-            self.both_in_view = 0
+            self.observable_both_indc = None
+            self.time_observable_both = 0
 
     def calc_doppler_vel(self, radar_num):
         abs_vel, vel_angle = cartesian_to_polar(self.vel)
         self.doppler_velocity[radar_num] = abs_vel * cos(pi * (vel_angle - self.target_angle[radar_num]) / 180)
-        if (0 in self.doppler_velocity.keys()) & (1 in self.doppler_velocity.keys()):
-            if (self.doppler_velocity[0] != 0) & (self.doppler_velocity[1] != 0):
-                self.doppler_velocity['overall_vel'] = (self.vel[0] ** 2 + self.vel[1] ** 2) ** (1 / 2)
-            else:
-                self.doppler_velocity['overall_vel'] = 0
 
     def update_t(self, t):
         self.t = t
@@ -195,35 +180,32 @@ class Target:
         # collect stats on the target after each step
         if self.first_in_view is None:
             self.first_in_view = t
-        self.time_in_view += 1
-        if self.time_in_view_both_indc == t:
-            self.both_in_view += 1
-        self.time_in_view_both_indc = t
+        if self.observable_both_indc != t:
+            self.time_observable += 1
+            self.sum_velocity += self.abs_vel
+        if self.observable_both_indc == t:
+            self.time_observable_both += 1
+        self.observable_both_indc = t
         if viewed is True:
-            if (self.first_viewed is None):
+            if self.first_viewed is None:
                 self.first_viewed = t
-            if self.views[-1] == t:
-                self.viewed_twice.append(t)
-            self.views.append(t)
-            # if r == 0 :
-            #     self.views_r1.append(t)
-            # else:
-            #     self.views_r2.append(t)
-        self.sum_velocity += sum(map(lambda v: v ** 2, self.vel)) ** (1 / 2)
-        self.sum_doppler_velocity += max(self.doppler_velocity.values())  # observed doppler_velocity
+            if self.last_viewed == t:
+                self.viewed_twice += 1
+            self.views += 1
+            self.last_viewed = t
+        self.sum_doppler_velocity += self.doppler_velocity[r]  # observed doppler_velocity
 
     def final_stats(self, reinit=False):
-        self.viewed_twice = []
-        average_velocity = self.sum_velocity / self.time_in_view
-        average_doppler_velocity = self.sum_doppler_velocity / self.time_in_view
+        average_velocity = self.sum_velocity / self.time_observable
+        average_doppler_velocity = self.sum_doppler_velocity / (self.time_observable * 2)
         if self.first_viewed is None:
             time_til_first_view = -1
             seen = 0
         else:
             time_til_first_view = (self.first_viewed - self.first_in_view)
             seen = 1
-        view_rate = (len(self.views) - 1) / self.time_in_view
-        twice_view_rate = (len(self.viewed_twice) - 1) / self.both_in_view if self.both_in_view else 0
+        view_rate = self.views / self.time_observable
+        twice_view_rate = self.viewed_twice/ self.time_observable_both if self.time_observable_both else 0
         return view_rate, average_velocity, time_til_first_view, seen, average_doppler_velocity, twice_view_rate
 
     def episode_end(self):
