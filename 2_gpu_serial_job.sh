@@ -32,5 +32,6 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --n_steps=1 \
       --type_of_MARL="some_shared_info_shared_reward"
       --max_train_steps=4000000
+EOT
   done
 done
