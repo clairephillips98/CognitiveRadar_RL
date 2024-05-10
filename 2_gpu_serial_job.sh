@@ -1,7 +1,5 @@
 #!/bin/bash
 # bests for longer experiment
-for bs in
-
 for bl in 1 2 3 4 5; do
   for r in 1 2; do
     full_name="V2_T5_a15"
