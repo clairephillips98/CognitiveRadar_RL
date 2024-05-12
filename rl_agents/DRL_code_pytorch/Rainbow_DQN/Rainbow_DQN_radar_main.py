@@ -102,6 +102,7 @@ class Runner:
             self.epsilon_decay = (self.args.epsilon_init - self.args.epsilon_min) / self.args.epsilon_decay_steps
     def run(self, ):
         self.evaluate_policy()
+        print("here")
         if self.args.baseline ==0:
             while self.total_steps < self.args.max_train_steps:
                 state = self.env.reset()[0]
@@ -133,13 +134,13 @@ class Runner:
                     if self.total_steps % self.args.evaluate_freq == 0:
                         self.evaluate_policy()
                     if (self.total_steps/10) % self.args.evaluate_freq == 0:
-                        #self.save_models()
+                        self.save_models()
                         None
         else:
             for x in range(int(floor(self.args.max_train_steps/self.args.evaluate_freq))):
                 self.total_steps = x*self.args.evaluate_freq
                 self.evaluate_policy()
-        self.save_models()
+
         # self.save_rewards()
 
     def save_rewards(self):
