@@ -28,7 +28,7 @@ print(device)
 class RadarEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, args, seed=None, render_mode=None, size=5):
+    def __init__(self, args, seed=None, render_mode="human", size=5):
         self.seed = seed
         self.args = args
         self.game = Simulation(self.args)

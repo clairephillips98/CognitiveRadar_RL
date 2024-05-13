@@ -168,7 +168,7 @@ class Target:
         self.cartesian_coordinates = (
             self.x_start + self.vel[0] * (t - self.shift) + self.acc[0] * (t - self.shift) ** 2,
             self.y_start + self.vel[1] * (t - self.shift) + self.acc[1] * (t - self.shift) ** 2)
-        # self.re_init(self.cartesian_coordinates, t)
+        self.re_init(self.cartesian_coordinates, t)
         self.vel = (self.vel[0] + 2 * self.acc[0] * (t - self.shift),
                     self.vel[1] + 2 * self.acc[1] * (t - self.shift))
 
