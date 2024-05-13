@@ -2,7 +2,7 @@
 # bests for longer experiment
 for bs in 0.5; do
   for ss in 3; do
-      full_name="V2_T5_a15_ns1_hd128"
+      full_name="V2_T5_a15_ns1_hd256"
       sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
@@ -27,7 +27,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --relative_change=0 \
       --use_noisy=1 \
       --speed_scale=$ss \
-      --hidden_dim=128 \
+      --hidden_dim=256 \
       --n_steps=1 \
       --type_of_MARL=MARL
       --max_train_steps=4000000
@@ -57,7 +57,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --relative_change=0 \
       --use_noisy=1 \
       --speed_scale=$ss \
-      --hidden_dim=128 \
+      --hidden_dim=256 \
       --n_steps=1 \
       --type_of_MARL=$MARL \
       --max_train_steps=4000000
