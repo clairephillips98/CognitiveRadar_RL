@@ -1,7 +1,7 @@
 #!/bin/bash
 # bests for longer experiment
 for bs in 0.5; do
-  for ss in 2 3; do
+  for ss in 3; do
       full_name="V2_T5_a15_ns1_hd128"
       sbatch <<EOT &
 #!/bin/bash
@@ -62,5 +62,6 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --type_of_MARL=$MARL \
       --max_train_steps=4000000
 EOT
+    done
   done
 done
