@@ -102,7 +102,6 @@ class Runner:
             self.epsilon_decay = (self.args.epsilon_init - self.args.epsilon_min) / self.args.epsilon_decay_steps
     def run(self, ):
         self.evaluate_policy()
-        print("here")
         if self.args.baseline ==0:
             while self.total_steps < self.args.max_train_steps:
                 state = self.env.reset()[0]
@@ -156,7 +155,7 @@ class Runner:
             torch.save(self.agent.target_net_state_dict(), 'models/DQN/target_net_{}'.format(self.path_name))
         else:
             nsd_0, nsd_1 = self.agent.net_state_dict()
-            tnsd_0, tsnd_1 = self.agnet.target_net_state_dict()
+            tnsd_0, tsnd_1 = self.agent.target_net_state_dict()
             torch.save(nsd_0,'models/DQN/net_0_{}'.format(self.path_name))
             torch.save(nsd_1,'models/DQN/net_1_{}'.format(self.path_name))
             torch.save(tnsd_0, 'models/DQN/target_net_0_{}'.format(self.path_name))
