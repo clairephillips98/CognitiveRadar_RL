@@ -27,8 +27,8 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --type_of_MARL="single_agent" \
       --max_train_steps=4000000
 EOT
-for marl in "some_shared_info" "some_shared_info_shared_reward" "shared_targets_only"
-    sbatch <<EOT &
+for marl in "some_shared_info" "some_shared_info_shared_reward" "shared_targets_only"; do
+  sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
