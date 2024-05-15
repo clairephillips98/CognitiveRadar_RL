@@ -1,6 +1,6 @@
 #!/bin/bash
 # bests for longer experiment
-for bs in 0.3 0.5; do
+for bs in 0.5; do
   for ss in 2 3; do
       full_name="V2_T5_a15_ns1_hd"
       sbatch <<EOT &
