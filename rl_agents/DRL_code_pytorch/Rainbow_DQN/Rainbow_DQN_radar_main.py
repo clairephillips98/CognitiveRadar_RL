@@ -16,6 +16,10 @@ from random import randint
 from math import floor
 from functools import reduce
 
+device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
+print(device)
+
+
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
@@ -91,14 +95,14 @@ class Runner:
         if args.load_model:
             if self.args.radars == 1:
                 if os.path.isfile('models/DQN/net_{}'.format(self.path_name)):
-                    self.agent.net_load_state_dict(torch.load('models/DQN/net_{}'.format(self.path_name)))
-                    self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}'.format(self.path_name)))
+                    self.agent.net_load_state_dict(torch.load('models/DQN/net_{}'.format(self.path_name),device))
+                    self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}'.format(self.path_name),device))
             else:
                 if os.path.isfile('models/DQN/net_0_{}'.format(self.path_name)):
-                    self.agent.net_load_state_dict([torch.load('models/DQN/net_0_{}'.format(self.path_name)),
-                                                   torch.load('models/DQN/net_1_{}'.format(self.path_name))])
-                    self.agent.target_net_load_state_dict([torch.load('models/DQN/target_net_0_{}'.format(self.path_name)),
-                                                          torch.load('models/DQN/target_net_0_{}'.format(self.path_name))])
+                    self.agent.net_load_state_dict([torch.load('models/DQN/net_0_{}'.format(self.path_name),device),
+                                                   torch.load('models/DQN/net_1_{}'.format(self.path_name),device)])
+                    self.agent.target_net_load_state_dict([torch.load('models/DQN/target_net_0_{}'.format(self.path_name),device),
+                                                          torch.load('models/DQN/target_net_0_{}'.format(self.path_name),device)])
 
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating

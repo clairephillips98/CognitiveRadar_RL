@@ -25,8 +25,10 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --blur_sigma=0.5 \
       --relative_change=0 \
       --speed_scale=2 \
-      --MARL="some_shared_info" \
+      --type_of_MARL="some_shared_info" \
       --max_train_steps=4000000
 EOT
   done
 done
+
+
