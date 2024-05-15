@@ -36,14 +36,13 @@ class MARL_Double_Agent(DQN):
         else:
             list(map(lambda x: self.agents[x].learn(replay_buffer, total_steps, x), range(self.args.agents)))
 
-    def net_load_state_dict(self, path):
-        list(map(lambda x: self.agents[x].net.load_state_dict(path), range(self.args.agents)))
+    def net_load_state_dict(self, paths):
+        list(map(lambda x: self.agents[x].net.load_state_dict(paths[x]), range(self.args.agents)))
 
-    def target_net_load_state_dict(self, path):
-        list(map(lambda x: self.agents[x].target_net.load_state_dict(path), range(self.args.agents)))
+    def target_net_load_state_dict(self, paths):
+        list(map(lambda x: self.agents[x].target_net.load_state_dict(paths[x]), range(self.args.agents)))
 
     def net_state_dict(self):
-
         return self.agents[0].net.state_dict(), self.agents[1].net.state_dict()
 
     def target_net_state_dict(self):

@@ -87,10 +87,19 @@ class Runner:
             self.args.penalize_no_movement,self.args.outside_radar_value,
             self.args.radars, self.args.relative_change, self.args.agents)
         self.writer = SummaryWriter(log_dir='runs/DQN/{}'.format(self.path_name))
+
         if args.load_model:
-            if os.path.isfile('models/DQN/net_{}'.format(self.path_name)):
-                self.agent.net_load_state_dict(torch.load('models/DQN/net_{}'.format(self.path_name)))
-                self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}'.format(self.path_name)))
+            if self.args.radars == 1:
+                if os.path.isfile('models/DQN/net_{}'.format(self.path_name)):
+                    self.agent.net_load_state_dict(torch.load('models/DQN/net_{}'.format(self.path_name)))
+                    self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}'.format(self.path_name)))
+            else:
+                if os.path.isfile('models/DQN/net_0_{}'.format(self.path_name)):
+                    self.agent.net_load_state_dict([torch.load('models/DQN/net_0_{}'.format(self.path_name)),
+                                                   torch.load('models/DQN/net_1_{}'.format(self.path_name))])
+                    self.agent.target_net_load_state_dict([torch.load('models/DQN/target_net_0_{}'.format(self.path_name)),
+                                                          torch.load('models/DQN/target_net_0_{}'.format(self.path_name))])
+
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
         self.total_steps = 0  # Record the total steps during the training
