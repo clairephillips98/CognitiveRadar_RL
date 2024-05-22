@@ -229,6 +229,7 @@ class Runner:
         self.writer.add_scalar('average_view_rate', analysis['average_view_rate'], global_step=self.total_steps)
         self.writer.add_scalar('unpenalized_step_reward', unpenalized_evaluate_reward, global_step=self.total_steps)
         self.writer.add_scalar('freq_of_double_radar_viewing', analysis['average_rate_of_viewed_by_both_radars'], global_step=self.total_steps)
+        self.writer.add_scalar('median_actions_freq', analysis['median_actions_freq'], global_step=self.total_steps)
 
 
 if __name__ == '__main__':
@@ -274,6 +275,7 @@ if __name__ == '__main__':
     parser.add_argument("--type_of_MARL", type=str, default="single_agent", help="type of shared info in the MARL system")
     parser.add_argument("--baseline", type=int, default=0, help="type of shared info in the MARL system, if its 1 then its move in a circle, if its 2 then no movement, 3 is max variance, 4 is min variance")
     parser.add_argument("--outside_radar_value", type=float, default=0.9, help="value outside of radar observation area")
+
     args = parser.parse_args()
 
     env_index = 1
