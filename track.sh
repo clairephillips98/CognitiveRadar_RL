@@ -1,6 +1,6 @@
 for bl in 1 2 3 4 5 ; do #hidden layer
   for rad in 1 2; do
-    full_name="GENERAL_REDOING_FINAL_hd${hl}"
+    full_name="TRACK_REDOING_FINAL_hd${hl}"
     sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
@@ -20,18 +20,20 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --radars=$rad \
       --agents=1 \
       --baseline=$bl \
-      --outside_radar_value=0.2 \
+      --outside_radar_value=1 \
       --blur_sigma=0.3 \
       --relative_change=0 \
       --use_noisy=1 \
       --speed_scale=2 \
       --n_steps=1 \
-      --max_train_steps=3000000
+      --max_train_steps=3000000 \
+      --evaluate_freq=500 \
+      --evaluate_times=2
 EOT
   done
 done
 for hl in 128 264 ; do #hidden layer
-    full_name="GENERAL_REDOING_FINAL_hd${hl}"
+    full_name="TRACK_REDOING_FINAL_hd${hl}"
     sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
@@ -51,19 +53,21 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --radars=1 \
       --agents=1 \
       --baseline=0 \
-      --outside_radar_value=0.2 \
+      --outside_radar_value=1 \
       --blur_sigma=0.3 \
       --relative_change=0 \
       --use_noisy=1 \
       --speed_scale=2 \
       --hidden_dim=$hl \
       --n_steps=1 \
-      --max_train_steps=3000000
+      --max_train_steps=3000000 \
+      --evaluate_freq=500\
+      --evaluate_times=2
 EOT
 done
 for hl in 128 264 ; do #hidden layer
   for marl in "some_shared_info" "some_shared_info_shared_reward" "shared_targets_only" "single_agent"; do
-    full_name="GENERAL_REDOING_FINAL_hd${hl}"
+    full_name="TRACK_REDOING_FINAL_hd${hl}"
     sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
@@ -83,18 +87,20 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --radars=2 \
       --agents=2 \
       --baseline=0 \
-      --outside_radar_value=0.2 \
+      --outside_radar_value=1\
       --blur_sigma=0.3 \
       --relative_change=0 \
       --use_noisy=1 \
       --speed_scale=2 \
       --hidden_dim=$hl \
       --n_steps=1 \
-      --max_train_steps=3000000 \
-      --type_of_MARL=$marl
+      --max_train_steps=3000000
+      --type_of_MARL=$marl \
+      --evaluate_freq=500\
+      --evaluate_times=2
 EOT
   done
-  full_name="GENERAL_REDOING_FINAL_hd${hl}"
+  full_name="TRACK_REDOING_FINAL_hd${hl}"
     sbatch <<EOT &
 #!/bin/bash
 #SBATCH --nodes=1
@@ -114,13 +120,15 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --radars=2 \
       --agents=1 \
       --baseline=0 \
-      --outside_radar_value=0.2 \
+      --outside_radar_value=1 \
       --blur_sigma=0.3 \
       --relative_change=0 \
       --use_noisy=1 \
       --speed_scale=2 \
       --hidden_dim=$hl \
       --n_steps=1 \
-      --max_train_steps=3000000
+      --max_train_steps=3000000 \
+      --evaluate_freq=500 \
+      --evaluate_times=2
 EOT
 done

@@ -40,9 +40,14 @@ class View:
         self.transform = T.GaussianBlur(kernel_size=(self.blur_radius * 2 + 1, self.blur_radius * 2 + 1),
                                         sigma=(self.args.blur_sigma, self.args.blur_sigma)).to(device)
         self.radars = radars if type(radars) == list else [radars]
-        self.masks = [
-            self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, radar.start_angle, radar.end_angle, radar.max_distance) for
-            radar in self.radars]
+        if args.search_outer_circle == 0:
+            self.masks = [
+                self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, radar.start_angle, radar.end_angle, radar.max_distance) for
+                radar in self.radars]
+        else:
+            self.masks = [
+                self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, 0, 360, radar.max_distance) for
+                radar in self.radars]
         self.mask_image = reduce(lambda x, y: torch.logical_or(x, y), self.masks)
         self.last_tensor = None
         self.speed_layers = (torch.zeros((self.shape[0], self.shape[1]))).to(device)
@@ -113,14 +118,15 @@ class View:
         if self.speed_layers is not None:
             self.speed_layers[self.current_mask] = 0
         for radar in visible_targets:
-            for target in visible_targets[radar]:
-                mask = self.draw_shape(self.x.clone(), self.y.clone(), target.tensor_cart_coords(), 0, 360,
-                                       max(self.scale / 2 + 1, target.radius))
-                self.next_image[mask] = 0
-                if self.speed_layers is not None:
-                    observed_vel = abs(max(target.doppler_velocity.values(), key=abs))if min(target.doppler_velocity.values(), key=abs) == 0 else target.abs_vel
-                    vel_mask = abs(observed_vel) > self.speed_layers.squeeze(0).abs()
-                    self.speed_layers[mask & vel_mask] = observed_vel
+            if self.args.search_outer_circle == 0:
+                for target in visible_targets[radar]:
+                    mask = self.draw_shape(self.x.clone(), self.y.clone(), target.tensor_cart_coords(), 0, 360,
+                                           max(self.scale / 2 + 1, target.radius))
+                    self.next_image[mask] = 0
+                    if self.speed_layers is not None:
+                        observed_vel = abs(max(target.doppler_velocity.values(), key=abs))if min(target.doppler_velocity.values(), key=abs) == 0 else target.abs_vel
+                        vel_mask = abs(observed_vel) > self.speed_layers.squeeze(0).abs()
+                        self.speed_layers[mask & vel_mask] = observed_vel
 
         # add mask of original value to everything outside mask
         self.next_image[~self.mask_image] = self.mask_val

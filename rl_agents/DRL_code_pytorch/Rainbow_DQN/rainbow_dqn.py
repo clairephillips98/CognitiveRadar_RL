@@ -3,7 +3,7 @@ import numpy as np
 import copy
 from rl_agents.DRL_code_pytorch.Rainbow_DQN.network import Dueling_Net, Net
 from rl_agents.config import GPU_NAME
-
+import random
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
 
