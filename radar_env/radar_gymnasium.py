@@ -78,7 +78,7 @@ class RadarEnv(gym.Env):
             return self.game.world_view.next_image.unsqueeze(0)
 
     def info_analysis(self):
-        info = torch.vstack([target.stats for target in self.game.targets]).to(device)
+        info = torch.vstack([target.stats for target in self.game.targets+self.game.demised_targets]).to(device)
         world_loss = self.game.measure_world_loss(input=self.game.world_view.next_image,
                                                   target=self.game.world_view.create_hidden_target_tensor(
                                                       self.game.targets))

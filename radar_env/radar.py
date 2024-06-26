@@ -32,7 +32,7 @@ class Radar:
         self.seen_list = {}
         self.range = (self.end_angle-self.start_angle)%360
         self.num_states = int(self.range/self.radians_of_view)
-        self.rho_0 = 0.005158 # rho_0 such that an object with a rho of 0.01km is seen 75 percent of the time at furtherest distance
+        self.rho_0 = 0.002579 # rho_0 such that an object with a rho of 0.005km is seen 75 percent of the time at furtherest distance
         self.prob_f = 10e-4
         self.SNR_0 = 16
         self.given_dir = 0

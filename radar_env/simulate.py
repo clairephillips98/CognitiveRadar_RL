@@ -4,14 +4,14 @@ Jan. 26, 2024
 
 Pulling together radar and target to create the environment, and define the reward.
 """
-
+import random
 from radar_env.radar import Radar
 from radar_env.target import Target
 from utils import min_max_radar_breadth
 from math import ceil, floor
 import torch
 from functools import reduce
-from math import pi
+from math import pi, inf
 import torchvision.transforms as T
 from rl_agents.config import GPU_NAME
 import argparse
@@ -60,6 +60,8 @@ class Simulation:
                                 'some_shared_info', 'some_shared_info_shared_reward', 'shared_targets_only']}
 
     def __init__(self, args, seed=None, game_type='single_agent'):
+        self.seed=seed
+        self.prob_of_target = 0.01
         self.args = args
         self.game_type = game_type
         self.reward = None
@@ -71,6 +73,7 @@ class Simulation:
         self.bounds = [bounds(radar) for radar in self.radars]
         self.args.action_size = int(reduce(lambda x, y: x * y, [radar.num_states for radar in self.radars]))
         self.overall_bounds = overall_bounds(self.bounds)  # these are overall bounds for when there are multiple radars
+        self.demised_targets = []
         self.targets = create_targets(5, self.overall_bounds, args, seed=seed)
         self.world_view = View(self.radars, self.overall_bounds, self.args, 0)
         if self.args.type_of_MARL in ['single_agent', 'MARL_shared_everything']:
@@ -106,6 +109,7 @@ class Simulation:
         [rad.update_t(self.t, dir_list[i], (bool(self.args.relative_change) & agent_learning)) for i, rad in
          enumerate(self.radars)]  # i think this is acutally pointless
         [tar.update_t(self.t) for tar in self.targets]
+        self.add_remove_targets()
         visible_targets = self.get_visible_targets_and_update_stats(recording=recording)
         if self.args.type_of_MARL in ['single_agent', 'MARL_shared_everything']:
             self.step_for_single_view(visible_targets)
@@ -113,6 +117,21 @@ class Simulation:
             self.step_for_diff_world_view(visible_targets)
         elif self.args.type_of_MARL in ['shared_targets_only']:
             self.step_for_shared_targets(visible_targets)
+
+    def add_remove_targets(self):
+        prob_new = random.random()
+        prob_remove = random.random()
+        if prob_new < self.prob_of_target:# add a new_target
+            new_target = Target(bounds=self.overall_bounds, args=self.args, name=len(self.targets), seed=self.seed)
+            new_target.re_init([inf,inf],self.t)
+            self.targets.append(new_target)
+        if prob_remove < self.prob_of_target:# remove a target
+            if self.targets!= []:
+                removed_target = self.targets.pop(random.randrange(len(self.targets)))
+            removed_target.episode_end()
+            self.demised_targets.append(removed_target)
+
+
 
     def step_for_diff_world_view(self, visible_targets):
         # same view but masked version of the rewards

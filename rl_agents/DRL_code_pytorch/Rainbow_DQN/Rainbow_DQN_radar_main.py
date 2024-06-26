@@ -16,6 +16,10 @@ from random import randint
 from math import floor
 from functools import reduce
 
+device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
+print(device)
+
+
 class Runner:
     def __init__(self, args, env_name, number,seed):
         self.args = args
@@ -87,10 +91,19 @@ class Runner:
             self.args.penalize_no_movement,self.args.outside_radar_value,
             self.args.radars, self.args.relative_change, self.args.agents)
         self.writer = SummaryWriter(log_dir='runs/DQN/{}'.format(self.path_name))
+
         if args.load_model:
-            if os.path.isfile('models/DQN/net_{}'.format(self.path_name)):
-                self.agent.net_load_state_dict(torch.load('models/DQN/net_{}'.format(self.path_name)))
-                self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}'.format(self.path_name)))
+            if self.args.radars == 1:
+                if os.path.isfile('models/DQN/net_{}'.format(self.path_name)):
+                    self.agent.net_load_state_dict(torch.load('models/DQN/net_{}'.format(self.path_name),device))
+                    self.agent.target_net_load_state_dict(torch.load('models/DQN/target_net_{}'.format(self.path_name),device))
+            else:
+                if os.path.isfile('models/DQN/net_0_{}'.format(self.path_name)):
+                    self.agent.net_load_state_dict([torch.load('models/DQN/net_0_{}'.format(self.path_name),device),
+                                                   torch.load('models/DQN/net_1_{}'.format(self.path_name),device)])
+                    self.agent.target_net_load_state_dict([torch.load('models/DQN/target_net_0_{}'.format(self.path_name),device),
+                                                          torch.load('models/DQN/target_net_0_{}'.format(self.path_name),device)])
+
         self.evaluate_num = 0  # Record the number of evaluations
         self.evaluate_rewards = []  # Record the rewards during the evaluating
         self.total_steps = 0  # Record the total steps during the training
@@ -216,10 +229,12 @@ class Runner:
         self.writer.add_scalar('average_view_rate', analysis['average_view_rate'], global_step=self.total_steps)
         self.writer.add_scalar('unpenalized_step_reward', unpenalized_evaluate_reward, global_step=self.total_steps)
         self.writer.add_scalar('freq_of_double_radar_viewing', analysis['average_rate_of_viewed_by_both_radars'], global_step=self.total_steps)
+        self.writer.add_scalar('median_actions_freq', analysis['median_actions_freq'], global_step=self.total_steps)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameter Setting for DQN")
+    parser.add_argument("--search_outer_circle", type=int, default=0, help=" Maximum number of training steps")
     parser.add_argument("--max_train_steps", type=int, default=int(1.5e6), help=" Maximum number of training steps")
     parser.add_argument("--evaluate_freq", type=float, default=1e3, help="Evaluate the policy every 'evaluate_freq' steps")
     parser.add_argument("--evaluate_times", type=float, default=3, help="Evaluate times")
@@ -261,6 +276,7 @@ if __name__ == '__main__':
     parser.add_argument("--type_of_MARL", type=str, default="single_agent", help="type of shared info in the MARL system")
     parser.add_argument("--baseline", type=int, default=0, help="type of shared info in the MARL system, if its 1 then its move in a circle, if its 2 then no movement, 3 is max variance, 4 is min variance")
     parser.add_argument("--outside_radar_value", type=float, default=0.9, help="value outside of radar observation area")
+
     args = parser.parse_args()
 
     env_index = 1

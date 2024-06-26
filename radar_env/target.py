@@ -11,7 +11,7 @@ import torch
 from random import randint, randrange
 from rl_agents.config import GPU_NAME
 from utils import cartesian_to_polar
-from math import cos, pi, sqrt, acos, log
+from math import cos, sin, pi, log
 
 device = torch.device(GPU_NAME if torch.cuda.is_available() else "cpu")
 print(device)
@@ -30,7 +30,9 @@ class Target:
         self.common_destination_likelihood = args.cdl
         self.t = 0
         self.shift = 0
-        self.chance = randrange(0, 100) / 100  # chance take off or land location is random
+        self.chance = random.random()  # chance take off or land location is random
+        self.avg_rho = randrange(0,100) / 10000  # average radar cross section (this is 5m)
+        self.manuever_t = randrange(1, 100)
         self.x_start, self.y_start = self.x_y_start()
         self.vel = self.x_y_vel()
         self.abs_vel = sum(map(lambda v: v ** 2, self.vel)) ** (1 / 2)
@@ -47,7 +49,6 @@ class Target:
         self.update_t(0)
         self.name = name
         self.target_angle = {}
-        self.avg_rho = random.random() / 50  # average radar cross section (this is 10m)
         self.radius = self.avg_rho
         self.doppler_velocity = {}
         self.viewed_twice = 0
@@ -92,10 +93,21 @@ class Target:
             y_vel = randint(-10, 10)
         scale = (x_vel ** 2 + y_vel ** 2) ** (1 / 2)
         scale = scale if scale != 0 else 1
-        vary = randint(3, 10)  # speed is between 300 km/hr to 1000 km/hr
-        x_vel = vary * (x_vel / scale) * speed_in_dt
-        y_vel = vary * (y_vel / scale) * speed_in_dt
+        self.vary = randint(50, 900)*self.avg_rho  # speed is between 50 km/hr to 900 km/hr
+        x_vel = self.vary * (x_vel / scale) * speed_in_dt
+        y_vel = self.vary * (y_vel / scale) * speed_in_dt
         return x_vel, y_vel
+
+    def manuever(self):
+        if self.t >= self.manuever_t:
+            self.manuever_t = random.randrange(1+self.t+self.shift, 100+self.t+self.shift)
+            new_angle = random.random()*2*pi
+            self.shift = self.t
+            self.x_start,self.y_start = self.cartesian_coordinates
+            self.vel = (self.vary*cos(new_angle), self.vary*sin(new_angle)) #change direction not speed
+
+
+
 
     def point_in_square(self, point):
         x, y = point
@@ -169,6 +181,7 @@ class Target:
             self.x_start + self.vel[0] * (t - self.shift) + self.acc[0] * (t - self.shift) ** 2,
             self.y_start + self.vel[1] * (t - self.shift) + self.acc[1] * (t - self.shift) ** 2)
         self.re_init(self.cartesian_coordinates, t)
+        self.manuever()
         self.vel = (self.vel[0] + 2 * self.acc[0] * (t - self.shift),
                     self.vel[1] + 2 * self.acc[1] * (t - self.shift))
 
