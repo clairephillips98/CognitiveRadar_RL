@@ -41,7 +41,6 @@ class stats:
         dev_y = views_vel[1] - y_mean
         slope = torch.sum(dev_x * dev_y) / torch.sum(dev_x ** 2)
         correlation = torch.corrcoef(views_vel)
-        print(self.stats['median_occurances'])
         stats = {
             'avg_time_til_first_view': float(time_til_first_view.mean()),
             'views_vel_corr': float(correlation[0, 1]),

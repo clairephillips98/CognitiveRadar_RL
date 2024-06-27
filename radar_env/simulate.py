@@ -128,7 +128,7 @@ class Simulation:
         if prob_remove < self.prob_of_target:# remove a target
             if self.targets!= []:
                 removed_target = self.targets.pop(random.randrange(len(self.targets)))
-            removed_target.episode_end()
+                removed_target.episode_end()
             self.demised_targets.append(removed_target)
 
 
