@@ -5,7 +5,7 @@ for bl in 1 2 3 4 5 ; do #hidden layer
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=18:00:0
+#SBATCH --time=24:00:0
 #SBATCH --export=ALL
 #SBATCH --output=run.txt
 module load anaconda3
@@ -36,7 +36,7 @@ for hl in 128 264 ; do #hidden layer
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=18:00:0
+#SBATCH --time=24:00:0
 #SBATCH --export=ALL
 #SBATCH --output=run.txt
 module load anaconda3
@@ -68,7 +68,7 @@ for hl in 128 264 ; do #hidden layer
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=18:00:0
+#SBATCH --time=24:00:0
 #SBATCH --export=ALL
 #SBATCH --output=run.txt
 module load anaconda3
@@ -99,7 +99,7 @@ EOT
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=18:00:0
+#SBATCH --time=24:00:0
 #SBATCH --export=ALL
 #SBATCH --output=run.txt
 module load anaconda3
