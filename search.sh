@@ -30,7 +30,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --max_train_steps=3000000
       --type_of_MARL=$marl \
       --evaluate_freq=500\
-      --evaluate_times=2\
+      --evaluate_times=3 \
       --search_outer_circle=1
 EOT
   done

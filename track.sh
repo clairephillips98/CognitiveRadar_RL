@@ -31,7 +31,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --max_train_steps=3000000
       --type_of_MARL=$marl \
       --evaluate_freq=500\
-      --evaluate_times=2
+      --evaluate_times=3
 EOT
   done
   full_name="TRACK_REDOING_FINAL_hd${hl}"
@@ -63,6 +63,6 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --n_steps=1 \
       --max_train_steps=3000000 \
       --evaluate_freq=500 \
-      --evaluate_times=2
+      --evaluate_times=3
 EOT
 done
