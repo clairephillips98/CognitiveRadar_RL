@@ -49,6 +49,7 @@ class RadarEnv(gym.Env):
 
         self.action_size = int(reduce(lambda x, y: x * y, [radar.num_states for radar in self.game.radars]))
         # 1 radar for now, so the number of actions is the number of states
+        self.actions_steps = torch.zeros((self.game.radars[0].num_states, len(self.game.radars)))
         self.action_space = gym.spaces.Discrete(self.action_size)
 
         """
@@ -92,7 +93,7 @@ class RadarEnv(gym.Env):
         if self.seed is not None:
             self.seed += 1
         super().reset(seed=self.seed)
-
+        self.actions_steps = torch.zeros((self.game.radars[0].num_states, len(self.game.radars)))
         self.game = Simulation(self.args, seed=self.seed)
         # self.info = torch.empty(0,4)
         # Choose the agent starting angle at random
@@ -134,6 +135,16 @@ class RadarEnv(gym.Env):
         if self.args.penalize_no_movement == 1:
             reward = self.penalize_no_action(reward, self._agent_angle, self.last_action)
 
+        reward_scale = sum([self.actions_steps[action[i], i] for i,radar in enumerate(self.game.radars)])
+        print('step')
+        print(reward)
+        reward = reward*(1+reward_scale/10)
+        print(reward)
+        self.actions_steps = torch.add(self.actions_steps, 1)
+        if rewards !=None:
+            rewards = [reward*(1+self.actions_steps[action[i], i]/10) for i,reward in enumerate(rewards)]
+        for i, radar in enumerate(self.game.radars):
+            self.actions_steps[action[i], i] = 0
         observation = self._get_obs()
         if self.render_mode == "human":
             self._render_frame()

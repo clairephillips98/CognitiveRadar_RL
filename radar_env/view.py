@@ -40,14 +40,9 @@ class View:
         self.transform = T.GaussianBlur(kernel_size=(self.blur_radius * 2 + 1, self.blur_radius * 2 + 1),
                                         sigma=(self.args.blur_sigma, self.args.blur_sigma)).to(device)
         self.radars = radars if type(radars) == list else [radars]
-        if args.search_outer_circle == 0:
-            self.masks = [
-                self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, radar.start_angle, radar.end_angle, radar.max_distance) for
-                radar in self.radars]
-        else:
-            self.masks = [
-                self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, 0, 360, radar.max_distance) for
-                radar in self.radars]
+        self.masks = [self.draw_shape(self.x.clone(), self.y.clone(), radar.cartesian_coordinates, radar.start_angle,
+                                      radar.end_angle, radar.max_distance) for radar in self.radars]
+
         self.mask_image = reduce(lambda x, y: torch.logical_or(x, y), self.masks)
         self.last_tensor = None
         self.speed_layers = (torch.zeros((self.shape[0], self.shape[1]))).to(device)
