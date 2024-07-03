@@ -134,15 +134,12 @@ class RadarEnv(gym.Env):
         unpenalized_reward = reward.clone()
         if self.args.penalize_no_movement == 1:
             reward = self.penalize_no_action(reward, self._agent_angle, self.last_action)
-
-        reward_scale = sum([self.actions_steps[action[i], i] for i,radar in enumerate(self.game.radars)])
-        print('step')
-        print(reward)
-        reward = reward*(1+reward_scale/10)
-        print(reward)
-        self.actions_steps = torch.add(self.actions_steps, 1)
-        if rewards !=None:
-            rewards = [reward*(1+self.actions_steps[action[i], i]/10) for i,reward in enumerate(rewards)]
+        if self.args.search_outer_circle == 1:
+            reward_scale = sum([self.actions_steps[action[i], i] for i,radar in enumerate(self.game.radars)])
+            reward = reward*(1+reward_scale)
+            self.actions_steps = torch.add(self.actions_steps, 1)
+            if rewards !=None:
+                rewards = [reward*(1+self.actions_steps[action[i], i]) for i,reward in enumerate(rewards)]
         for i, radar in enumerate(self.game.radars):
             self.actions_steps[action[i], i] = 0
         observation = self._get_obs()

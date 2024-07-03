@@ -1,4 +1,4 @@
-for os in 0 1; do
+for os in 0; do
   for bl in 1 2 3 4 5 ; do #hidden layer
     for rad in 1 2; do
       full_name="NEW_TRACK_REDOING_FINAL_hd${hl}"
@@ -22,16 +22,16 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --agents=1 \
       --baseline=$bl \
       --outside_radar_value=$os \
-      --blur_sigma=0.3 \
+      --blur_sigma=0.2 \
       --relative_change=0 \
       --use_noisy=1 \
-      --speed_scale=2 \
+      --speed_scale=1000 \
       --n_steps=1 \
       --max_train_steps=3000000
 EOT
     done
   done
-  for hl in 128 264 ; do #hidden layer
+  for hl in 128 264 528; do #hidden layer
       full_name="NEW_TRACK_REDOING_FINAL_hd${hl}"
       sbatch <<EOT &
 #!/bin/bash
@@ -53,16 +53,16 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --agents=1 \
       --baseline=0 \
       --outside_radar_value=$os \
-      --blur_sigma=0.3 \
+      --blur_sigma=0.2 \
       --relative_change=0 \
       --use_noisy=1 \
-      --speed_scale=100 \
+      --speed_scale=1000 \
       --hidden_dim=$hl \
       --n_steps=1 \
       --max_train_steps=3000000
 EOT
   done
-  for hl in 128 264 ; do #hidden layer
+  for hl in 128 264 528; do #hidden layer
     for marl in "some_shared_info" "some_shared_info_shared_reward" "shared_targets_only" "single_agent"; do
       full_name="NEW_TRACK_REDOING_FINAL_hd${hl}"
       sbatch <<EOT &
@@ -85,10 +85,10 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --agents=2 \
       --baseline=0 \
       --outside_radar_value=$os \
-      --blur_sigma=0.3 \
+      --blur_sigma=0.2 \
       --relative_change=0 \
       --use_noisy=1 \
-      --speed_scale=100 \
+      --speed_scale=1000 \
       --hidden_dim=$hl \
       --n_steps=1 \
       --max_train_steps=3000000 \
@@ -116,10 +116,10 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --agents=1 \
       --baseline=0 \
       --outside_radar_value=$os \
-      --blur_sigma=0.3 \
+      --blur_sigma=0.2 \
       --relative_change=0 \
       --use_noisy=1 \
-      --speed_scale=100 \
+      --speed_scale=1000 \
       --hidden_dim=$hl \
       --n_steps=1 \
       --max_train_steps=3000000
