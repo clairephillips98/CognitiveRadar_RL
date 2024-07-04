@@ -21,7 +21,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --agents=1 \
       --baseline=$bl \
       --outside_radar_value=0 \
-      --blur_sigma=0.5 \
+      --blur_sigma=1 \
       --relative_change=0 \
       --use_noisy=1 \
       --speed_scale=0 \
@@ -53,7 +53,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --agents=1 \
       --baseline=0 \
       --outside_radar_value=0 \
-      --blur_sigma=0.5 \
+      --blur_sigma=1 \
       --relative_change=0 \
       --use_noisy=1 \
       --speed_scale=0 \
@@ -86,7 +86,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --agents=2 \
       --baseline=0 \
       --outside_radar_value=0.2 \
-      --blur_sigma=0.5 \
+      --blur_sigma=1 \
       --relative_change=0 \
       --use_noisy=1 \
       --speed_scale=0 \
@@ -118,7 +118,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --agents=1 \
       --baseline=0 \
       --outside_radar_value=0.2 \
-      --blur_sigma=0.5 \
+      --blur_sigma=1 \
       --relative_change=0 \
       --use_noisy=1 \
       --speed_scale=0 \

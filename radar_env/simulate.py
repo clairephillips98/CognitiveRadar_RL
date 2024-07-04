@@ -201,6 +201,7 @@ class Simulation:
         # Using BCE loss to find the binary cross entropy of the  changing images
         # The model is rewarded for a large change == high entropy
         loss = torch.nn.BCELoss(reduction='none').to(device)
+        next_image[next_image > 1] = 1
         loss = loss(input=last_tensor, target=torch.floor(next_image))
         # lasts.append(transform(torch.stack([last_tensor] * 3, dim=0)))
         # states.append(transform(torch.stack([torch.floor(next_image)] * 3, dim=0)))
