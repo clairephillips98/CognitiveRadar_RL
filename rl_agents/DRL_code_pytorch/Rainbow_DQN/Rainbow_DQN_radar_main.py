@@ -276,6 +276,7 @@ if __name__ == '__main__':
     parser.add_argument("--type_of_MARL", type=str, default="single_agent", help="type of shared info in the MARL system")
     parser.add_argument("--baseline", type=int, default=0, help="type of shared info in the MARL system, if its 1 then its move in a circle, if its 2 then no movement, 3 is max variance, 4 is min variance")
     parser.add_argument("--outside_radar_value", type=float, default=0.9, help="value outside of radar observation area")
+    parser.add_argument("--tracking_mode", type=float, default=0, help="track simulation")
 
     args = parser.parse_args()
 

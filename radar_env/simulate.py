@@ -109,7 +109,8 @@ class Simulation:
         [rad.update_t(self.t, dir_list[i], (bool(self.args.relative_change) & agent_learning)) for i, rad in
          enumerate(self.radars)]  # i think this is acutally pointless
         [tar.update_t(self.t) for tar in self.targets]
-        self.add_remove_targets()
+        if self.args.tracking_mode==0:
+            self.add_remove_targets()
         visible_targets = self.get_visible_targets_and_update_stats(recording=recording)
         if self.args.type_of_MARL in ['single_agent', 'MARL_shared_everything']:
             self.step_for_single_view(visible_targets)
