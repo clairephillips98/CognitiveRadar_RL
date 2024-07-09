@@ -1,4 +1,4 @@
-for os in 0; do
+for os in 1.0; do
   for bl in 1 2 3 4 5 ; do #hidden layer
     for rad in 2; do
       full_name="NEW_TRACK_REDOING_FINAL_hd${hl}"
