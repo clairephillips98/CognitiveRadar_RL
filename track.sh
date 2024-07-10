@@ -25,7 +25,7 @@ python -m rl_agents.DRL_code_pytorch.Rainbow_DQN.Rainbow_DQN_radar_main \
       --blur_sigma=0.2 \
       --relative_change=0 \
       --use_noisy=1 \
-      --speed_scale=1000 \
+      --speed_scale=10 \
       --n_steps=1 \
       --max_train_steps=3000000
 EOT

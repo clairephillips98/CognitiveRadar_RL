@@ -69,7 +69,11 @@ class RadarEnv(gym.Env):
         """
         self.window = None
         self.clock = None
-        self._max_episode_steps = 500
+        if self.args.tracking_mode == 0:
+
+            self._max_episode_steps = 500
+        else:
+            self._max_episode_steps = 50
         self.last_action = None
 
     def _get_obs(self):
